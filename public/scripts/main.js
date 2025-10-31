@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
     
-    // Load activities if any
+    // Display existing data from localStorage or from API
     displayActivities();
     displayMeals();
     updateOverview();
@@ -45,27 +45,40 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     
     // Login form submission
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
+    document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const username = document.getElementById('username').value;
         const password = document.getElementById('password').value;
         
-        // Simple authentication (in production, use proper backend)
-        if (username && password) {
+        try {
+            const userData = await loginUser(username, password);
+            
+            // Load user profile
+            userProfile = await getUserProfile();
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appScreen').style.display = 'block';
             
+            // Load user data
+            await loadUserData();
+            
             // Show profile setup if not completed, otherwise show home
-            if (!userProfile || !userProfile.isSetupComplete) {
+            if (!userProfile.isSetupComplete) {
                 showPage('profile');
             } else {
+                loadProfileData();
                 showPage('home');
             }
+            
+            alert('Login successful!');
+        } catch (error) {
+            alert('Login failed: ' + error.message);
         }
     });
     
     // Sign up form submission
-    document.getElementById('signupForm').addEventListener('submit', function(e) {
+    document.getElementById('signupForm').addEventListener('submit', async function(e) {
         e.preventDefault();
         const username = document.getElementById('signupUsername').value;
         const email = document.getElementById('signupEmail').value;
@@ -78,20 +91,16 @@ document.addEventListener('DOMContentLoaded', function() {
             return;
         }
         
-        // Simple validation (in production, use proper backend)
-        if (username && email && password) {
-            // Store user info (in production, send to backend)
-            const userInfo = {
-                username: username,
-                email: email,
-                signupDate: new Date().toISOString()
-            };
-            localStorage.setItem('userInfo', JSON.stringify(userInfo));
+        try {
+            const userData = await registerUser(username, email, password);
             
-            // Switch to app and show profile setup
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appScreen').style.display = 'block';
             showPage('profile');
+            
+            alert('Account created successfully! Please complete your profile.');
+        } catch (error) {
+            alert('Registration failed: ' + error.message);
         }
     });
     
@@ -226,7 +235,7 @@ function updateCaloricGoals() {
 }
 
 // Profile Management
-function saveProfile() {
+async function saveProfile() {
     // Required fields
     const name = document.getElementById('name').value;
     const age = document.getElementById('age').value;
@@ -315,7 +324,7 @@ function saveProfile() {
     }
     
     // Create profile object
-    userProfile = {
+    const profileData = {
         // Basic Details
         name: name,
         age: parseInt(age),
@@ -360,10 +369,37 @@ function saveProfile() {
         setupDate: new Date().toISOString()
     };
     
-    localStorage.setItem('userProfile', JSON.stringify(userProfile));
-    
-    alert('Profile saved successfully! Your personalized health plan is ready.');
-    showPage('home');
+    // Save to API and localStorage
+    try {
+        userProfile = await updateUserProfile(profileData);
+        localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        alert('Profile saved successfully! Your personalized health plan is ready.');
+        showPage('home');
+    } catch (error) {
+        alert('Error saving profile: ' + error.message);
+        // Fallback to localStorage
+        userProfile = profileData;
+        localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        showPage('home');
+    }
+}
+
+// Load user data from API
+async function loadUserData() {
+    try {
+        // Load activities
+        activities = await getActivities();
+        // Load meals
+        meals = await getMeals();
+        // Load weights
+        weights = await getWeights();
+    } catch (error) {
+        console.error('Error loading user data:', error);
+        // Fallback to localStorage if API fails
+        activities = JSON.parse(localStorage.getItem('activities')) || [];
+        meals = JSON.parse(localStorage.getItem('meals')) || [];
+        weights = JSON.parse(localStorage.getItem('weights')) || [];
+    }
 }
 
 function loadProfileData() {
@@ -917,7 +953,7 @@ function clearActivityAutoFill() {
 }
 
 // Activity Tracker
-function logActivity() {
+async function logActivity() {
     const activityType = document.getElementById('activityType').value;
     const duration = parseInt(document.getElementById('duration').value);
     const calories = parseInt(document.getElementById('calories').value);
@@ -929,26 +965,30 @@ function logActivity() {
     }
     
     const activity = {
-        id: Date.now(),
         type: activityType,
         duration: duration,
         calories: calories,
-        date: date,
-        timestamp: new Date().toISOString()
+        date: date
     };
     
-    activities.push(activity);
-    localStorage.setItem('activities', JSON.stringify(activities));
-    
-    displayActivities();
-    updateOverview();
-    
-    // Reset form
-    document.getElementById('duration').value = '';
-    document.getElementById('calories').value = '';
-    clearActivityAutoFill();
-    
-    alert('Activity logged successfully!');
+    try {
+        const savedActivity = await createActivity(activity);
+        // Add id and timestamp for local use
+        savedActivity.id = savedActivity._id;
+        activities.push(savedActivity);
+        
+        displayActivities();
+        updateOverview();
+        
+        // Reset form
+        document.getElementById('duration').value = '';
+        document.getElementById('calories').value = '';
+        clearActivityAutoFill();
+        
+        alert('Activity logged successfully!');
+    } catch (error) {
+        alert('Error logging activity: ' + error.message);
+    }
 }
 
 function displayActivities() {
@@ -988,7 +1028,7 @@ function displayActivities() {
                         <p><i class="fas fa-calendar"></i> ${formattedDate} | <i class="fas fa-stopwatch"></i> ${activity.duration} min | <i class="fas fa-fire"></i> ${activity.calories} cal</p>
                     </div>
                 </div>
-                <button onclick="deleteActivity(${activity.id})" style="background: var(--accent-color); border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                <button onclick="deleteActivityById(${activity.id})" style="background: var(--accent-color); border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -996,11 +1036,22 @@ function displayActivities() {
     }).join('');
 }
 
-function deleteActivity(id) {
-    activities = activities.filter(activity => activity.id !== id);
-    localStorage.setItem('activities', JSON.stringify(activities));
-    displayActivities();
-    updateOverview();
+async function deleteActivityById(activityId) {
+    try {
+        // Find the MongoDB _id
+        const activity = activities.find(a => a.id === activityId || a._id === activityId);
+        if (activity && activity._id) {
+            await deleteActivity(activity._id); // Call API
+        }
+        activities = activities.filter(activity => activity.id !== activityId && activity._id !== activityId);
+        displayActivities();
+        updateOverview();
+    } catch (error) {
+        alert('Error deleting activity: ' + error.message);
+        // Still remove from local list if API fails
+        activities = activities.filter(activity => activity.id !== activityId && activity._id !== activityId);
+        displayActivities();
+    }
 }
 
 // Global variable to store current recipe nutrition
