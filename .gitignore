@@ -1,0 +1,30 @@
+# OS Files
+.DS_Store
+Thumbs.db
+
+# IDE Files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+logs/
+
+# Environment Variables (for MongoDB connection)
+.env
+.env.local
+
+# Node modules (if you add any in future)
+node_modules/
+package-lock.json
+
+# Build files
+dist/
+build/
+
+# Temporary files
+*.tmp
+*.temp
+

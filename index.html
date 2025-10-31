@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VitaTrackr - Your Complete Health Companion</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="loginScreen" class="login-container">
+        <div class="login-box">
+            <div class="login-header">
+                <i class="fas fa-heartbeat fa-3x"></i>
+                <h1>VitaTrackr</h1>
+                <p>Your Complete Health Companion</p>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="loginFormContainer">
+                <form id="loginForm">
+                    <div class="form-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" placeholder="Username" required>
+                    </div>
+                    <div class="form-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" placeholder="Password" required>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </button>
+                </form>
+                <p class="signup-link">
+                    Don't have an account? <a href="#" id="showSignup">Sign Up</a>
+                </p>
+            </div>
+
+            <!-- Sign Up Form -->
+            <div id="signupFormContainer" style="display: none;">
+                <form id="signupForm">
+                    <div class="form-group">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="signupUsername" placeholder="Choose Username" required>
+                    </div>
+                    <div class="form-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="signupEmail" placeholder="Email Address" required>
+                    </div>
+                    <div class="form-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupPassword" placeholder="Create Password" required>
+                    </div>
+                    <div class="form-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-user-plus"></i> Create Account
+                    </button>
+                </form>
+                <p class="signup-link">
+                    Already have an account? <a href="#" id="showLogin">Login</a>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application -->
+    <div id="appScreen" class="app-container" style="display: none;">
+        <nav class="navbar">
+            <div class="nav-brand">
+                <i class="fas fa-heartbeat"></i>
+                <span>VitaTrackr</span>
+            </div>
+            <div class="nav-links">
+                <a href="#" class="nav-link" data-page="home">
+                    <i class="fas fa-home"></i> Home
+                </a>
+                <a href="#" class="nav-link" data-page="recipe">
+                    <i class="fas fa-utensils"></i> Recipe Generator
+                </a>
+                <a href="#" class="nav-link" data-page="suggestions">
+                    <i class="fas fa-lightbulb"></i> Dish Suggestions
+                </a>
+                <a href="#" class="nav-link" data-page="tracker">
+                    <i class="fas fa-running"></i> Activity Tracker
+                </a>
+                <a href="#" class="nav-link" data-page="meals">
+                    <i class="fas fa-apple-alt"></i> Meal Log
+                </a>
+                <a href="#" class="nav-link" data-page="overview">
+                    <i class="fas fa-chart-line"></i> Overview
+                </a>
+                <a href="#" class="nav-link" data-page="progress">
+                    <i class="fas fa-trophy"></i> Progress
+                </a>
+                <a href="#" class="nav-link" data-page="profile">
+                    <i class="fas fa-user-circle"></i> Profile
+                </a>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button onclick="toggleTheme()" class="theme-toggle" title="Toggle Dark/Light Mode">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </button>
+                <div class="nav-subscription">
+                    <span class="subscription-badge">Pro</span>
+                </div>
+            </div>
+        </nav>
+
+        <main class="main-content">
+            <!-- Profile Setup Page -->
+            <section id="profile" class="page active">
+                <h2><i class="fas fa-user-circle"></i> Setup Your Profile</h2>
+                <div class="content-card">
+                    <p style="margin-bottom: 20px; color: var(--text-secondary);">
+                        Please provide your health information so we can personalize recommendations for you. 
+                        <span style="color: var(--warning-color);">* Required fields</span>
+                    </p>
+                    
+                    <!-- Basic Details Section -->
+                    <div class="profile-section">
+                        <h3><i class="fas fa-user"></i> Basic Details</h3>
+                        <div class="input-row">
+                            <div class="input-section">
+                                <label for="name">Name *</label>
+                                <input type="text" id="name" placeholder="Your Name" required>
+                            </div>
+                            <div class="input-section">
+                                <label for="age">Age *</label>
+                                <input type="number" id="age" placeholder="25" min="1" max="120" required>
+                            </div>
+                            <div class="input-section">
+                                <label for="gender">Gender *</label>
+                                <select id="gender" required>
+                                    <option value="">Select</option>
+                                    <option value="male">Male</option>
+                                    <option value="female">Female</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-section">
+                                <label for="weight">Weight (kg) *</label>
+                                <input type="number" id="weight" placeholder="70" step="0.1" required onchange="calculateBMI()">
+                            </div>
+                            <div class="input-section">
+                                <label for="height">Height (cm) *</label>
+                                <input type="number" id="height" placeholder="170" step="0.1" required onchange="calculateBMI()">
+                            </div>
+                            <div class="input-section">
+                                <label>BMI (Auto-calculated)</label>
+                                <input type="text" id="bmi" placeholder="-" readonly style="background: rgba(255,255,255,0.05);">
+                            </div>
+                        </div>
+                        <div class="input-row">
+                            <div class="input-section">
+                                <label for="bodyFat">Body Fat % (Optional)</label>
+                                <input type="number" id="bodyFat" placeholder="15" step="0.1" min="0" max="100">
+                            </div>
+                            <div class="input-section">
+                                <label for="waistHipRatio">Waist-Hip Ratio (Optional)</label>
+                                <input type="number" id="waistHipRatio" placeholder="0.85" step="0.01" min="0" max="2">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Health Information Section -->
+                    <div class="profile-section">
+                        <h3><i class="fas fa-heartbeat"></i> Health Information</h3>
+                        <div class="input-section">
+                            <label for="diseases">Existing Diseases/Conditions (comma-separated, Optional)</label>
+                            <input type="text" id="diseases" placeholder="e.g., diabetes, hypertension, PCOS, thyroid...">
+                        </div>
+                        <div class="input-section">
+                            <label for="allergies">Food Allergies (comma-separated, Optional)</label>
+                            <input type="text" id="allergies" placeholder="e.g., nuts, dairy, gluten...">
+                        </div>
+                        <div class="input-section">
+                            <label for="dietaryPreferenceProfile">Food Preferences *</label>
+                            <select id="dietaryPreferenceProfile" required>
+                                <option value="">Select</option>
+                                <option value="vegetarian">Vegetarian</option>
+                                <option value="vegan">Vegan</option>
+                                <option value="omnivore">Non-Vegetarian</option>
+                                <option value="pescatarian">Pescatarian</option>
+                            </select>
+                        </div>
+                        <div class="input-section">
+                            <label for="medications">Current Medications (Optional)</label>
+                            <input type="text" id="medications" placeholder="e.g., insulin, metformin...">
+                        </div>
+                        <div class="input-row">
+                            <div class="input-section">
+                                <label for="sleepHours">Average Sleep Hours/Day (Optional)</label>
+                                <input type="number" id="sleepHours" placeholder="8" step="0.5" min="0" max="24">
+                            </div>
+                            <div class="input-section">
+                                <label for="waterIntake">Daily Water Intake (Liters) (Optional)</label>
+                                <input type="number" id="waterIntake" placeholder="2.5" step="0.1" min="0" max="20">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity & Lifestyle Section -->
+                    <div class="profile-section">
+                        <h3><i class="fas fa-running"></i> Activity & Lifestyle</h3>
+                        <div class="input-section">
+                            <label for="occupation">Occupation Type *</label>
+                            <select id="occupation" required>
+                                <option value="">Select</option>
+                                <option value="sedentary">Sedentary (Desk job, Little activity)</option>
+                                <option value="light">Lightly Active (Light exercise 1-3 days/week)</option>
+                                <option value="moderate">Moderately Active (Moderate exercise 3-5 days/week)</option>
+                                <option value="very">Very Active (Hard exercise 6-7 days/week)</option>
+                                <option value="extreme">Extremely Active (Physical job or 2x training/day)</option>
+                            </select>
+                        </div>
+                        <div class="input-section">
+                            <label for="exerciseFrequency">Exercise Frequency (days/week) (Optional)</label>
+                            <input type="number" id="exerciseFrequency" placeholder="3" min="0" max="7">
+                        </div>
+                        <div class="input-row">
+                            <div class="input-section">
+                                <label for="stepCount">Average Daily Steps (Optional)</label>
+                                <input type="number" id="stepCount" placeholder="8000" min="0">
+                            </div>
+                            <div class="input-section">
+                                <label for="screenTime">Daily Screen Time (hours) (Optional)</label>
+                                <input type="number" id="screenTime" placeholder="6" step="0.5" min="0" max="24">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Goal Tracking Section -->
+                    <div class="profile-section">
+                        <h3><i class="fas fa-bullseye"></i> Goal Tracking</h3>
+                        <div class="input-row">
+                            <div class="input-section">
+                                <label for="goalType">Goal Type *</label>
+                                <select id="goalType" required onchange="updateCaloricGoals()">
+                                    <option value="">Select</option>
+                                    <option value="weightLoss">Weight Loss</option>
+                                    <option value="weightGain">Weight Gain</option>
+                                    <option value="muscleGain">Muscle Gain</option>
+                                    <option value="maintain">Maintain Current Weight</option>
+                                </select>
+                            </div>
+                            <div class="input-section">
+                                <label for="targetDuration">Target Duration (weeks) (Optional)</label>
+                                <input type="number" id="targetDuration" placeholder="12" min="1">
+                            </div>
+                        </div>
+                        <div class="input-section">
+                            <label>Daily Caloric Goal (Auto-calculated)</label>
+                            <input type="text" id="caloricGoal" placeholder="-" readonly style="background: rgba(255,255,255,0.05); font-size: 1.2em; font-weight: bold;">
+                        </div>
+                        <div class="input-section">
+                            <label>Macronutrient Split (Auto-calculated)</label>
+                            <div id="macroSplit" class="macro-split-display">
+                                <div class="macro-item">
+                                    <strong class="macro-label carbs">Carbs</strong>
+                                    <span id="carbsValue">-</span>
+                                </div>
+                                <div class="macro-item">
+                                    <strong class="macro-label protein">Protein</strong>
+                                    <span id="proteinValue">-</span>
+                                </div>
+                                <div class="macro-item">
+                                    <strong class="macro-label fats">Fats</strong>
+                                    <span id="fatsValue">-</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Optional Enhancements Section -->
+                    <div class="profile-section">
+                        <h3><i class="fas fa-star"></i> Optional Enhancements</h3>
+                        <div class="input-section">
+                            <label for="familyHistory">Family History (Optional)</label>
+                            <input type="text" id="familyHistory" placeholder="e.g., heart disease, diabetes, hypertension...">
+                        </div>
+                        <div class="input-section">
+                            <label for="stressLevel">Stress Level (1-10) (Optional)</label>
+                            <input type="number" id="stressLevel" placeholder="5" min="1" max="10">
+                        </div>
+                        <div class="input-section">
+                            <label for="bloodReports">Blood Test Results (Optional)</label>
+                            <input type="text" id="bloodReports" placeholder="e.g., glucose: 95, cholesterol: 180...">
+                        </div>
+                        <div class="input-section">
+                            <label for="foodDislikes">Food Dislikes (Optional)</label>
+                            <input type="text" id="foodDislikes" placeholder="e.g., bitter gourd, okra...">
+                        </div>
+                        <div class="input-section">
+                            <label for="preferredCuisines">Preferred Cuisines (Optional)</label>
+                            <input type="text" id="preferredCuisines" placeholder="e.g., Italian, Mediterranean, Asian...">
+                        </div>
+                    </div>
+
+                    <div style="text-align: center; margin-top: 30px;">
+                        <button onclick="saveProfile()" class="btn-primary" style="font-size: 1.1em; padding: 15px 40px;">
+                            <i class="fas fa-save"></i> Save Profile
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Home Page -->
+            <section id="home" class="page">
+                <div class="hero-section">
+                    <h1>Welcome to VitaTrackr</h1>
+                    <p>Your all-in-one health and wellness companion</p>
+                </div>
+                <div class="features-grid">
+                    <div class="feature-card" onclick="showPage('recipe')">
+                        <i class="fas fa-utensils fa-3x"></i>
+                        <h3>Recipe Generator</h3>
+                        <p>Generate personalized recipes from the ingredients you have</p>
+                    </div>
+                    <div class="feature-card" onclick="showPage('suggestions')">
+                        <i class="fas fa-lightbulb fa-3x"></i>
+                        <h3>Dish Suggestions</h3>
+                        <p>Get dish recommendations based on your diet and health conditions</p>
+                    </div>
+                    <div class="feature-card" onclick="showPage('tracker')">
+                        <i class="fas fa-running fa-3x"></i>
+                        <h3>Activity Tracker</h3>
+                        <p>Track your physical activities and monitor your progress</p>
+                    </div>
+                    <div class="feature-card" onclick="showPage('meals')">
+                        <i class="fas fa-apple-alt fa-3x"></i>
+                        <h3>Meal Logging</h3>
+                        <p>Track your meals with automatic nutrition lookup</p>
+                    </div>
+                    <div class="feature-card" onclick="showPage('overview')">
+                        <i class="fas fa-chart-line fa-3x"></i>
+                        <h3>Overview Dashboard</h3>
+                        <p>View comprehensive health statistics and insights</p>
+                    </div>
+                    <div class="feature-card" onclick="showPage('progress')">
+                        <i class="fas fa-trophy fa-3x"></i>
+                        <h3>Progress & Achievements</h3>
+                        <p>Track your progress with charts and unlock achievements</p>
+                    </div>
+                    <div class="feature-card" onclick="showPage('profile')">
+                        <i class="fas fa-user-circle fa-3x"></i>
+                        <h3>Profile Setup</h3>
+                        <p>Manage your health profile and preferences</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Recipe Generator Page -->
+            <section id="recipe" class="page">
+                <h2><i class="fas fa-utensils"></i> Recipe Generator</h2>
+                <div class="content-card">
+                    <div class="input-section">
+                        <label for="recipeSearch">Search Recipe by Name or Ingredients</label>
+                        <input type="text" id="recipeSearch" placeholder="e.g., Paneer Tikka, Chicken Curry, or ingredients like chicken, rice...">
+                    </div>
+                    <div class="input-section">
+                        <label for="ingredients">Or Enter Your Ingredients (comma-separated)</label>
+                        <textarea id="ingredients" placeholder="e.g., chicken, rice, tomatoes, olive oil, garlic..."></textarea>
+                    </div>
+                    <button onclick="generateRecipe()" class="btn-primary">
+                        <i class="fas fa-magic"></i> Generate Recipe
+                    </button>
+                    <div id="recipeResult" class="recipe-result"></div>
+                </div>
+            </section>
+
+            <!-- Dish Suggestions Page -->
+            <section id="suggestions" class="page">
+                <h2><i class="fas fa-lightbulb"></i> Dish Suggestions</h2>
+                <div class="content-card">
+                    <div id="autoRecommendation" class="auto-recommendation-box">
+                        <h3><i class="fas fa-brain"></i> Automatic Recommendation</h3>
+                        <div id="recommendationInfo" class="recommendation-info"></div>
+                    </div>
+                    <button onclick="getSuggestions()" class="btn-primary" style="margin-top: 20px;">
+                        <i class="fas fa-sync"></i> Refresh Suggestions
+                    </button>
+                    <div id="suggestionsResult" class="suggestions-result"></div>
+                </div>
+            </section>
+
+            <!-- Activity Tracker Page -->
+            <section id="tracker" class="page">
+                <h2><i class="fas fa-running"></i> Activity Tracker</h2>
+                <div class="content-card">
+                    <div class="input-section">
+                        <label for="activityType">Activity Type</label>
+                        <select id="activityType" onchange="calculateActivityCalories()">
+                            <option value="running">Running</option>
+                            <option value="cycling">Cycling</option>
+                            <option value="swimming">Swimming</option>
+                            <option value="walking">Walking</option>
+                            <option value="gym">Gym Workout</option>
+                            <option value="yoga">Yoga</option>
+                        </select>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-section">
+                            <label for="duration">Duration (minutes)</label>
+                            <input type="number" id="duration" placeholder="30" onchange="calculateActivityCalories()">
+                        </div>
+                        <div class="input-section">
+                            <label for="calories">Calories Burned</label>
+                            <input type="number" id="calories" placeholder="Will auto-calculate">
+                        </div>
+                    </div>
+                    <div id="activityAutoFill" style="display: none; background: rgba(80, 200, 120, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 10px; border: 1px solid var(--secondary-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--secondary-color);"><i class="fas fa-check-circle"></i> Calories calculated! You can edit if needed.</span>
+                            <button onclick="clearActivityAutoFill()" style="background: transparent; border: none; color: var(--accent-color); cursor: pointer;">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                    </div>
+                    <div class="input-section">
+                        <label for="activityDate">Date</label>
+                        <input type="date" id="activityDate">
+                    </div>
+                    <button onclick="logActivity()" class="btn-primary">
+                        <i class="fas fa-plus"></i> Log Activity
+                    </button>
+                    <div id="activitiesList" class="activities-list"></div>
+                </div>
+            </section>
+
+            <!-- Meal Log Page -->
+            <section id="meals" class="page">
+                <h2><i class="fas fa-apple-alt"></i> Meal Logging</h2>
+                <div class="content-card">
+                    <div class="input-row">
+                        <div class="input-section">
+                            <label for="mealType">Meal Type</label>
+                            <select id="mealType">
+                                <option value="breakfast">Breakfast</option>
+                                <option value="lunch">Lunch</option>
+                                <option value="dinner">Dinner</option>
+                                <option value="snack">Snack</option>
+                            </select>
+                        </div>
+                        <div class="input-section">
+                            <label for="mealDate">Date</label>
+                            <input type="date" id="mealDate">
+                        </div>
+                    </div>
+                    <div class="input-section">
+                        <label for="mealName">Food Item</label>
+                        <input type="text" id="mealName" placeholder="e.g., Paneer Tikka, Grilled Chicken..." onchange="lookupRecipeNutrition()">
+                    </div>
+                    <div class="input-row">
+                        <div class="input-section">
+                            <label for="quantityType">Quantity Type</label>
+                            <select id="quantityType" onchange="handleQuantityTypeChange()">
+                                <option value="servings">By Servings</option>
+                                <option value="grams">By Weight (grams)</option>
+                            </select>
+                        </div>
+                        <div class="input-section">
+                            <label for="mealQuantity" id="quantityLabel">Quantity (servings)</label>
+                            <input type="number" id="mealQuantity" placeholder="1" step="0.5" min="0.25" value="1" onchange="updateNutritionFromQuantity()">
+                        </div>
+                    </div>
+                    <div id="servingWeightInfo" style="display: none; background: rgba(74, 144, 226, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; color: var(--text-secondary);">
+                        <i class="fas fa-info-circle"></i> Standard serving size: 100g (base for calculations)
+                    </div>
+                    <div id="nutritionAutoFill" style="display: none; background: rgba(80, 200, 120, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--secondary-color);">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                            <span style="color: var(--secondary-color);"><i class="fas fa-check-circle"></i> Nutrition data found from database!</span>
+                            <button onclick="clearAutoFill()" style="background: transparent; border: none; color: var(--accent-color); cursor: pointer;">
+                                <i class="fas fa-times"></i> Clear
+                            </button>
+                        </div>
+                        <p style="color: var(--text-secondary); font-size: 14px;">Nutrition values are automatically calculated. You can edit them below.</p>
+                    </div>
+                    <div class="input-section">
+                        <label for="mealCalories">Calories</label>
+                        <input type="number" id="mealCalories" placeholder="Will auto-fill if recipe found" min="0">
+                    </div>
+                    <div class="input-row">
+                        <div class="input-section">
+                            <label for="mealProtein">Protein (g)</label>
+                            <input type="number" id="mealProtein" placeholder="20" step="0.1" min="0">
+                        </div>
+                        <div class="input-section">
+                            <label for="mealCarbs">Carbs (g)</label>
+                            <input type="number" id="mealCarbs" placeholder="30" step="0.1" min="0">
+                        </div>
+                        <div class="input-section">
+                            <label for="mealFats">Fats (g)</label>
+                            <input type="number" id="mealFats" placeholder="10" step="0.1" min="0">
+                        </div>
+                    </div>
+                    <button onclick="logMeal()" class="btn-primary">
+                        <i class="fas fa-plus"></i> Log Meal
+                    </button>
+                    <div id="mealsList" class="meals-list"></div>
+                </div>
+            </section>
+
+            <!-- Overview Page -->
+            <section id="overview" class="page">
+                <h2><i class="fas fa-chart-line"></i> Overview Dashboard</h2>
+                <div class="overview-grid">
+                    <div class="stat-card">
+                        <i class="fas fa-fire fa-2x"></i>
+                        <h3>Activity Calories Burned</h3>
+                        <p id="totalCalories">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-stopwatch fa-2x"></i>
+                        <h3>Total Minutes</h3>
+                        <p id="totalMinutes">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-apple-alt fa-2x"></i>
+                        <h3>Meals Logged</h3>
+                        <p id="totalMeals">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-heart fa-2x"></i>
+                        <h3>Health Score</h3>
+                        <p id="healthScore">85%</p>
+                    </div>
+                </div>
+                <div class="overview-grid" style="margin-top: 20px;">
+                    <div class="stat-card">
+                        <i class="fas fa-utensils fa-2x"></i>
+                        <h3>Avg Daily Calories</h3>
+                        <p id="avgDailyCalories">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-dumbbell fa-2x"></i>
+                        <h3>Total Protein (g)</h3>
+                        <p id="totalProtein">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-bread-slice fa-2x"></i>
+                        <h3>Total Carbs (g)</h3>
+                        <p id="totalCarbs">0</p>
+                    </div>
+                    <div class="stat-card">
+                        <i class="fas fa-seedling fa-2x"></i>
+                        <h3>This Week Activities</h3>
+                        <p id="weekActivities">0</p>
+                    </div>
+                </div>
+                <div class="content-card">
+                    <h3>Recent Activities</h3>
+                    <div id="overviewActivities"></div>
+                </div>
+                <div class="content-card">
+                    <h3>Recent Meals</h3>
+                    <div id="overviewMeals"></div>
+                </div>
+                <div class="content-card">
+                    <h3>Nutrition Insights</h3>
+                    <div id="nutritionInsights" class="insights-grid"></div>
+                </div>
+            </section>
+
+            <!-- Progress & Analytics Page -->
+            <section id="progress" class="page">
+                <h2><i class="fas fa-trophy"></i> Progress & Achievements</h2>
+                
+                <!-- Achievements Section -->
+                <div class="content-card">
+                    <h3><i class="fas fa-medal"></i> Your Achievements</h3>
+                    <div id="achievementsDisplay" class="achievements-grid"></div>
+                </div>
+
+                <!-- Streaks Section -->
+                <div class="content-card">
+                    <h3><i class="fas fa-fire"></i> Current Streaks</h3>
+                    <div id="streaksDisplay" class="streaks-display"></div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="content-card">
+                    <h3><i class="fas fa-chart-area"></i> Activity Trends (Last 7 Days)</h3>
+                    <canvas id="activityChart" width="400" height="100"></canvas>
+                </div>
+
+                <div class="content-card">
+                    <h3><i class="fas fa-apple-alt"></i> Nutrition Trends (Last 7 Days)</h3>
+                    <canvas id="nutritionChart" width="400" height="100"></canvas>
+                </div>
+
+                <!-- Weight Tracking Section -->
+                <div class="content-card">
+                    <h3><i class="fas fa-weight"></i> Weight Tracking</h3>
+                    <div class="input-row">
+                        <div class="input-section">
+                            <label for="newWeight">Update Weight (kg)</label>
+                            <input type="number" id="newWeight" placeholder="Current weight" step="0.1">
+                        </div>
+                        <div class="input-section">
+                            <label for="weightDate">Date</label>
+                            <input type="date" id="weightDate">
+                        </div>
+                    </div>
+                    <button onclick="logWeight()" class="btn-primary">
+                        <i class="fas fa-plus"></i> Log Weight
+                    </button>
+                    <canvas id="weightChart" style="margin-top: 30px;" width="400" height="100"></canvas>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Recipe Detail Modal -->
+    <div id="recipeModal" class="modal">
+        <div class="modal-content">
+            <span class="modal-close">&times;</span>
+            <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <script src="scripts/database.js"></script>
+    <script src="scripts/smartRecommendations.js"></script>
+    <script src="scripts/main.js"></script>
+</body>
+</html>
+
