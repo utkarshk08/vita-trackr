@@ -2058,9 +2058,18 @@ function showAchievementDetails(achievementId) {
 
 // Update Charts
 function updateCharts() {
-    updateActivityChart();
-    updateNutritionChart();
-    updateWeightChart();
+    // Use setTimeout to ensure DOM is ready and Chart.js is loaded
+    setTimeout(() => {
+        updateActivityChart();
+    }, 100);
+    
+    setTimeout(() => {
+        updateNutritionChart();
+    }, 150);
+    
+    setTimeout(() => {
+        updateWeightChart();
+    }, 200);
 }
 
 // Activity Chart
@@ -2108,57 +2117,110 @@ function updateActivityChart() {
         activityCaloriesByDay
     });
     
+    // Show message if no activity data
+    const totalCalories = activityCaloriesByDay.reduce((a, b) => a + b, 0);
+    if (totalCalories === 0 && activities.length === 0) {
+        // Keep canvas but show a message below
+        const existingMsg = canvas.parentElement.querySelector('.no-data-message');
+        if (!existingMsg) {
+            const msg = document.createElement('p');
+            msg.className = 'no-data-message';
+            msg.style.cssText = 'text-align: center; color: var(--text-secondary); padding-top: 20px; font-style: italic;';
+            msg.textContent = 'No activity data yet. Start logging activities to see your trends!';
+            canvas.parentElement.appendChild(msg);
+        }
+    } else {
+        // Remove no-data message if it exists
+        const existingMsg = canvas.parentElement.querySelector('.no-data-message');
+        if (existingMsg) existingMsg.remove();
+    }
+    
     const isLightMode = document.body.classList.contains('light-mode');
     const textColor = isLightMode ? '#2c3e50' : '#ffffff';
     const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     const tickColor = isLightMode ? '#5a6c7d' : '#b0b0b0';
     
-    window.activityChartInstance = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
-            datasets: [{
-                label: 'Calories Burned',
-                data: activityCaloriesByDay,
-                borderColor: '#50c878',
-                backgroundColor: 'rgba(80, 200, 120, 0.1)',
-                tension: 0.4,
-                fill: true
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            aspectRatio: 2,
-            plugins: {
-                legend: {
-                    display: true,
-                    labels: {
-                        color: textColor
-                    }
-                }
+    try {
+        window.activityChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                datasets: [{
+                    label: 'Calories Burned',
+                    data: activityCaloriesByDay,
+                    borderColor: '#50c878',
+                    backgroundColor: 'rgba(80, 200, 120, 0.1)',
+                    tension: 0.4,
+                    fill: true,
+                    pointRadius: 4,
+                    pointBackgroundColor: '#50c878',
+                    pointBorderColor: '#ffffff',
+                    pointBorderWidth: 2
+                }]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: tickColor
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 2,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: textColor,
+                            font: {
+                                size: 12
+                            }
+                        }
                     },
-                    grid: {
-                        color: gridColor
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#50c878',
+                        borderWidth: 1
                     }
                 },
-                x: {
-                    ticks: {
-                        color: tickColor
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: tickColor,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: gridColor,
+                            lineWidth: 1
+                        }
                     },
-                    grid: {
-                        color: gridColor
+                    x: {
+                        ticks: {
+                            color: tickColor,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: gridColor,
+                            lineWidth: 1
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+        
+        console.log('✅ Activity chart rendered successfully');
+    } catch (error) {
+        console.error('❌ Error rendering activity chart:', error);
+        canvas.parentElement.innerHTML += '<p style="text-align: center; color: var(--accent-color); padding-top: 20px;">Error loading chart. Please refresh the page.</p>';
+    }
 }
 
 // Nutrition Chart
@@ -2208,72 +2270,121 @@ function updateNutritionChart() {
         nutritionByDay
     });
     
+    // Show message if no nutrition data
+    const totalCalories = nutritionByDay.reduce((sum, n) => sum + n.calories, 0);
+    if (totalCalories === 0 && meals.length === 0) {
+        // Keep canvas but show a message below
+        const existingMsg = canvas.parentElement.querySelector('.no-data-message');
+        if (!existingMsg) {
+            const msg = document.createElement('p');
+            msg.className = 'no-data-message';
+            msg.style.cssText = 'text-align: center; color: var(--text-secondary); padding-top: 20px; font-style: italic;';
+            msg.textContent = 'No meal data yet. Start logging meals to see your nutrition trends!';
+            canvas.parentElement.appendChild(msg);
+        }
+    } else {
+        // Remove no-data message if it exists
+        const existingMsg = canvas.parentElement.querySelector('.no-data-message');
+        if (existingMsg) existingMsg.remove();
+    }
+    
     const isLightMode = document.body.classList.contains('light-mode');
     const textColor = isLightMode ? '#2c3e50' : '#ffffff';
     const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
     const tickColor = isLightMode ? '#5a6c7d' : '#b0b0b0';
     
-    window.nutritionChartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-            labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
-            datasets: [
-                {
-                    label: 'Calories',
-                    data: nutritionByDay.map(n => n.calories),
-                    backgroundColor: 'rgba(255, 107, 107, 0.6)',
-                    borderColor: '#ff6b6b',
-                    borderWidth: 2
-                },
-                {
-                    label: 'Protein (g)',
-                    data: nutritionByDay.map(n => n.protein),
-                    backgroundColor: 'rgba(74, 144, 226, 0.6)',
-                    borderColor: '#4a90e2',
-                    borderWidth: 2
-                },
-                {
-                    label: 'Carbs (g)',
-                    data: nutritionByDay.map(n => n.carbs),
-                    backgroundColor: 'rgba(255, 215, 0, 0.6)',
-                    borderColor: '#ffd700',
-                    borderWidth: 2
-                }
-            ]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            aspectRatio: 2,
-            plugins: {
-                legend: {
-                    display: true,
-                    labels: {
-                        color: textColor
+    try {
+        window.nutritionChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                datasets: [
+                    {
+                        label: 'Calories',
+                        data: nutritionByDay.map(n => n.calories),
+                        backgroundColor: 'rgba(255, 107, 107, 0.6)',
+                        borderColor: '#ff6b6b',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Protein (g)',
+                        data: nutritionByDay.map(n => n.protein),
+                        backgroundColor: 'rgba(74, 144, 226, 0.6)',
+                        borderColor: '#4a90e2',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Carbs (g)',
+                        data: nutritionByDay.map(n => n.carbs),
+                        backgroundColor: 'rgba(255, 215, 0, 0.6)',
+                        borderColor: '#ffd700',
+                        borderWidth: 2
                     }
-                }
+                ]
             },
-            scales: {
-                y: {
-                    beginAtZero: true,
-                    ticks: {
-                        color: tickColor
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                aspectRatio: 2,
+                animation: {
+                    duration: 1000,
+                    easing: 'easeInOutQuart'
+                },
+                plugins: {
+                    legend: {
+                        display: true,
+                        position: 'top',
+                        labels: {
+                            color: textColor,
+                            font: {
+                                size: 12
+                            }
+                        }
                     },
-                    grid: {
-                        color: gridColor
+                    tooltip: {
+                        enabled: true,
+                        backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                        titleColor: '#ffffff',
+                        bodyColor: '#ffffff',
+                        borderColor: '#4a90e2',
+                        borderWidth: 1
                     }
                 },
-                x: {
-                    ticks: {
-                        color: tickColor
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            color: tickColor,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: gridColor,
+                            lineWidth: 1
+                        }
                     },
-                    grid: {
-                        color: gridColor
+                    x: {
+                        ticks: {
+                            color: tickColor,
+                            font: {
+                                size: 11
+                            }
+                        },
+                        grid: {
+                            color: gridColor,
+                            lineWidth: 1
+                        }
                     }
                 }
             }
-        }
-    });
+        });
+        
+        console.log('✅ Nutrition chart rendered successfully');
+    } catch (error) {
+        console.error('❌ Error rendering nutrition chart:', error);
+        canvas.parentElement.innerHTML += '<p style="text-align: center; color: var(--accent-color); padding-top: 20px;">Error loading chart. Please refresh the page.</p>';
+    }
 }
 
 // Weight Chart
