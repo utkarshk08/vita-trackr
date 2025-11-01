@@ -1319,7 +1319,7 @@ function clearAutoFill() {
 }
 
 // Meal Logging
-function logMeal() {
+async function logMeal() {
     const mealType = document.getElementById('mealType').value;
     const mealDate = document.getElementById('mealDate').value;
     const mealName = document.getElementById('mealName').value;
@@ -1337,7 +1337,6 @@ function logMeal() {
     const quantityType = document.getElementById('quantityType').value;
     
     const meal = {
-        id: Date.now(),
         type: mealType,
         name: mealName,
         date: mealDate,
@@ -1346,26 +1345,82 @@ function logMeal() {
         calories: calories,
         protein: protein,
         carbs: carbs,
-        fats: fats,
-        timestamp: new Date().toISOString()
+        fats: fats
     };
     
-    meals.push(meal);
-    localStorage.setItem('meals', JSON.stringify(meals));
-    
-    displayMeals();
-    updateOverview();
-    
-    // Reset form
-    document.getElementById('mealName').value = '';
-    document.getElementById('mealCalories').value = '';
-    document.getElementById('mealProtein').value = '';
-    document.getElementById('mealCarbs').value = '';
-    document.getElementById('mealFats').value = '';
-    document.getElementById('mealQuantity').value = 1;
-    clearAutoFill();
-    
-    alert('Meal logged successfully!');
+    try {
+        // Check if user is in demo mode (demo userId)
+        const currentUserId = localStorage.getItem('currentUserId');
+        const isDemoUser = currentUserId && currentUserId.startsWith('demo-');
+        
+        if (isDemoUser) {
+            // Save to localStorage for demo users
+            const savedMeal = {
+                ...meal,
+                id: 'meal-' + Date.now(),
+                _id: 'meal-' + Date.now()
+            };
+            meals.push(savedMeal);
+            localStorage.setItem('meals', JSON.stringify(meals));
+            
+            displayMeals();
+            updateOverview();
+            
+            // Reset form
+            document.getElementById('mealName').value = '';
+            document.getElementById('mealCalories').value = '';
+            document.getElementById('mealProtein').value = '';
+            document.getElementById('mealCarbs').value = '';
+            document.getElementById('mealFats').value = '';
+            document.getElementById('mealQuantity').value = 1;
+            clearAutoFill();
+            
+            alert('Meal logged successfully! (Demo mode)');
+        } else {
+            // Save to API for real users
+            const savedMeal = await createMeal(meal);
+            savedMeal.id = savedMeal._id;
+            meals.push(savedMeal);
+            
+            displayMeals();
+            updateOverview();
+            
+            // Reset form
+            document.getElementById('mealName').value = '';
+            document.getElementById('mealCalories').value = '';
+            document.getElementById('mealProtein').value = '';
+            document.getElementById('mealCarbs').value = '';
+            document.getElementById('mealFats').value = '';
+            document.getElementById('mealQuantity').value = 1;
+            clearAutoFill();
+            
+            alert('Meal logged successfully!');
+        }
+    } catch (error) {
+        // Fallback to localStorage if API fails
+        console.error('API error, saving to localStorage:', error);
+        const savedMeal = {
+            ...meal,
+            id: 'meal-' + Date.now(),
+            _id: 'meal-' + Date.now()
+        };
+        meals.push(savedMeal);
+        localStorage.setItem('meals', JSON.stringify(meals));
+        
+        displayMeals();
+        updateOverview();
+        
+        // Reset form
+        document.getElementById('mealName').value = '';
+        document.getElementById('mealCalories').value = '';
+        document.getElementById('mealProtein').value = '';
+        document.getElementById('mealCarbs').value = '';
+        document.getElementById('mealFats').value = '';
+        document.getElementById('mealQuantity').value = 1;
+        clearAutoFill();
+        
+        alert('Meal logged successfully! (Saved locally)');
+    }
 }
 
 function displayMeals() {
@@ -2025,6 +2080,8 @@ function updateActivityChart() {
     // Check if Chart.js is loaded
     if (typeof Chart === 'undefined') {
         console.error('Chart.js not loaded!');
+        // Show fallback message
+        canvas.parentElement.innerHTML += '<p style="text-align: center; color: var(--text-secondary); padding-top: 20px;">Charts loading... Please refresh if this persists.</p>';
         return;
     }
     
@@ -2121,6 +2178,8 @@ function updateNutritionChart() {
     // Check if Chart.js is loaded
     if (typeof Chart === 'undefined') {
         console.error('Chart.js not loaded!');
+        // Show fallback message
+        canvas.parentElement.innerHTML += '<p style="text-align: center; color: var(--text-secondary); padding-top: 20px;">Charts loading... Please refresh if this persists.</p>';
         return;
     }
     
