@@ -489,9 +489,16 @@ function logout() {
         meals = [];
         weights = [];
         
-        // Hide app and show login
-        document.getElementById('loginScreen').style.display = 'block';
-        document.getElementById('appScreen').style.display = 'none';
+        // Hide app and show login with proper reset
+        const loginScreen = document.getElementById('loginScreen');
+        const appScreen = document.getElementById('appScreen');
+        
+        appScreen.style.display = 'none';
+        loginScreen.style.display = 'flex';  // Use flex to maintain centering
+        
+        // Reset any form display states
+        document.getElementById('loginFormContainer').style.display = 'block';
+        document.getElementById('signupFormContainer').style.display = 'none';
         
         alert('Logged out successfully!');
     }
