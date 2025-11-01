@@ -1125,6 +1125,7 @@ async function logActivity() {
             // Add id and timestamp for local use
             savedActivity.id = savedActivity._id;
             activities.push(savedActivity);
+            localStorage.setItem('activities', JSON.stringify(activities));
             
             displayActivities();
             updateOverview();
@@ -1391,6 +1392,7 @@ async function logMeal() {
             const savedMeal = await createMeal(meal);
             savedMeal.id = savedMeal._id;
             meals.push(savedMeal);
+            localStorage.setItem('meals', JSON.stringify(meals));
             
             displayMeals();
             updateOverview();
@@ -1843,7 +1845,7 @@ function updateThemeIcon() {
 // ==================== PROGRESS, ACHIEVEMENTS & CHARTS ====================
 
 // Weight Logging
-function logWeight() {
+async function logWeight() {
     const weight = parseFloat(document.getElementById('newWeight').value);
     const date = document.getElementById('weightDate').value;
     
@@ -1853,23 +1855,71 @@ function logWeight() {
     }
     
     const weightEntry = {
-        id: Date.now(),
         weight: weight,
-        date: date,
-        timestamp: new Date().toISOString()
+        date: date
     };
     
-    weights.push(weightEntry);
-    localStorage.setItem('weights', JSON.stringify(weights));
-    
-    // Reset form
-    document.getElementById('newWeight').value = '';
-    
-    alert('Weight logged successfully!');
-    
-    // Update progress page if visible
-    if (document.getElementById('progress').classList.contains('active')) {
-        updateProgressPage();
+    try {
+        // Check if user is in demo mode (demo userId)
+        const currentUserId = localStorage.getItem('currentUserId');
+        const isDemoUser = currentUserId && currentUserId.startsWith('demo-');
+        
+        if (isDemoUser) {
+            // Save to localStorage for demo users
+            const savedWeight = {
+                ...weightEntry,
+                id: 'weight-' + Date.now(),
+                _id: 'weight-' + Date.now()
+            };
+            weights.push(savedWeight);
+            localStorage.setItem('weights', JSON.stringify(weights));
+            
+            // Reset form
+            document.getElementById('newWeight').value = '';
+            
+            alert('Weight logged successfully! (Demo mode)');
+            
+            // Update progress page if visible
+            if (document.getElementById('progress').classList.contains('active')) {
+                updateProgressPage();
+            }
+        } else {
+            // Save to API for real users
+            const savedWeight = await createWeight(weightEntry);
+            savedWeight.id = savedWeight._id;
+            weights.push(savedWeight);
+            localStorage.setItem('weights', JSON.stringify(weights));
+            
+            // Reset form
+            document.getElementById('newWeight').value = '';
+            
+            alert('Weight logged successfully!');
+            
+            // Update progress page if visible
+            if (document.getElementById('progress').classList.contains('active')) {
+                updateProgressPage();
+            }
+        }
+    } catch (error) {
+        // Fallback to localStorage if API fails
+        console.error('API error, saving to localStorage:', error);
+        const savedWeight = {
+            ...weightEntry,
+            id: 'weight-' + Date.now(),
+            _id: 'weight-' + Date.now()
+        };
+        weights.push(savedWeight);
+        localStorage.setItem('weights', JSON.stringify(weights));
+        
+        // Reset form
+        document.getElementById('newWeight').value = '';
+        
+        alert('Weight logged successfully! (Saved locally)');
+        
+        // Update progress page if visible
+        if (document.getElementById('progress').classList.contains('active')) {
+            updateProgressPage();
+        }
     }
 }
 
