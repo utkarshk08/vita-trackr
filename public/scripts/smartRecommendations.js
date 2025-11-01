@@ -71,14 +71,40 @@ function getRecommendedRecipes(userProfile, availableIngredients = []) {
                 reasons.push('Nutritional goals aligned');
             }
 
-            // 8. Activity-based Protein Needs (5 points)
-            const recentCalories = getRecentActivityCalories();
-            if (recentCalories > 1500 && recipe.tags.includes('high-protein')) {
-                score += 5;
-                reasons.push('High protein for recovery');
+            // 8. Previous Day Activity Analysis (15 points)
+            const previousDayActivity = analyzePreviousDayActivity();
+            if (previousDayActivity.highCalories && recipe.tags.includes('high-protein')) {
+                score += 15;
+                reasons.push('High protein for your active yesterday');
+            }
+            if (previousDayActivity.lightActivity && recipe.tags.includes('light')) {
+                score += 10;
+                reasons.push('Light meal for your less active day');
             }
 
-            // 9. Time-based preferences (bonus)
+            // 9. Previous Day Diet Analysis (20 points) - Balance nutrients
+            const previousDayNutrition = analyzePreviousDayNutrition();
+            if (previousDayNutrition.needsProtein && recipe.tags.includes('high-protein')) {
+                score += 20;
+                reasons.push('Protein boost - you had less protein yesterday');
+            }
+            if (previousDayNutrition.needsFiber && recipe.tags.includes('high-fiber')) {
+                score += 15;
+                reasons.push('Fiber boost - balance your nutrition');
+            }
+            if (previousDayNutrition.highCarbs && recipe.tags.includes('low-carb')) {
+                score += 10;
+                reasons.push('Lower carbs to balance yesterday');
+            }
+
+            // 10. Goal-based Recommendations (25 points for primary goal)
+            const goalScore = calculateGoalBasedScore(recipe, userProfile);
+            score += goalScore;
+            if (goalScore > 0) {
+                reasons.push(`${userProfile.goalType} goal aligned`);
+            }
+
+            // 11. Time-based preferences (bonus)
             const currentHour = new Date().getHours();
             if ((currentHour >= 6 && currentHour < 10) && recipe.tags.includes('breakfast')) {
                 score += 10;
@@ -152,18 +178,19 @@ function checkNutritionalAlignment(recipe, userProfile) {
 
     const recipeTags = recipe.tags || [];
     
+    // Fixed goal type values to match backend schema
     switch (userProfile.goalType) {
-        case 'weightLoss':
+        case 'weight-loss':
             if (recipeTags.includes('low-carb') || recipeTags.includes('low-fat')) {
                 score += 10;
             }
             break;
-        case 'weightGain':
+        case 'weight-gain':
             if (recipeTags.includes('high-protein') || recipeTags.includes('balanced')) {
                 score += 10;
             }
             break;
-        case 'muscleGain':
+        case 'muscle-gain':
             if (recipeTags.includes('high-protein')) {
                 score += 10;
             }
@@ -271,5 +298,87 @@ function getRecipeDetails(recipeId) {
     return getRecipesFromDB().then(recipes => {
         return recipes.find(r => r.id === recipeId);
     });
+}
+
+// Analyze previous day's activity
+function analyzePreviousDayActivity() {
+    const activities = JSON.parse(localStorage.getItem('activities')) || [];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    const yesterdayActivities = activities.filter(act => act.date === yesterdayStr);
+    const totalCalories = yesterdayActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
+    const totalDuration = yesterdayActivities.reduce((sum, act) => sum + (act.duration || 0), 0);
+    
+    return {
+        highCalories: totalCalories > 300,  // More than 300 calories burned
+        lightActivity: totalCalories < 100,  // Less than 100 calories
+        totalCalories: totalCalories,
+        totalDuration: totalDuration
+    };
+}
+
+// Analyze previous day's nutrition
+function analyzePreviousDayNutrition() {
+    const meals = JSON.parse(localStorage.getItem('meals')) || [];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    const yesterdayMeals = meals.filter(meal => meal.date === yesterdayStr);
+    
+    const totalProtein = yesterdayMeals.reduce((sum, meal) => sum + (parseFloat(meal.protein) || 0), 0);
+    const totalCarbs = yesterdayMeals.reduce((sum, meal) => sum + (parseFloat(meal.carbs) || 0), 0);
+    const totalCalories = yesterdayMeals.reduce((sum, meal) => sum + (parseFloat(meal.calories) || 0), 0);
+    
+    // Analyze nutritional gaps
+    const avgProtein = totalProtein / Math.max(1, yesterdayMeals.length);
+    const avgCarbs = totalCarbs / Math.max(1, yesterdayMeals.length);
+    
+    return {
+        needsProtein: totalProtein < 50 || avgProtein < 15,  // Less than 50g total or 15g per meal
+        needsFiber: true,  // Always good to have more fiber
+        highCarbs: totalCarbs > 200 || avgCarbs > 50,  // More than 200g total or 50g per meal
+        totalCalories: totalCalories,
+        totalProtein: totalProtein,
+        totalCarbs: totalCarbs
+    };
+}
+
+// Calculate goal-based score
+function calculateGoalBasedScore(recipe, userProfile) {
+    if (!userProfile.goalType) return 0;
+    
+    const recipeTags = recipe.tags || [];
+    let score = 0;
+    
+    switch (userProfile.goalType) {
+        case 'weight-loss':
+            // For weight loss: prefer low-carb, low-fat, high-protein
+            if (recipeTags.includes('low-carb')) score += 15;
+            if (recipeTags.includes('low-fat')) score += 10;
+            if (recipeTags.includes('high-protein')) score += 10;
+            if (recipeTags.includes('low-calorie')) score += 10;
+            break;
+        case 'weight-gain':
+            // For weight gain: prefer high-calorie, balanced, protein
+            if (recipeTags.includes('balanced')) score += 15;
+            if (recipeTags.includes('high-protein')) score += 10;
+            if (recipeTags.includes('calorie-rich')) score += 15;
+            break;
+        case 'muscle-gain':
+            // For muscle gain: heavily favor high-protein
+            if (recipeTags.includes('high-protein')) score += 25;
+            if (recipeTags.includes('balanced')) score += 5;
+            break;
+        case 'maintain':
+            // For maintenance: prefer balanced nutrition
+            if (recipeTags.includes('balanced')) score += 20;
+            if (recipeTags.includes('high-fiber')) score += 10;
+            break;
+    }
+    
+    return score;
 }
 
