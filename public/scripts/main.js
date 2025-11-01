@@ -1996,10 +1996,22 @@ function updateCharts() {
 // Activity Chart
 function updateActivityChart() {
     const canvas = document.getElementById('activityChart');
-    if (!canvas) return;
+    if (!canvas) {
+        console.log('Activity chart canvas not found');
+        return;
+    }
     
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+        console.log('Could not get canvas context');
+        return;
+    }
+    
+    // Check if Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js not loaded!');
+        return;
+    }
     
     // Destroy existing chart if it exists
     if (window.activityChartInstance) {
@@ -2016,6 +2028,12 @@ function updateActivityChart() {
     const activityCaloriesByDay = last7Days.map(date => {
         const dayActivities = activities.filter(act => act.date === date);
         return dayActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
+    });
+    
+    console.log('Activity chart data:', {
+        activities: activities.length,
+        last7Days,
+        activityCaloriesByDay
     });
     
     const isLightMode = document.body.classList.contains('light-mode');
@@ -2074,10 +2092,22 @@ function updateActivityChart() {
 // Nutrition Chart
 function updateNutritionChart() {
     const canvas = document.getElementById('nutritionChart');
-    if (!canvas) return;
+    if (!canvas) {
+        console.log('Nutrition chart canvas not found');
+        return;
+    }
     
     const ctx = canvas.getContext('2d');
-    if (!ctx) return;
+    if (!ctx) {
+        console.log('Could not get canvas context');
+        return;
+    }
+    
+    // Check if Chart.js is loaded
+    if (typeof Chart === 'undefined') {
+        console.error('Chart.js not loaded!');
+        return;
+    }
     
     if (window.nutritionChartInstance) {
         window.nutritionChartInstance.destroy();
@@ -2096,6 +2126,12 @@ function updateNutritionChart() {
             protein: dayMeals.reduce((sum, meal) => sum + (meal.protein || 0), 0),
             carbs: dayMeals.reduce((sum, meal) => sum + (meal.carbs || 0), 0)
         };
+    });
+    
+    console.log('Nutrition chart data:', {
+        meals: meals.length,
+        last7Days,
+        nutritionByDay
     });
     
     const isLightMode = document.body.classList.contains('light-mode');
