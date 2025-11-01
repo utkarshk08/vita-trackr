@@ -1066,6 +1066,622 @@ const recipeDatabase = [
         },
         prepTime: '30 min',
         cookTime: '120 min'
+    },
+    // More Diverse Dishes
+    {
+        title: 'Aloo Bhindi (Potato Okra)',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'vegan', 'high-fiber', 'gluten-free', 'budget-friendly'],
+        healthCondition: ['low-fat', 'high-fiber'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['potatoes', 'okra', 'onions', 'tomatoes', 'ginger', 'garlic', 'turmeric', 'spices'],
+        instructions: [
+            'Cut okra and potatoes into pieces',
+            'Heat oil and fry okra until crispy',
+            'Remove and set aside',
+            'Sauté onions until golden',
+            'Add ginger-garlic paste',
+            'Add tomatoes and spices',
+            'Add potatoes and cook until tender',
+            'Add fried okra and mix gently',
+            'Garnish with coriander leaves'
+        ],
+        nutrition: {
+            'Calories': '135',
+            'Protein': '4g',
+            'Carbs': '24g',
+            'Fiber': '8g',
+            'Fat': '4g'
+        },
+        prepTime: '20 min',
+        cookTime: '30 min'
+    },
+    {
+        title: 'Gobi Manchurian (Cauliflower Manchurian)',
+        cuisine: 'Indo-Chinese',
+        tags: ['vegetarian', 'vegan', 'spicy', 'crispy', 'appetizer'],
+        healthCondition: ['moderate-calorie'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['cauliflower', 'flour', 'cornstarch', 'onions', 'bell peppers', 'garlic', 'ginger', 'soy sauce', 'vinegar'],
+        instructions: [
+            'Cut cauliflower into florets',
+            'Make batter with flour and cornstarch',
+            'Dip florets and deep fry until golden',
+            'Heat oil and sauté garlic and ginger',
+            'Add onions and bell peppers',
+            'Add sauces and spices',
+            'Toss fried cauliflower in sauce',
+            'Garnish with green onions'
+        ],
+        nutrition: {
+            'Calories': '285',
+            'Protein': '6g',
+            'Carbs': '38g',
+            'Fat': '12g',
+            'Fiber': '4g'
+        },
+        prepTime: '25 min',
+        cookTime: '20 min'
+    },
+    {
+        title: 'Vegetable Fried Rice',
+        cuisine: 'Chinese',
+        tags: ['vegetarian', 'vegan', 'high-carb', 'quick', 'balanced'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['cooked rice', 'vegetables', 'soy sauce', 'sesame oil', 'garlic', 'ginger', 'eggs (optional)'],
+        instructions: [
+            'Use day-old cooked rice',
+            'Heat oil in wok',
+            'Sauté garlic and ginger',
+            'Add vegetables and stir-fry',
+            'Add rice and break up clumps',
+            'Add soy sauce and sesame oil',
+            'Add eggs if using and scramble',
+            'Toss well and serve hot'
+        ],
+        nutrition: {
+            'Calories': '240',
+            'Protein': '6g',
+            'Carbs': '45g',
+            'Fat': '5g',
+            'Fiber': '3g'
+        },
+        prepTime: '10 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Chicken Fried Rice',
+        cuisine: 'Chinese',
+        tags: ['high-protein', 'balanced', 'quick'],
+        healthCondition: ['high-protein', 'balanced'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['cooked rice', 'chicken', 'vegetables', 'soy sauce', 'eggs', 'garlic', 'ginger', 'sesame oil'],
+        instructions: [
+            'Use day-old cooked rice',
+            'Cook chicken and set aside',
+            'Heat oil and scramble eggs',
+            'Add garlic and ginger',
+            'Add vegetables and stir-fry',
+            'Add rice and chicken',
+            'Add soy sauce and toss',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '310',
+            'Protein': '22g',
+            'Carbs': '42g',
+            'Fat': '7g',
+            'Fiber': '2g'
+        },
+        prepTime: '15 min',
+        cookTime: '20 min'
+    },
+    {
+        title: 'Hakka Noodles',
+        cuisine: 'Chinese',
+        tags: ['vegetarian', 'high-carb', 'quick', 'balanced'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['hakka noodles', 'vegetables', 'soy sauce', 'vinegar', 'chili sauce', 'garlic', 'ginger'],
+        instructions: [
+            'Boil noodles until al dente',
+            'Drain and rinse with cold water',
+            'Heat oil in wok',
+            'Sauté garlic and ginger',
+            'Add vegetables and stir-fry',
+            'Add noodles and toss',
+            'Add sauces and mix well',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '265',
+            'Protein': '8g',
+            'Carbs': '48g',
+            'Fat': '6g',
+            'Fiber': '4g'
+        },
+        prepTime: '10 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Chicken Tikka',
+        cuisine: 'Indian',
+        tags: ['high-protein', 'low-carb', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-carb'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['chicken breast', 'yogurt', 'ginger', 'garlic', 'lemon', 'garam masala', 'cumin', 'paprika'],
+        instructions: [
+            'Cut chicken into cubes',
+            'Mix yogurt with ginger-garlic paste',
+            'Add spices and lemon juice',
+            'Marinate for 4-6 hours',
+            'Skewer chicken pieces',
+            'Grill or bake until cooked',
+            'Baste with butter',
+            'Serve with mint chutney'
+        ],
+        nutrition: {
+            'Calories': '245',
+            'Protein': '28g',
+            'Carbs': '6g',
+            'Fat': '10g',
+            'Fiber': '1g'
+        },
+        prepTime: '20 min',
+        cookTime: '20 min'
+    },
+    {
+        title: 'Chinese Bhel',
+        cuisine: 'Indo-Chinese',
+        tags: ['vegetarian', 'vegan', 'crispy', 'appetizer', 'quick'],
+        healthCondition: ['moderate-calorie'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['noodles', 'cabbage', 'onions', 'bell peppers', 'carrots', 'chili sauce', 'vinegar', 'sesame seeds'],
+        instructions: [
+            'Deep fry noodles until crispy',
+            'Shred vegetables finely',
+            'Mix vegetables with sauces',
+            'Add chili sauce and vinegar',
+            'Toss with crispy noodles',
+            'Garnish with green onions',
+            'Add sesame seeds',
+            'Serve immediately'
+        ],
+        nutrition: {
+            'Calories': '220',
+            'Protein': '5g',
+            'Carbs': '35g',
+            'Fat': '8g',
+            'Fiber': '4g'
+        },
+        prepTime: '15 min',
+        cookTime: '10 min'
+    },
+    {
+        title: 'Sushi Rolls',
+        cuisine: 'Japanese',
+        tags: ['pescatarian', 'low-fat', 'gluten-free', 'fresh'],
+        healthCondition: ['low-fat', 'omega-3'],
+        dietaryPreference: ['pescatarian'],
+        ingredients: ['sushi rice', 'nori seaweed', 'fresh fish', 'vegetables', 'wasabi', 'pickled ginger', 'soy sauce'],
+        instructions: [
+            'Cook sushi rice with vinegar',
+            'Lay nori sheet on bamboo mat',
+            'Spread rice evenly',
+            'Add fish and vegetables',
+            'Roll tightly using mat',
+            'Slice into pieces',
+            'Serve with wasabi and ginger',
+            'Dip in soy sauce'
+        ],
+        nutrition: {
+            'Calories': '200',
+            'Protein': '8g',
+            'Carbs': '35g',
+            'Fat': '3g',
+            'Omega-3': '0.8g'
+        },
+        prepTime: '40 min',
+        cookTime: '10 min'
+    },
+    {
+        title: 'Caesar Salad',
+        cuisine: 'Western',
+        tags: ['vegetarian', 'high-protein', 'low-carb', 'fresh'],
+        healthCondition: ['low-carb', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['romaine lettuce', 'parmesan cheese', 'croutons', 'caesar dressing', 'lemon', 'anchovies (optional)'],
+        instructions: [
+            'Chop romaine lettuce',
+            'Make caesar dressing',
+            'Grate parmesan cheese',
+            'Prepare croutons',
+            'Toss lettuce with dressing',
+            'Add croutons and cheese',
+            'Squeeze lemon juice',
+            'Serve immediately'
+        ],
+        nutrition: {
+            'Calories': '220',
+            'Protein': '10g',
+            'Carbs': '12g',
+            'Fat': '16g',
+            'Fiber': '3g'
+        },
+        prepTime: '15 min',
+        cookTime: '0 min'
+    },
+    {
+        title: 'Mediterranean Quinoa Salad',
+        cuisine: 'Mediterranean',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'high-fiber', 'gluten-free'],
+        healthCondition: ['high-protein', 'high-fiber', 'balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['quinoa', 'cucumber', 'cherry tomatoes', 'olives', 'feta cheese', 'olive oil', 'lemon', 'herbs'],
+        instructions: [
+            'Cook quinoa and cool',
+            'Dice cucumber and tomatoes',
+            'Mix with olives',
+            'Add crumbled feta',
+            'Drizzle olive oil and lemon',
+            'Add fresh herbs',
+            'Toss gently',
+            'Serve chilled'
+        ],
+        nutrition: {
+            'Calories': '290',
+            'Protein': '12g',
+            'Carbs': '38g',
+            'Fat': '12g',
+            'Fiber': '6g'
+        },
+        prepTime: '20 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Green Salad with Vinaigrette',
+        cuisine: 'Western',
+        tags: ['vegetarian', 'vegan', 'low-calorie', 'gluten-free', 'quick'],
+        healthCondition: ['low-calorie', 'low-fat', 'fresh'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['mixed greens', 'cherry tomatoes', 'cucumber', 'carrots', 'olive oil', 'vinegar', 'mustard', 'honey'],
+        instructions: [
+            'Wash and chop greens',
+            'Slice tomatoes and cucumber',
+            'Shred carrots',
+            'Make vinaigrette dressing',
+            'Toss vegetables in dressing',
+            'Serve fresh'
+        ],
+        nutrition: {
+            'Calories': '85',
+            'Protein': '3g',
+            'Carbs': '10g',
+            'Fat': '4g',
+            'Fiber': '4g'
+        },
+        prepTime: '10 min',
+        cookTime: '0 min'
+    },
+    {
+        title: 'Chilli Paneer',
+        cuisine: 'Indo-Chinese',
+        tags: ['vegetarian', 'high-protein', 'spicy', 'crispy'],
+        healthCondition: ['high-protein', 'balanced'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['paneer', 'bell peppers', 'onions', 'ginger', 'garlic', 'soy sauce', 'chili sauce', 'cornstarch'],
+        instructions: [
+            'Cube paneer and coat with cornstarch',
+            'Deep fry until golden',
+            'Heat oil and sauté garlic and ginger',
+            'Add onions and bell peppers',
+            'Add sauces and spices',
+            'Toss fried paneer in sauce',
+            'Garnish with green onions'
+        ],
+        nutrition: {
+            'Calories': '310',
+            'Protein': '18g',
+            'Carbs': '22g',
+            'Fat': '16g',
+            'Fiber': '3g'
+        },
+        prepTime: '20 min',
+        cookTime: '20 min'
+    },
+    {
+        title: 'Paneer 65',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'high-protein', 'spicy', 'crispy', 'appetizer'],
+        healthCondition: ['high-protein', 'balanced'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['paneer', 'yogurt', 'red chili powder', 'garam masala', 'ginger-garlic paste', 'cornstarch', 'curry leaves'],
+        instructions: [
+            'Cut paneer into cubes',
+            'Marinate in yogurt and spices',
+            'Covern paneer with cornstarch',
+            'Deep fry until golden and crispy',
+            'Heat oil and temper curry leaves',
+            'Add fried paneer and toss',
+            'Garnish with fresh coriander'
+        ],
+        nutrition: {
+            'Calories': '285',
+            'Protein': '16g',
+            'Carbs': '18g',
+            'Fat': '16g',
+            'Fiber': '1g'
+        },
+        prepTime: '25 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Tandoori Chicken',
+        cuisine: 'Indian',
+        tags: ['high-protein', 'low-carb', 'spicy', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-carb'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['chicken', 'yogurt', 'lemon', 'ginger-garlic paste', 'tandoori masala', 'turmeric', 'red chili', 'butter'],
+        instructions: [
+            'Cut chicken into pieces',
+            'Make cuts on chicken',
+            'Mix yogurt with spices and lemon',
+            'Marinate chicken overnight',
+            'Skewer chicken pieces',
+            'Grill or bake until cooked',
+            'Baste with butter',
+            'Serve with onion rings and lemon'
+        ],
+        nutrition: {
+            'Calories': '265',
+            'Protein': '32g',
+            'Carbs': '4g',
+            'Fat': '12g',
+            'Fiber': '0g'
+        },
+        prepTime: '30 min',
+        cookTime: '25 min'
+    },
+    {
+        title: 'Chicken Spring Rolls',
+        cuisine: 'Chinese',
+        tags: ['high-protein', 'crispy', 'appetizer'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['spring roll wrappers', 'chicken', 'cabbage', 'carrots', 'bean sprouts', 'soy sauce', 'garlic'],
+        instructions: [
+            'Cook chicken and shred',
+            'Shred vegetables',
+            'Heat oil and sauté vegetables',
+            'Add chicken and season',
+            'Cool filling',
+            'Wrap in spring roll wrappers',
+            'Deep fry until golden',
+            'Serve with sweet chili sauce'
+        ],
+        nutrition: {
+            'Calories': '195',
+            'Protein': '10g',
+            'Carbs': '22g',
+            'Fat': '7g',
+            'Fiber': '2g'
+        },
+        prepTime: '30 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Vegetable Spring Rolls',
+        cuisine: 'Chinese',
+        tags: ['vegetarian', 'vegan', 'crispy', 'appetizer'],
+        healthCondition: ['low-calorie', 'balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['spring roll wrappers', 'cabbage', 'carrots', 'bean sprouts', 'mushrooms', 'ginger', 'soy sauce'],
+        instructions: [
+            'Shred all vegetables',
+            'Heat oil and sauté vegetables',
+            'Add seasonings',
+            'Cool filling completely',
+            'Wrap in spring roll wrappers',
+            'Deep fry until golden and crispy',
+            'Serve with dipping sauce'
+        ],
+        nutrition: {
+            'Calories': '145',
+            'Protein': '4g',
+            'Carbs': '20g',
+            'Fat': '6g',
+            'Fiber': '3g'
+        },
+        prepTime: '25 min',
+        cookTime: '12 min'
+    },
+    {
+        title: 'Chicken Momos',
+        cuisine: 'Chinese/Himalayan',
+        tags: ['high-protein', 'balanced', 'steamed'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['all-purpose flour', 'chicken', 'cabbage', 'ginger', 'garlic', 'soy sauce', 'pepper'],
+        instructions: [
+            'Make dough and rest',
+            'Mince chicken with vegetables',
+            'Season with spices',
+            'Roll small circles of dough',
+            'Fill with chicken mixture',
+            'Pleat and seal momos',
+            'Steam for 10-12 minutes',
+            'Serve with spicy chutney'
+        ],
+        nutrition: {
+            'Calories': '240',
+            'Protein': '16g',
+            'Carbs': '32g',
+            'Fat': '6g',
+            'Fiber': '2g'
+        },
+        prepTime: '40 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Veg Momos',
+        cuisine: 'Chinese/Himalayan',
+        tags: ['vegetarian', 'vegan', 'balanced', 'steamed'],
+        healthCondition: ['balanced', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['all-purpose flour', 'cabbage', 'carrots', 'ginger', 'garlic', 'soy sauce', 'pepper'],
+        instructions: [
+            'Make dough and rest',
+            'Shred vegetables',
+            'Season with spices',
+            'Roll dough into circles',
+            'Fill with vegetable mixture',
+            'Pleat and seal',
+            'Steam until cooked',
+            'Serve with red chutney'
+        ],
+        nutrition: {
+            'Calories': '180',
+            'Protein': '5g',
+            'Carbs': '34g',
+            'Fat': '3g',
+            'Fiber': '3g'
+        },
+        prepTime: '35 min',
+        cookTime: '12 min'
+    },
+    {
+        title: 'Classic Burger',
+        cuisine: 'Western',
+        tags: ['high-protein', 'balanced', 'comfort-food'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['burger buns', 'beef/chicken patty', 'lettuce', 'tomato', 'onion', 'cheese', 'pickles', 'special sauce'],
+        instructions: [
+            'Season and grill patty',
+            'Toast burger buns',
+            'Spread sauce on bottom bun',
+            'Add patty and cheese',
+            'Add fresh vegetables',
+            'Top with other half',
+            'Secure with toothpick',
+            'Serve with fries'
+        ],
+        nutrition: {
+            'Calories': '420',
+            'Protein': '28g',
+            'Carbs': '35g',
+            'Fat': '18g',
+            'Fiber': '3g'
+        },
+        prepTime: '20 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Veggie Burger',
+        cuisine: 'Western',
+        tags: ['vegetarian', 'high-protein', 'balanced'],
+        healthCondition: ['balanced', 'high-protein'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['burger bun', 'veggie patty', 'lettuce', 'tomato', 'onion', 'cheese', 'mayo', 'pickles'],
+        instructions: [
+            'Grill or pan-fry veggie patty',
+            'Toast burger buns',
+            'Spread mayo on bottom bun',
+            'Add patty and cheese',
+            'Layer fresh vegetables',
+            'Add top bun',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '315',
+            'Protein': '16g',
+            'Carbs': '42g',
+            'Fat': '10g',
+            'Fiber': '8g'
+        },
+        prepTime: '15 min',
+        cookTime: '12 min'
+    },
+    {
+        title: 'Vada Pav',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'vegan', 'comfort-food', 'street-food'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['pav buns', 'potatoes', 'curry leaves', 'mustard seeds', 'turmeric', 'green chilies', 'ginger', 'garlic', 'chickpea flour'],
+        instructions: [
+            'Boil and mash potatoes',
+            'Temper mustard seeds and curry leaves',
+            'Add chilies, ginger, garlic',
+            'Mix with potatoes and spices',
+            'Shape into balls',
+            'Coat with chickpea flour batter',
+            'Deep fry until golden',
+            'Serve in pav with chutneys'
+        ],
+        nutrition: {
+            'Calories': '280',
+            'Protein': '8g',
+            'Carbs': '42g',
+            'Fat': '10g',
+            'Fiber': '5g'
+        },
+        prepTime: '30 min',
+        cookTime: '20 min'
+    },
+    {
+        title: 'Mint Chutney',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'vegan', 'low-calorie', 'gluten-free', 'condiment'],
+        healthCondition: ['low-calorie', 'digestive'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['mint leaves', 'coriander leaves', 'green chilies', 'ginger', 'lemon', 'cumin powder', 'salt'],
+        instructions: [
+            'Wash mint and coriander leaves',
+            'Chop green chilies',
+            'Add all ingredients to blender',
+            'Blend to smooth paste',
+            'Add water if needed',
+            'Adjust seasoning',
+            'Serve chilled'
+        ],
+        nutrition: {
+            'Calories': '15',
+            'Protein': '1g',
+            'Carbs': '3g',
+            'Fat': '0g',
+            'Fiber': '1g'
+        },
+        prepTime: '10 min',
+        cookTime: '0 min'
+    },
+    {
+        title: 'Dal Baati',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'high-carb', 'comfort-food', 'rich'],
+        healthCondition: ['high-carb', 'balanced'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['wheat flour', 'dal (pigeon pea)', 'onions', 'tomatoes', 'ginger', 'garlic', 'spices', 'ghee'],
+        instructions: [
+            'Make dough with wheat flour and ghee',
+            'Shape into balls (baati)',
+            'Bake or deep fry baatis',
+            'Cook dal with spices',
+            'Temper with garlic',
+            'Smash hot baatis',
+            'Pour dal over baatis',
+            'Drizzle ghee and serve'
+        ],
+        nutrition: {
+            'Calories': '485',
+            'Protein': '14g',
+            'Carbs': '68g',
+            'Fat': '18g',
+            'Fiber': '8g'
+        },
+        prepTime: '40 min',
+        cookTime: '60 min'
     }
 ];
 
