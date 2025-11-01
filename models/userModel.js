@@ -29,35 +29,35 @@ const userSchema = new mongoose.Schema({
     // Basic Details
     name: {
         type: String,
-        required: true,
+        required: false,
         trim: true
     },
     age: {
         type: Number,
-        required: true,
+        required: false,
         min: 1,
         max: 150
     },
     gender: {
         type: String,
-        required: true,
+        required: false,
         enum: ['male', 'female', 'other']
     },
     weight: {
         type: Number,
-        required: true,
+        required: false,
         min: 10,
         max: 500
     },
     height: {
         type: Number,
-        required: true,
+        required: false,
         min: 50,
         max: 300
     },
     bmi: {
         type: Number,
-        required: true
+        required: false
     },
     bodyFat: {
         type: Number,
@@ -80,7 +80,7 @@ const userSchema = new mongoose.Schema({
     },
     dietaryPreference: {
         type: String,
-        required: true,
+        required: false,
         enum: ['vegetarian', 'vegan', 'non-veg', 'pescatarian', 'omnivore'],
         default: 'omnivore'
     },
@@ -101,7 +101,7 @@ const userSchema = new mongoose.Schema({
     // Activity & Lifestyle
     occupation: {
         type: String,
-        required: true,
+        required: false,
         enum: ['sedentary', 'lightly-active', 'moderately-active', 'very-active', 'extremely-active']
     },
     exerciseFrequency: {
@@ -121,7 +121,7 @@ const userSchema = new mongoose.Schema({
     // Goal Tracking
     goalType: {
         type: String,
-        required: true,
+        required: false,
         enum: ['weight-loss', 'weight-gain', 'muscle-gain', 'maintain']
     },
     targetDuration: {
@@ -130,29 +130,29 @@ const userSchema = new mongoose.Schema({
     },
     caloricGoal: {
         type: Number,
-        required: true
+        required: false
     },
     macroSplit: {
         carbs: {
             type: Number,
-            required: true
+            required: false
         },
         protein: {
             type: Number,
-            required: true
+            required: false
         },
         fats: {
             type: Number,
-            required: true
+            required: false
         }
     },
     bmr: {
         type: Number,
-        required: true
+        required: false
     },
     tdee: {
         type: Number,
-        required: true
+        required: false
     },
     
     // Optional Enhancements
