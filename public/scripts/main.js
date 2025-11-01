@@ -255,15 +255,15 @@ function updateCaloricGoals() {
     let macroSplit;
     
     switch(goalType) {
-        case 'weightLoss':
+        case 'weight-loss':
             caloricGoal = Math.round(tdee - 500); // 500 cal deficit
             macroSplit = { carbs: 45, protein: 30, fats: 25 };
             break;
-        case 'weightGain':
+        case 'weight-gain':
             caloricGoal = Math.round(tdee + 500); // 500 cal surplus
             macroSplit = { carbs: 50, protein: 25, fats: 25 };
             break;
-        case 'muscleGain':
+        case 'muscle-gain':
             caloricGoal = Math.round(tdee + 300); // 300 cal surplus
             macroSplit = { carbs: 40, protein: 35, fats: 25 };
             break;
@@ -271,13 +271,17 @@ function updateCaloricGoals() {
             caloricGoal = Math.round(tdee);
             macroSplit = { carbs: 45, protein: 25, fats: 30 };
             break;
+        default:
+            return; // Invalid goal type
     }
     
-    // Update UI
-    document.getElementById('caloricGoal').value = caloricGoal + ' calories/day';
-    document.getElementById('carbsValue').textContent = macroSplit.carbs + '%';
-    document.getElementById('proteinValue').textContent = macroSplit.protein + '%';
-    document.getElementById('fatsValue').textContent = macroSplit.fats + '%';
+    // Update UI only if macroSplit is defined
+    if (macroSplit && document.getElementById('caloricGoal')) {
+        document.getElementById('caloricGoal').value = caloricGoal + ' calories/day';
+        document.getElementById('carbsValue').textContent = macroSplit.carbs + '%';
+        document.getElementById('proteinValue').textContent = macroSplit.protein + '%';
+        document.getElementById('fatsValue').textContent = macroSplit.fats + '%';
+    }
 }
 
 // Profile Management
@@ -367,6 +371,17 @@ async function saveProfile() {
             caloricGoal = Math.round(tdee);
             macroSplit = { carbs: 45, protein: 25, fats: 30 };
             break;
+        default:
+            // Fallback for unknown goal type
+            caloricGoal = Math.round(tdee);
+            macroSplit = { carbs: 45, protein: 25, fats: 30 };
+            break;
+    }
+    
+    // Safety check
+    if (!macroSplit || !caloricGoal) {
+        alert('Please select a valid goal type');
+        return;
     }
     
     // Create profile object
