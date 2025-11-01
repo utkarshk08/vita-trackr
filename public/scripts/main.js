@@ -28,7 +28,9 @@ document.addEventListener('DOMContentLoaded', function() {
     if (userProfile && document.getElementById('home')) {
         loadProfileData();
         if (userProfile.isSetupComplete) {
-            showPage('home');
+            // Restore last viewed page or default to home
+            const lastPage = localStorage.getItem('lastPage') || 'home';
+            showPage(lastPage);
         }
     }
     
@@ -181,6 +183,9 @@ function showPage(pageName) {
             link.classList.add('active');
         }
     });
+    
+    // Save last viewed page to localStorage
+    localStorage.setItem('lastPage', pageName);
     
     // Update pages when navigating
     if (pageName === 'overview') {
