@@ -110,6 +110,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 localStorage.setItem('currentUser', JSON.stringify(demoUser));
                 localStorage.setItem('currentUserId', demoUserId);
                 
+                // Set userProfile for demo mode
+                userProfile = {
+                    ...demoUser,
+                    subscriptionStatus: 'pro',
+                    isActive: true
+                };
+                localStorage.setItem('userProfile', JSON.stringify(userProfile));
+                
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('appScreen').style.display = 'block';
                 showPage('profile');
@@ -138,6 +146,10 @@ document.addEventListener('DOMContentLoaded', function() {
         try {
             const userData = await registerUser(username, email, password);
             
+            // Load user profile
+            userProfile = await getUserProfile();
+            localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appScreen').style.display = 'block';
             showPage('profile');
@@ -156,6 +168,14 @@ document.addEventListener('DOMContentLoaded', function() {
                 };
                 localStorage.setItem('currentUser', JSON.stringify(demoUser));
                 localStorage.setItem('currentUserId', demoUserId);
+                
+                // Set userProfile for demo mode
+                userProfile = {
+                    ...demoUser,
+                    subscriptionStatus: 'pro',
+                    isActive: true
+                };
+                localStorage.setItem('userProfile', JSON.stringify(userProfile));
                 
                 document.getElementById('loginScreen').style.display = 'none';
                 document.getElementById('appScreen').style.display = 'block';
