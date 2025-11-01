@@ -196,10 +196,10 @@ function updateCaloricGoals() {
     // Activity multipliers
     const activityMultipliers = {
         sedentary: 1.2,
-        light: 1.375,
-        moderate: 1.55,
-        very: 1.725,
-        extreme: 1.9
+        'lightly-active': 1.375,
+        'moderately-active': 1.55,
+        'very-active': 1.725,
+        'extremely-active': 1.9
     };
     
     const tdee = bmr * activityMultipliers[occupation];
@@ -292,10 +292,10 @@ async function saveProfile() {
     // Activity multipliers
     const activityMultipliers = {
         sedentary: 1.2,
-        light: 1.375,
-        moderate: 1.55,
-        very: 1.725,
-        extreme: 1.9
+        'lightly-active': 1.375,
+        'moderately-active': 1.55,
+        'very-active': 1.725,
+        'extremely-active': 1.9
     };
     
     const tdee = bmr * activityMultipliers[occupation];
@@ -305,15 +305,15 @@ async function saveProfile() {
     let macroSplit;
     
     switch(goalType) {
-        case 'weightLoss':
+        case 'weight-loss':
             caloricGoal = Math.round(tdee - 500);
             macroSplit = { carbs: 45, protein: 30, fats: 25 };
             break;
-        case 'weightGain':
+        case 'weight-gain':
             caloricGoal = Math.round(tdee + 500);
             macroSplit = { carbs: 50, protein: 25, fats: 25 };
             break;
-        case 'muscleGain':
+        case 'muscle-gain':
             caloricGoal = Math.round(tdee + 300);
             macroSplit = { carbs: 40, protein: 35, fats: 25 };
             break;
