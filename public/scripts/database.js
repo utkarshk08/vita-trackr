@@ -381,6 +381,691 @@ const recipeDatabase = [
         },
         prepTime: '10 min',
         cookTime: '0 min'
+    },
+    // More Indian Cuisine
+    {
+        title: 'Butter Chicken',
+        cuisine: 'Indian',
+        tags: ['non-vegetarian', 'high-protein', 'gluten-free', 'rich'],
+        healthCondition: ['high-protein', 'balanced'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['chicken', 'butter', 'tomatoes', 'cream', 'ginger', 'garlic', 'spices', 'yogurt'],
+        instructions: [
+            'Marinate chicken in yogurt and spices for 2 hours',
+            'Grill chicken until cooked',
+            'Make tomato-based gravy with butter and spices',
+            'Add cream and simmer',
+            'Add grilled chicken and cook 10 minutes',
+            'Garnish with fresh cream and coriander'
+        ],
+        nutrition: {
+            'Calories': '320',
+            'Protein': '32g',
+            'Carbs': '8g',
+            'Fat': '18g',
+            'Fiber': '2g'
+        },
+        prepTime: '20 min',
+        cookTime: '40 min'
+    },
+    {
+        title: 'Chole Bhature (Chickpeas with Fried Bread)',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'high-protein', 'high-fiber', 'comfort-food'],
+        healthCondition: ['high-protein', 'high-fiber', 'balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['chickpeas', 'onion', 'tomatoes', 'ginger', 'garlic', 'spices', 'flour', 'yogurt'],
+        instructions: [
+            'Soak chickpeas overnight and pressure cook',
+            'Heat oil and add spices until fragrant',
+            'Add onions and sauté until golden',
+            'Add tomatoes and cook until soft',
+            'Add chickpeas and cook 15 minutes',
+            'Make dough for bhature with flour and yogurt',
+            'Roll and deep fry until golden',
+            'Serve hot with pickled onions'
+        ],
+        nutrition: {
+            'Calories': '450',
+            'Protein': '18g',
+            'Carbs': '65g',
+            'Fiber': '15g',
+            'Fat': '14g'
+        },
+        prepTime: '30 min',
+        cookTime: '50 min'
+    },
+    {
+        title: 'Rajma (Kidney Bean Curry)',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'high-fiber', 'gluten-free'],
+        healthCondition: ['high-protein', 'high-fiber', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['kidney beans', 'onion', 'tomatoes', 'ginger', 'garlic', 'spices', 'garam masala'],
+        instructions: [
+            'Soak kidney beans overnight',
+            'Pressure cook until soft',
+            'Heat oil and add cumin seeds',
+            'Add onions and sauté until golden',
+            'Add tomatoes and cook until soft',
+            'Add spices and kidney beans',
+            'Simmer 20 minutes until thick',
+            'Garnish with coriander leaves'
+        ],
+        nutrition: {
+            'Calories': '195',
+            'Protein': '10g',
+            'Carbs': '32g',
+            'Fiber': '13g',
+            'Fat': '4g'
+        },
+        prepTime: '20 min',
+        cookTime: '40 min'
+    },
+    {
+        title: 'Aloo Gobi (Potato Cauliflower)',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'vegan', 'high-fiber', 'gluten-free', 'budget-friendly'],
+        healthCondition: ['low-fat', 'high-fiber'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['potatoes', 'cauliflower', 'onion', 'tomatoes', 'ginger', 'garlic', 'turmeric', 'spices'],
+        instructions: [
+            'Cut potatoes and cauliflower into florets',
+            'Heat oil and add cumin seeds',
+            'Add onions and sauté until golden',
+            'Add ginger-garlic paste',
+            'Add turmeric and other spices',
+            'Add cauliflower and potatoes',
+            'Cover and cook until tender (15-20 min)',
+            'Garnish with fresh coriander'
+        ],
+        nutrition: {
+            'Calories': '150',
+            'Protein': '5g',
+            'Carbs': '28g',
+            'Fiber': '6g',
+            'Fat': '3g'
+        },
+        prepTime: '15 min',
+        cookTime: '25 min'
+    },
+    // South Indian Cuisine
+    {
+        title: 'Dosa (Fermented Rice Pancake)',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'vegan', 'gluten-free', 'fermented', 'breakfast'],
+        healthCondition: ['low-fat', 'balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['rice', 'urad dal', 'fenugreek seeds', 'salt', 'oil'],
+        instructions: [
+            'Soak rice and urad dal separately overnight',
+            'Grind with fenugreek seeds to smooth batter',
+            'Ferment overnight in warm place',
+            'Heat tawa and pour batter',
+            'Spread thin and drizzle oil',
+            'Cook until golden and crispy',
+            'Serve with sambar and chutney'
+        ],
+        nutrition: {
+            'Calories': '180',
+            'Protein': '4g',
+            'Carbs': '35g',
+            'Fiber': '3g',
+            'Fat': '4g'
+        },
+        prepTime: '30 min',
+        cookTime: '10 min'
+    },
+    {
+        title: 'Idli (Steamed Rice Cakes)',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'vegan', 'gluten-free', 'low-fat', 'breakfast'],
+        healthCondition: ['low-fat', 'balanced', 'easy-digest'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['rice', 'urad dal', 'fenugreek seeds', 'salt'],
+        instructions: [
+            'Soak rice and urad dal overnight',
+            'Grind to smooth batter separately',
+            'Mix and ferment overnight',
+            'Pour into idli molds',
+            'Steam for 10-12 minutes',
+            'Serve hot with sambar and chutney'
+        ],
+        nutrition: {
+            'Calories': '85',
+            'Protein': '2g',
+            'Carbs': '18g',
+            'Fiber': '1g',
+            'Fat': '0.5g'
+        },
+        prepTime: '30 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Sambar (Lentil Vegetable Stew)',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'high-fiber', 'gluten-free'],
+        healthCondition: ['high-protein', 'high-fiber', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['toor dal', 'vegetables', 'tamarind', 'sambar powder', 'turmeric', 'tempering spices'],
+        instructions: [
+            'Cook toor dal until soft',
+            'Add vegetables and cook',
+            'Add tamarind extract',
+            'Add sambar powder and turmeric',
+            'Prepare tempering with mustard seeds',
+            'Add to sambar and bring to boil',
+            'Serve hot with idli or dosa'
+        ],
+        nutrition: {
+            'Calories': '95',
+            'Protein': '5g',
+            'Carbs': '15g',
+            'Fiber': '5g',
+            'Fat': '1g'
+        },
+        prepTime: '15 min',
+        cookTime: '30 min'
+    },
+    {
+        title: 'Upma (Savory Semolina)',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'high-fiber', 'quick', 'breakfast'],
+        healthCondition: ['balanced', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['semolina', 'onions', 'vegetables', 'green chilies', 'ginger', 'mustard seeds', 'urad dal'],
+        instructions: [
+            'Dry roast semolina until golden',
+            'Heat oil and add mustard seeds',
+            'Add urad dal and sauté until golden',
+            'Add onions and green chilies',
+            'Add vegetables and cook',
+            'Add water and bring to boil',
+            'Stir in semolina continuously',
+            'Cook until water absorbed'
+        ],
+        nutrition: {
+            'Calories': '240',
+            'Protein': '6g',
+            'Carbs': '45g',
+            'Fiber': '4g',
+            'Fat': '5g'
+        },
+        prepTime: '10 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Rasam (Spiced Tamarind Soup)',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'vegan', 'low-calorie', 'gluten-free', 'digestive'],
+        healthCondition: ['low-calorie', 'easy-digest'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['tamarind', 'tomatoes', 'rasam powder', 'turmeric', 'peppercorns', 'cumin', 'garlic'],
+        instructions: [
+            'Extract tamarind juice',
+            'Heat with water and turmeric',
+            'Add chopped tomatoes',
+            'Add rasam powder and boil',
+            'Prepare tempering with cumin and garlic',
+            'Add to rasam and bring to boil',
+            'Serve hot as soup or with rice'
+        ],
+        nutrition: {
+            'Calories': '40',
+            'Protein': '2g',
+            'Carbs': '8g',
+            'Fiber': '2g',
+            'Fat': '0.5g'
+        },
+        prepTime: '10 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Pesarattu (Green Gram Dosa)',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'gluten-free', 'breakfast'],
+        healthCondition: ['high-protein', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['green gram', 'rice', 'ginger', 'green chilies', 'cumin seeds'],
+        instructions: [
+            'Soak green gram overnight',
+            'Grind with ginger and chilies',
+            'Add cumin seeds to batter',
+            'Heat tawa and pour batter',
+            'Spread thick and drizzle oil',
+            'Cook both sides until golden',
+            'Serve with ginger chutney'
+        ],
+        nutrition: {
+            'Calories': '155',
+            'Protein': '8g',
+            'Carbs': '24g',
+            'Fiber': '8g',
+            'Fat': '3g'
+        },
+        prepTime: '20 min',
+        cookTime: '12 min'
+    },
+    // French Cuisine
+    {
+        title: 'Coq au Vin',
+        cuisine: 'French',
+        tags: ['non-vegetarian', 'high-protein', 'rich', 'comfort-food'],
+        healthCondition: ['high-protein', 'balanced'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['chicken', 'red wine', 'mushrooms', 'onions', 'bacon', 'herbs', 'stock'],
+        instructions: [
+            'Brown chicken pieces in butter',
+            'Cook bacon and set aside',
+            'Sauté mushrooms and onions',
+            'Deglaze pan with wine',
+            'Add chicken, stock, and herbs',
+            'Simmer for 1 hour until tender',
+            'Serve with crusty bread'
+        ],
+        nutrition: {
+            'Calories': '420',
+            'Protein': '38g',
+            'Carbs': '12g',
+            'Fat': '18g',
+            'Fiber': '2g'
+        },
+        prepTime: '20 min',
+        cookTime: '90 min'
+    },
+    {
+        title: 'Ratatouille',
+        cuisine: 'French',
+        tags: ['vegetarian', 'vegan', 'high-fiber', 'gluten-free', 'low-calorie'],
+        healthCondition: ['low-calorie', 'high-fiber', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['eggplant', 'zucchini', 'bell peppers', 'tomatoes', 'onion', 'garlic', 'herbs', 'olive oil'],
+        instructions: [
+            'Slice vegetables evenly',
+            'Sauté onions and garlic',
+            'Layer vegetables in baking dish',
+            'Drizzle olive oil and herbs',
+            'Bake at 180°C for 45 minutes',
+            'Serve with fresh basil'
+        ],
+        nutrition: {
+            'Calories': '120',
+            'Protein': '4g',
+            'Carbs': '18g',
+            'Fiber': '8g',
+            'Fat': '5g'
+        },
+        prepTime: '25 min',
+        cookTime: '45 min'
+    },
+    {
+        title: 'Salmon en Papillote',
+        cuisine: 'French',
+        tags: ['pescatarian', 'high-protein', 'low-carb', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-carb', 'omega-3'],
+        dietaryPreference: ['pescatarian'],
+        ingredients: ['salmon', 'lemon', 'herbs', 'vegetables', 'white wine', 'butter'],
+        instructions: [
+            'Preheat oven to 200°C',
+            'Cut parchment paper into hearts',
+            'Place salmon on parchment',
+            'Add vegetables and herbs',
+            'Drizzle wine and butter',
+            'Fold and seal tightly',
+            'Bake for 12-15 minutes',
+            'Serve in paper packet'
+        ],
+        nutrition: {
+            'Calories': '280',
+            'Protein': '32g',
+            'Carbs': '6g',
+            'Fat': '14g',
+            'Omega-3': '2.5g'
+        },
+        prepTime: '15 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'French Onion Soup',
+        cuisine: 'French',
+        tags: ['vegetarian', 'low-calorie', 'comfort-food', 'gluten-free'],
+        healthCondition: ['low-calorie', 'low-fat'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['onions', 'butter', 'stock', 'white wine', 'gruyere cheese', 'bread'],
+        instructions: [
+            'Slice onions thinly',
+            'Caramelize in butter for 30 minutes',
+            'Add wine and cook down',
+            'Add stock and simmer 20 minutes',
+            'Ladle into bowls',
+            'Top with bread and cheese',
+            'Broil until bubbly'
+        ],
+        nutrition: {
+            'Calories': '180',
+            'Protein': '8g',
+            'Carbs': '20g',
+            'Fat': '7g',
+            'Fiber': '3g'
+        },
+        prepTime: '15 min',
+        cookTime: '60 min'
+    },
+    {
+        title: 'Bouillabaisse',
+        cuisine: 'French',
+        tags: ['pescatarian', 'high-protein', 'low-carb', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-carb', 'omega-3'],
+        dietaryPreference: ['pescatarian'],
+        ingredients: ['fish', 'shellfish', 'fennel', 'onions', 'tomatoes', 'saffron', 'herbs', 'wine'],
+        instructions: [
+            'Make fish stock with bones',
+            'Sauté fennel and onions',
+            'Add tomatoes and wine',
+            'Add stock and saffron',
+            'Add fish and shellfish',
+            'Simmer 15 minutes',
+            'Serve with rouille and bread'
+        ],
+        nutrition: {
+            'Calories': '240',
+            'Protein': '30g',
+            'Carbs': '8g',
+            'Fat': '10g',
+            'Omega-3': '1.8g'
+        },
+        prepTime: '30 min',
+        cookTime: '45 min'
+    },
+    // More Italian Cuisine
+    {
+        title: 'Risotto ai Funghi (Mushroom Risotto)',
+        cuisine: 'Italian',
+        tags: ['vegetarian', 'gluten-free', 'creamy', 'comfort-food'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['arborio rice', 'mushrooms', 'onion', 'white wine', 'parmesan', 'stock', 'butter'],
+        instructions: [
+            'Sauté mushrooms until golden',
+            'Cook onions until translucent',
+            'Toast rice in pan',
+            'Add wine and cook until absorbed',
+            'Add hot stock ladle by ladle',
+            'Stir continuously 18-20 minutes',
+            'Stir in butter and parmesan',
+            'Serve immediately'
+        ],
+        nutrition: {
+            'Calories': '340',
+            'Protein': '12g',
+            'Carbs': '52g',
+            'Fat': '11g',
+            'Fiber': '2g'
+        },
+        prepTime: '15 min',
+        cookTime: '30 min'
+    },
+    {
+        title: 'Osso Buco',
+        cuisine: 'Italian',
+        tags: ['non-vegetarian', 'high-protein', 'gluten-free', 'rich'],
+        healthCondition: ['high-protein', 'balanced'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['veal shanks', 'vegetables', 'white wine', 'stock', 'herbs', 'gremolata'],
+        instructions: [
+            'Brown veal shanks in butter',
+            'Sauté vegetables until soft',
+            'Add wine and reduce',
+            'Add stock and herbs',
+            'Braise covered for 2 hours',
+            'Make gremolata with lemon zest',
+            'Serve with risotto milanese'
+        ],
+        nutrition: {
+            'Calories': '380',
+            'Protein': '42g',
+            'Carbs': '6g',
+            'Fat': '18g',
+            'Fiber': '1g'
+        },
+        prepTime: '25 min',
+        cookTime: '120 min'
+    },
+    {
+        title: 'Bruschetta al Pomodoro',
+        cuisine: 'Italian',
+        tags: ['vegetarian', 'vegan', 'low-calorie', 'quick', 'appetizer'],
+        healthCondition: ['low-calorie', 'low-fat', 'fresh'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['bread', 'tomatoes', 'garlic', 'basil', 'olive oil', 'balsamic'],
+        instructions: [
+            'Toast bread slices until golden',
+            'Rub with garlic clove',
+            'Dice tomatoes and mix with basil',
+            'Add olive oil and salt',
+            'Top bread with tomato mixture',
+            'Drizzle balsamic and serve'
+        ],
+        nutrition: {
+            'Calories': '140',
+            'Protein': '4g',
+            'Carbs': '18g',
+            'Fat': '6g',
+            'Fiber': '2g'
+        },
+        prepTime: '10 min',
+        cookTime: '5 min'
+    },
+    {
+        title: 'Margherita Pizza',
+        cuisine: 'Italian',
+        tags: ['vegetarian', 'balanced', 'comfort-food'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['pizza dough', 'tomato sauce', 'mozzarella', 'basil', 'olive oil'],
+        instructions: [
+            'Preheat oven to 250°C',
+            'Roll out pizza dough',
+            'Spread tomato sauce',
+            'Add mozzarella slices',
+            'Bake 10-12 minutes',
+            'Top with fresh basil',
+            'Drizzle olive oil and serve'
+        ],
+        nutrition: {
+            'Calories': '280',
+            'Protein': '14g',
+            'Carbs': '38g',
+            'Fat': '9g',
+            'Fiber': '2g'
+        },
+        prepTime: '20 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Tiramisu',
+        cuisine: 'Italian',
+        tags: ['vegetarian', 'dessert', 'indulgent'],
+        healthCondition: ['high-calorie', 'sweet'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['ladyfingers', 'mascarpone', 'espresso', 'cocoa powder', 'eggs', 'sugar'],
+        instructions: [
+            'Brew strong espresso and cool',
+            'Beat egg yolks with sugar',
+            'Fold in mascarpone',
+            'Dip ladyfingers in coffee',
+            'Layer in dish',
+            'Spread mascarpone mixture',
+            'Repeat layers',
+            'Dust with cocoa and chill'
+        ],
+        nutrition: {
+            'Calories': '320',
+            'Protein': '6g',
+            'Carbs': '32g',
+            'Fat': '18g',
+            'Fiber': '1g'
+        },
+        prepTime: '30 min',
+        cookTime: '0 min'
+    },
+    // Chinese Cuisine
+    {
+        title: 'Mapo Tofu',
+        cuisine: 'Chinese',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'spicy', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['tofu', 'ground meat/beans', 'sichuan peppers', 'doubanjiang', 'soy sauce', 'ginger', 'garlic'],
+        instructions: [
+            'Cube tofu and blanch',
+            'Heat oil and fry ground meat',
+            'Add doubanjiang and spices',
+            'Add ginger and garlic',
+            'Add stock and simmer',
+            'Add tofu carefully',
+            'Thicken with cornstarch',
+            'Garnish with green onions'
+        ],
+        nutrition: {
+            'Calories': '215',
+            'Protein': '16g',
+            'Carbs': '8g',
+            'Fat': '12g',
+            'Fiber': '2g'
+        },
+        prepTime: '15 min',
+        cookTime: '20 min'
+    },
+    {
+        title: 'Kung Pao Chicken',
+        cuisine: 'Chinese',
+        tags: ['high-protein', 'balanced', 'spicy'],
+        healthCondition: ['high-protein', 'balanced'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['chicken', 'peanuts', 'bell peppers', 'dried chilies', 'soy sauce', 'vinegar', 'cornstarch'],
+        instructions: [
+            'Marinate chicken in soy sauce and cornstarch',
+            'Deep fry chicken until crispy',
+            'Sauté dried chilies and peanuts',
+            'Add bell peppers',
+            'Add sauce mixture',
+            'Add chicken and toss',
+            'Garnish with green onions'
+        ],
+        nutrition: {
+            'Calories': '290',
+            'Protein': '28g',
+            'Carbs': '12g',
+            'Fat': '14g',
+            'Fiber': '2g'
+        },
+        prepTime: '20 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Hot and Sour Soup',
+        cuisine: 'Chinese',
+        tags: ['low-calorie', 'gluten-free', 'comfort-food'],
+        healthCondition: ['low-calorie', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['tofu', 'mushrooms', 'bamboo shoots', 'vinegar', 'soy sauce', 'pepper', 'cornstarch', 'egg'],
+        instructions: [
+            'Heat stock and bring to boil',
+            'Add mushrooms and bamboo shoots',
+            'Add tofu and spices',
+            'Add vinegar and soy sauce',
+            'Thicken with cornstarch',
+            'Drizzle beaten egg',
+            'Garnish with green onions'
+        ],
+        nutrition: {
+            'Calories': '85',
+            'Protein': '5g',
+            'Carbs': '8g',
+            'Fat': '3g',
+            'Fiber': '1g'
+        },
+        prepTime: '15 min',
+        cookTime: '20 min'
+    },
+    {
+        title: 'Sweet and Sour Pork',
+        cuisine: 'Chinese',
+        tags: ['high-protein', 'balanced', 'sweet'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['pork', 'bell peppers', 'pineapple', 'vinegar', 'sugar', 'ketchup', 'cornstarch'],
+        instructions: [
+            'Marinate pork in soy sauce',
+            'Coat with cornstarch and fry',
+            'Make sweet and sour sauce',
+            'Sauté vegetables',
+            'Add sauce and simmer',
+            'Add pineapple',
+            'Toss with fried pork',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '310',
+            'Protein': '24g',
+            'Carbs': '28g',
+            'Fat': '12g',
+            'Fiber': '2g'
+        },
+        prepTime: '20 min',
+        cookTime: '20 min'
+    },
+    {
+        title: 'Vegetable Lo Mein',
+        cuisine: 'Chinese',
+        tags: ['vegetarian', 'vegan', 'high-carb', 'balanced'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['lo mein noodles', 'vegetables', 'soy sauce', 'sesame oil', 'ginger', 'garlic'],
+        instructions: [
+            'Cook noodles until al dente',
+            'Sauté ginger and garlic',
+            'Add vegetables and stir-fry',
+            'Add soy sauce and sesame oil',
+            'Toss with noodles',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '265',
+            'Protein': '8g',
+            'Carbs': '48g',
+            'Fat': '6g',
+            'Fiber': '4g'
+        },
+        prepTime: '10 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Peking Duck',
+        cuisine: 'Chinese',
+        tags: ['high-protein', 'indulgent', 'special-occasion'],
+        healthCondition: ['high-protein', 'higher-fat'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['duck', 'hoisin sauce', 'pancakes', 'cucumber', 'green onions', 'sugar'],
+        instructions: [
+            'Roast duck until crispy',
+            'Make pancakes',
+            'Prepare hoisin sauce',
+            'Shred duck meat',
+            'Slice skin thinly',
+            'Serve with pancakes and vegetables',
+            'Wrap and enjoy'
+        ],
+        nutrition: {
+            'Calories': '395',
+            'Protein': '35g',
+            'Carbs': '18g',
+            'Fat': '20g',
+            'Fiber': '1g'
+        },
+        prepTime: '30 min',
+        cookTime: '120 min'
     }
 ];
 
