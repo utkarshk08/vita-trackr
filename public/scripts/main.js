@@ -541,8 +541,46 @@ function generateRecipe() {
             }
         });
     } else {
-        // Search by ingredients
+        // Search by ingredients from recipe database
         const ingredients = ingredientsInput.split(',').map(i => i.trim());
+        searchRecipesByIngredients(ingredients);
+    }
+}
+
+// Search recipes by ingredients from database
+async function searchRecipesByIngredients(ingredients) {
+    try {
+        const recipes = await getRecipesFromDB();
+        
+        // Score recipes based on ingredient matches
+        const scoredRecipes = recipes.map(recipe => {
+            let matches = 0;
+            const ingredientsLower = ingredients.map(i => i.toLowerCase());
+            
+            // Check if recipe ingredients match user ingredients
+            recipe.ingredients.forEach(recipeIngredient => {
+                const recipeIngLower = recipeIngredient.toLowerCase();
+                if (ingredientsLower.some(userIng => 
+                    recipeIngLower.includes(userIng) || userIng.includes(recipeIngLower)
+                )) {
+                    matches++;
+                }
+            });
+            
+            return { recipe, matches, score: matches / recipe.ingredients.length };
+        });
+        
+        // Filter and sort by relevance (at least 1 match)
+        const relevantRecipes = scoredRecipes
+            .filter(item => item.matches > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 5) // Top 5 matches
+            .map(item => item.recipe);
+        
+        displayRecipes(relevantRecipes);
+    } catch (error) {
+        console.error('Error searching recipes:', error);
+        // Fallback to basic generator
         const recipesDatabase = generateMultipleRecipes(ingredients);
         displayRecipes(recipesDatabase);
     }
@@ -1956,7 +1994,8 @@ function updateActivityChart() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
+            aspectRatio: 2,
             plugins: {
                 legend: {
                     display: true,
@@ -2050,7 +2089,8 @@ function updateNutritionChart() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
+            aspectRatio: 2,
             plugins: {
                 legend: {
                     display: true,
@@ -2125,7 +2165,8 @@ function updateWeightChart() {
         },
         options: {
             responsive: true,
-            maintainAspectRatio: true,
+            maintainAspectRatio: false,
+            aspectRatio: 2,
             plugins: {
                 legend: {
                     display: true,

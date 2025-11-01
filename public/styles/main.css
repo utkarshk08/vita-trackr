@@ -1210,7 +1210,9 @@ body.light-mode .instructions-list li:hover {
 /* Chart Container */
 canvas {
     max-height: 300px;
+    height: 300px !important;
     margin-top: 20px;
+    width: 100% !important;
 }
 
 /* Light Mode for Achievements */
