@@ -2,10 +2,22 @@
 
 // Score-based matching algorithm
 function getRecommendedRecipes(userProfile, availableIngredients = []) {
+    console.log('🤖 AI Recommendation System Starting...');
+    
+    // Log current state
+    console.log('User Profile:', {
+        goalType: userProfile.goalType,
+        cuisines: userProfile.preferredCuisines,
+        dietaryPreference: userProfile.dietaryPreference
+    });
+    
     return getRecipesFromDB().then(recipes => {
         if (!recipes || recipes.length === 0) {
+            console.error('No recipes found!');
             return [];
         }
+        
+        console.log(`📚 Found ${recipes.length} recipes to analyze`);
 
         // Score each recipe based on multiple factors
         const scoredRecipes = recipes.map(recipe => {
@@ -160,10 +172,18 @@ function getRecommendedRecipes(userProfile, availableIngredients = []) {
         });
 
         // Filter negative scores and sort by score
-        return scoredRecipes
+        const filteredScored = scoredRecipes
             .filter(item => item.score > 0)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 6); // Return top 6 recommendations
+            .sort((a, b) => b.score - a.score);
+        
+        console.log(`✅ Top 6 recommendations selected from ${filteredScored.length} scored recipes`);
+        console.log('Top recommendations:', filteredScored.slice(0, 3).map(r => ({
+            name: r.recipe.title,
+            score: r.score,
+            reasons: r.reasons.slice(0, 3)
+        })));
+        
+        return filteredScored.slice(0, 6); // Return top 6 recommendations
     });
 }
 
@@ -465,11 +485,15 @@ function analyzeWeeklyActivityTrend() {
     const firstHalf = dailyCalories.slice(0, 3).reduce((a, b) => a + b, 0) / 3;
     const secondHalf = dailyCalories.slice(3).reduce((a, b) => a + b, 0) / 4;
     
-    return {
+    const result = {
         increasingActivity: secondHalf > firstHalf * 1.2,  // 20% increase
         decreasingActivity: secondHalf < firstHalf * 0.8,   // 20% decrease
         averageDailyCalories: dailyCalories.reduce((a, b) => a + b, 0) / 7
     };
+    
+    console.log('Weekly Activity Trend:', result);
+    
+    return result;
 }
 
 // Analyze weekly nutrition trends
@@ -498,11 +522,16 @@ function analyzeWeeklyNutritionTrend() {
     
     const avgDailyProtein = daysWithMeals > 0 ? totalProtein / daysWithMeals : 0;
     
-    return {
+    const result = {
         proteinDeficit: avgDailyProtein < 60,  // Less than 60g protein per day average
         fiberDeficit: true,  // Always recommend fiber
-        averageDailyCalories: daysWithMeals > 0 ? totalCalories / daysWithMeals : 0
+        averageDailyCalories: daysWithMeals > 0 ? totalCalories / daysWithMeals : 0,
+        avgDailyProtein: avgDailyProtein
     };
+    
+    console.log('Weekly Nutrition Trend:', result);
+    
+    return result;
 }
 
 // Check calorie goal alignment
