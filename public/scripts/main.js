@@ -14,31 +14,47 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Set today's date as default for activity tracker, meal log, and weight tracking
+    const today = new Date().toISOString().split('T')[0];
     if (document.getElementById('activityDate')) {
-        document.getElementById('activityDate').valueAsDate = new Date();
+        document.getElementById('activityDate').value = today;
     }
     if (document.getElementById('mealDate')) {
-        document.getElementById('mealDate').valueAsDate = new Date();
+        document.getElementById('mealDate').value = today;
     }
     if (document.getElementById('weightDate')) {
-        document.getElementById('weightDate').valueAsDate = new Date();
+        document.getElementById('weightDate').value = today;
     }
     
-    // Load existing profile data if available (only if on app screen)
-    if (userProfile && document.getElementById('home')) {
-        loadProfileData();
-        if (userProfile.isSetupComplete) {
-            // Restore last viewed page or default to home
+    // Check for saved user session and restore
+    const currentUserId = localStorage.getItem('currentUserId');
+    userProfile = JSON.parse(localStorage.getItem('userProfile') || 'null');
+    
+    if (currentUserId && userProfile && userProfile.isSetupComplete) {
+        // User is already logged in, show app screen
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'block';
+        
+        // Load their data from the API
+        loadUserData().then(() => {
+            // Now that data is loaded, display it and show the page
+            loadProfileData();
+            displayActivities();
+            displayMeals();
+            updateOverview();
+            
             const lastPage = localStorage.getItem('lastPage') || 'home';
             showPage(lastPage);
-        }
-    }
-    
-    // Display existing data from localStorage or from API (only if on app screen)
-    if (document.getElementById('home')) {
-        displayActivities();
-        displayMeals();
-        updateOverview();
+        }).catch(err => {
+            console.error("Failed to load user data on refresh", err);
+            // If API fails, show login
+            document.getElementById('loginScreen').style.display = 'block';
+            document.getElementById('appScreen').style.display = 'none';
+        });
+    } else if (userProfile && !userProfile.isSetupComplete) {
+        // User signed up but didn't finish profile
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('appScreen').style.display = 'block';
+        showPage('profile');
     }
     
     // Navigation
@@ -1112,6 +1128,7 @@ async function logActivity() {
             
             displayActivities();
             updateOverview();
+            updateProgressPage();
             
             // Reset form
             document.getElementById('duration').value = '';
@@ -1129,6 +1146,7 @@ async function logActivity() {
             
             displayActivities();
             updateOverview();
+            updateProgressPage();
             
             // Reset form
             document.getElementById('duration').value = '';
@@ -1150,6 +1168,7 @@ async function logActivity() {
         
         displayActivities();
         updateOverview();
+        updateProgressPage();
         
         // Reset form
         document.getElementById('duration').value = '';
@@ -1376,6 +1395,7 @@ async function logMeal() {
             
             displayMeals();
             updateOverview();
+            updateProgressPage();
             
             // Reset form
             document.getElementById('mealName').value = '';
@@ -1396,6 +1416,7 @@ async function logMeal() {
             
             displayMeals();
             updateOverview();
+            updateProgressPage();
             
             // Reset form
             document.getElementById('mealName').value = '';
@@ -1421,6 +1442,7 @@ async function logMeal() {
         
         displayMeals();
         updateOverview();
+        updateProgressPage();
         
         // Reset form
         document.getElementById('mealName').value = '';
