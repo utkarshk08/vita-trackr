@@ -873,20 +873,26 @@ function determineAutoRecommendation() {
     
     let recommendationType = 'balanced';
     let recommendationTags = [];
+    let primaryCondition = null;
+    let secondaryReasons = [];
     
     // Check for diseases and conditions
     if (diseases.some(d => ['diabetes', 'diabetic'].includes(d.toLowerCase()))) {
         recommendationType = 'lowSugar';
         recommendationTags.push('Low Sugar', 'High Fiber');
+        primaryCondition = 'diabetes';
     } else if (diseases.some(d => ['hypertension', 'high blood pressure'].includes(d.toLowerCase()))) {
         recommendationType = 'lowSodium';
         recommendationTags.push('Low Sodium', 'Heart Healthy');
+        primaryCondition = 'hypertension';
     } else if (diseases.some(d => ['obesity', 'overweight', 'weight loss'].includes(d.toLowerCase()))) {
         recommendationType = 'lowCarb';
         recommendationTags.push('Low Carb', 'Weight Management');
+        primaryCondition = 'weight management';
     } else if (diseases.some(d => ['high cholesterol'].includes(d.toLowerCase()))) {
         recommendationType = 'lowFat';
         recommendationTags.push('Low Fat', 'High Fiber');
+        primaryCondition = 'high cholesterol';
     }
     
     // Check for protein needs based on activities
@@ -896,6 +902,7 @@ function determineAutoRecommendation() {
             recommendationType = 'protein';
         }
         recommendationTags.push('High Protein');
+        secondaryReasons.push('your high activity levels');
     }
     
     // Check for fiber needs
@@ -905,7 +912,9 @@ function determineAutoRecommendation() {
     
     return {
         type: recommendationType,
-        tags: recommendationTags.slice(0, 3)
+        tags: recommendationTags.slice(0, 3),
+        primaryCondition: primaryCondition,
+        secondaryReasons: secondaryReasons
     };
 }
 
@@ -913,24 +922,25 @@ function displayAutoRecommendation(recommendation) {
     const infoDiv = document.getElementById('recommendationInfo');
     
     let recommendationText = '';
-    switch(recommendation.type) {
-        case 'lowSugar':
-            recommendationText = 'Based on your profile, we recommend a <strong>Low Sugar, High Fiber</strong> diet to help manage your health.';
-            break;
-        case 'lowSodium':
-            recommendationText = 'For your condition, we suggest a <strong>Low Sodium, Heart Healthy</strong> diet.';
-            break;
-        case 'lowCarb':
-            recommendationText = 'We recommend a <strong>Low Carbohydrate, Weight Management</strong> focused diet.';
-            break;
-        case 'lowFat':
-            recommendationText = 'To support your health, we suggest a <strong>Low Fat, High Fiber</strong> diet.';
-            break;
-        case 'protein':
-            recommendationText = 'Based on your activity levels, we recommend a <strong>High Protein</strong> diet for better recovery.';
-            break;
-        default:
-            recommendationText = 'We recommend a <strong>Balanced, High Fiber</strong> diet for optimal health.';
+    
+    // Build a personalized, complete sentence
+    if (recommendation.primaryCondition) {
+        const tagsList = recommendation.tags.join(', ');
+        const conditionName = recommendation.primaryCondition.charAt(0).toUpperCase() + recommendation.primaryCondition.slice(1);
+        
+        if (recommendation.secondaryReasons.length > 0) {
+            recommendationText = `Based on your profile, we recommend <strong>${tagsList}</strong> food because of your ${conditionName} condition, as well as ${recommendation.secondaryReasons.join(' and ')}.`;
+        } else {
+            recommendationText = `Based on your profile, we recommend <strong>${tagsList}</strong> food because of your ${conditionName} condition.`;
+        }
+    } else {
+        switch(recommendation.type) {
+            case 'protein':
+                recommendationText = `Based on your high activity levels, we recommend a <strong>High Protein</strong> diet for better muscle recovery and energy.`;
+                break;
+            default:
+                recommendationText = `We recommend a <strong>Balanced, High Fiber</strong> diet for optimal health and digestion.`;
+        }
     }
     
     const tagsHTML = recommendation.tags.map(tag => 
