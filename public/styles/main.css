@@ -165,6 +165,24 @@ body.light-mode .theme-toggle {
     box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
 }
 
+.btn-secondary {
+    padding: 15px;
+    background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+    border: none;
+    border-radius: 10px;
+    color: white;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    margin-top: 10px;
+}
+
+.btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(255, 107, 107, 0.3);
+}
+
 .signup-link {
     margin-top: 20px;
     color: var(--text-secondary);

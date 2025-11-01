@@ -466,6 +466,37 @@ async function saveProfile() {
     }
 }
 
+// Logout function
+function logout() {
+    if (confirm('Are you sure you want to logout?')) {
+        // Call API logout if available
+        if (typeof logoutUser === 'function') {
+            logoutUser();
+        }
+        
+        // Clear all user data
+        localStorage.removeItem('currentUserId');
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('userProfile');
+        localStorage.removeItem('activities');
+        localStorage.removeItem('meals');
+        localStorage.removeItem('weights');
+        localStorage.removeItem('lastPage');
+        
+        // Reset global variables
+        userProfile = null;
+        activities = [];
+        meals = [];
+        weights = [];
+        
+        // Hide app and show login
+        document.getElementById('loginScreen').style.display = 'block';
+        document.getElementById('appScreen').style.display = 'none';
+        
+        alert('Logged out successfully!');
+    }
+}
+
 // Load user data from API
 async function loadUserData() {
     try {
