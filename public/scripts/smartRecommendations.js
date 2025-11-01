@@ -104,11 +104,56 @@ function getRecommendedRecipes(userProfile, availableIngredients = []) {
                 reasons.push(`${userProfile.goalType} goal aligned`);
             }
 
-            // 11. Time-based preferences (bonus)
+            // 11. 7-Day Activity Trend Analysis (20 points)
+            const weeklyActivity = analyzeWeeklyActivityTrend();
+            if (weeklyActivity.increasingActivity && recipe.tags.includes('high-protein')) {
+                score += 20;
+                reasons.push('Your activity is increasing - protein support needed');
+            }
+            if (weeklyActivity.decreasingActivity && recipe.tags.includes('moderate-calorie')) {
+                score += 15;
+                reasons.push('Balanced calories for your decreasing activity');
+            }
+
+            // 12. 7-Day Nutrition Balance (15 points)
+            const weeklyNutrition = analyzeWeeklyNutritionTrend();
+            if (weeklyNutrition.proteinDeficit && recipe.tags.includes('high-protein')) {
+                score += 15;
+                reasons.push('Your weekly protein is low - boost needed');
+            }
+            if (weeklyNutrition.fiberDeficit && recipe.tags.includes('high-fiber')) {
+                score += 12;
+                reasons.push('Weekly fiber needs improvement');
+            }
+
+            // 13. Calorie Goal Alignment (25 points)
+            const calorieAlignment = checkCalorieGoalAlignment(recipe, userProfile);
+            score += calorieAlignment.score;
+            if (calorieAlignment.reason) {
+                reasons.push(calorieAlignment.reason);
+            }
+
+            // 14. Time-based preferences (bonus)
             const currentHour = new Date().getHours();
             if ((currentHour >= 6 && currentHour < 10) && recipe.tags.includes('breakfast')) {
                 score += 10;
                 reasons.push('Perfect for breakfast time');
+            } else if ((currentHour >= 10 && currentHour < 14) && recipe.tags.includes('lunch')) {
+                score += 10;
+                reasons.push('Great lunch option');
+            } else if ((currentHour >= 14 && currentHour < 18) && recipe.tags.includes('snack')) {
+                score += 8;
+                reasons.push('Perfect snack time');
+            } else if ((currentHour >= 18 && currentHour < 22) && recipe.tags.includes('dinner')) {
+                score += 10;
+                reasons.push('Ideal dinner choice');
+            }
+
+            // 15. Variety Bonus - avoid recently eaten dishes (10 points)
+            const varietyBonus = checkVarietyBonus(recipe);
+            if (varietyBonus) {
+                score += 10;
+                reasons.push('New dish for variety');
             }
 
             return { recipe, score, reasons };
@@ -311,6 +356,15 @@ function analyzePreviousDayActivity() {
     const totalCalories = yesterdayActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
     const totalDuration = yesterdayActivities.reduce((sum, act) => sum + (act.duration || 0), 0);
     
+    // Log for debugging
+    console.log('Previous day activity analysis:', {
+        date: yesterdayStr,
+        activitiesCount: yesterdayActivities.length,
+        totalCalories: totalCalories,
+        highActivity: totalCalories > 300,
+        lightActivity: totalCalories < 100
+    });
+    
     return {
         highCalories: totalCalories > 300,  // More than 300 calories burned
         lightActivity: totalCalories < 100,  // Less than 100 calories
@@ -335,6 +389,17 @@ function analyzePreviousDayNutrition() {
     // Analyze nutritional gaps
     const avgProtein = totalProtein / Math.max(1, yesterdayMeals.length);
     const avgCarbs = totalCarbs / Math.max(1, yesterdayMeals.length);
+    
+    // Log for debugging
+    console.log('Previous day nutrition analysis:', {
+        date: yesterdayStr,
+        mealsCount: yesterdayMeals.length,
+        totalProtein: totalProtein,
+        totalCarbs: totalCarbs,
+        totalCalories: totalCalories,
+        needsProtein: totalProtein < 50 || avgProtein < 15,
+        highCarbs: totalCarbs > 200 || avgCarbs > 50
+    });
     
     return {
         needsProtein: totalProtein < 50 || avgProtein < 15,  // Less than 50g total or 15g per meal
@@ -380,5 +445,118 @@ function calculateGoalBasedScore(recipe, userProfile) {
     }
     
     return score;
+}
+
+// Analyze weekly activity trends
+function analyzeWeeklyActivityTrend() {
+    const activities = JSON.parse(localStorage.getItem('activities')) || [];
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        return date.toISOString().split('T')[0];
+    }).reverse();
+    
+    const dailyCalories = last7Days.map(date => {
+        const dayActivities = activities.filter(act => act.date === date);
+        return dayActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
+    });
+    
+    // Calculate trend
+    const firstHalf = dailyCalories.slice(0, 3).reduce((a, b) => a + b, 0) / 3;
+    const secondHalf = dailyCalories.slice(3).reduce((a, b) => a + b, 0) / 4;
+    
+    return {
+        increasingActivity: secondHalf > firstHalf * 1.2,  // 20% increase
+        decreasingActivity: secondHalf < firstHalf * 0.8,   // 20% decrease
+        averageDailyCalories: dailyCalories.reduce((a, b) => a + b, 0) / 7
+    };
+}
+
+// Analyze weekly nutrition trends
+function analyzeWeeklyNutritionTrend() {
+    const meals = JSON.parse(localStorage.getItem('meals')) || [];
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        return date.toISOString().split('T')[0];
+    }).reverse();
+    
+    let totalProtein = 0;
+    let totalCarbs = 0;
+    let totalCalories = 0;
+    let daysWithMeals = 0;
+    
+    last7Days.forEach(date => {
+        const dayMeals = meals.filter(meal => meal.date === date);
+        if (dayMeals.length > 0) {
+            daysWithMeals++;
+            totalProtein += dayMeals.reduce((sum, meal) => sum + (parseFloat(meal.protein) || 0), 0);
+            totalCarbs += dayMeals.reduce((sum, meal) => sum + (parseFloat(meal.carbs) || 0), 0);
+            totalCalories += dayMeals.reduce((sum, meal) => sum + (parseFloat(meal.calories) || 0), 0);
+        }
+    });
+    
+    const avgDailyProtein = daysWithMeals > 0 ? totalProtein / daysWithMeals : 0;
+    
+    return {
+        proteinDeficit: avgDailyProtein < 60,  // Less than 60g protein per day average
+        fiberDeficit: true,  // Always recommend fiber
+        averageDailyCalories: daysWithMeals > 0 ? totalCalories / daysWithMeals : 0
+    };
+}
+
+// Check calorie goal alignment
+function checkCalorieGoalAlignment(recipe, userProfile) {
+    if (!userProfile.caloricGoal || !recipe.nutrition || !recipe.nutrition.Calories) return { score: 0 };
+    
+    const mealCalories = parseInt(recipe.nutrition.Calories) || 0;
+    const dailyGoal = parseInt(userProfile.caloricGoal) || 2000;
+    const mealGoal = dailyGoal / 3; // Approximate per meal goal
+    
+    // For weight loss: prefer slightly lower calorie meals
+    if (userProfile.goalType === 'weight-loss') {
+        if (mealCalories <= mealGoal * 0.85) {
+            return { score: 25, reason: 'Perfect calorie range for weight loss' };
+        } else if (mealCalories <= mealGoal) {
+            return { score: 15, reason: 'Good calorie control for your goal' };
+        }
+    }
+    
+    // For weight gain or muscle gain: need sufficient calories
+    if (userProfile.goalType === 'weight-gain' || userProfile.goalType === 'muscle-gain') {
+        if (mealCalories >= mealGoal * 1.1) {
+            return { score: 20, reason: 'Calorie-dense for your goals' };
+        } else if (mealCalories >= mealGoal) {
+            return { score: 10, reason: 'Adequate calories for goals' };
+        }
+    }
+    
+    // For maintain: balanced calories
+    if (userProfile.goalType === 'maintain') {
+        if (mealCalories >= mealGoal * 0.9 && mealCalories <= mealGoal * 1.1) {
+            return { score: 20, reason: 'Balanced calories for maintenance' };
+        }
+    }
+    
+    return { score: 0 };
+}
+
+// Check variety bonus (avoid recently eaten dishes)
+function checkVarietyBonus(recipe) {
+    const meals = JSON.parse(localStorage.getItem('meals')) || [];
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        return date.toISOString().split('T')[0];
+    });
+    
+    // Check if this dish was eaten recently
+    const recentlyEaten = meals.some(meal => 
+        last7Days.includes(meal.date) && 
+        meal.name && 
+        meal.name.toLowerCase().includes(recipe.title.toLowerCase().split(' ')[0])
+    );
+    
+    return !recentlyEaten;
 }
 
