@@ -2276,7 +2276,7 @@ function updateActivityChart() {
             }
         });
         
-        console.log('✅ Activity chart rendered successfully');
+        console.log('✅ Activity chart rendered successfully with', activityCaloriesByDay.length, 'data points');
     } catch (error) {
         console.error('❌ Error rendering activity chart:', error);
         canvas.parentElement.innerHTML += '<p style="text-align: center; color: var(--accent-color); padding-top: 20px;">Error loading chart. Please refresh the page.</p>';
@@ -2440,7 +2440,7 @@ function updateNutritionChart() {
             }
         });
         
-        console.log('✅ Nutrition chart rendered successfully');
+        console.log('✅ Nutrition chart rendered successfully with', nutritionByDay.length, 'data points');
     } catch (error) {
         console.error('❌ Error rendering nutrition chart:', error);
         canvas.parentElement.innerHTML += '<p style="text-align: center; color: var(--accent-color); padding-top: 20px;">Error loading chart. Please refresh the page.</p>';
