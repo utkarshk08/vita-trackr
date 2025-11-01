@@ -1071,10 +1071,56 @@ async function logActivity() {
     };
     
     try {
-        const savedActivity = await createActivity(activity);
-        // Add id and timestamp for local use
-        savedActivity.id = savedActivity._id;
+        // Check if user is in demo mode (demo userId)
+        const currentUserId = localStorage.getItem('currentUserId');
+        const isDemoUser = currentUserId && currentUserId.startsWith('demo-');
+        
+        if (isDemoUser) {
+            // Save to localStorage for demo users
+            const savedActivity = {
+                ...activity,
+                id: 'activity-' + Date.now(),
+                _id: 'activity-' + Date.now()
+            };
+            activities.push(savedActivity);
+            localStorage.setItem('activities', JSON.stringify(activities));
+            
+            displayActivities();
+            updateOverview();
+            
+            // Reset form
+            document.getElementById('duration').value = '';
+            document.getElementById('calories').value = '';
+            clearActivityAutoFill();
+            
+            alert('Activity logged successfully! (Demo mode)');
+        } else {
+            // Save to API for real users
+            const savedActivity = await createActivity(activity);
+            // Add id and timestamp for local use
+            savedActivity.id = savedActivity._id;
+            activities.push(savedActivity);
+            
+            displayActivities();
+            updateOverview();
+            
+            // Reset form
+            document.getElementById('duration').value = '';
+            document.getElementById('calories').value = '';
+            clearActivityAutoFill();
+            
+            alert('Activity logged successfully!');
+        }
+    } catch (error) {
+        // Fallback to localStorage if API fails
+        console.error('API error, saving to localStorage:', error);
+        const savedActivity = {
+            ...activity,
+            id: 'activity-' + Date.now(),
+            _id: 'activity-' + Date.now()
+        };
         activities.push(savedActivity);
+        localStorage.setItem('activities', JSON.stringify(activities));
         
         displayActivities();
         updateOverview();
@@ -1084,9 +1130,7 @@ async function logActivity() {
         document.getElementById('calories').value = '';
         clearActivityAutoFill();
         
-        alert('Activity logged successfully!');
-    } catch (error) {
-        alert('Error logging activity: ' + error.message);
+        alert('Activity logged successfully! (Saved locally)');
     }
 }
 
