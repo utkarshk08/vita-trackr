@@ -1682,6 +1682,539 @@ const recipeDatabase = [
         },
         prepTime: '40 min',
         cookTime: '60 min'
+    },
+    // Quick Fridge-Friendly Recipes
+    {
+        title: 'Egg Fried Rice',
+        cuisine: 'Quick & Easy',
+        tags: ['high-protein', 'quick', 'balanced', 'budget-friendly'],
+        healthCondition: ['high-protein', 'balanced'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['cooked rice', 'eggs', 'onions', 'garlic', 'soy sauce', 'green onions', 'oil'],
+        instructions: [
+            'Use leftover cooked rice',
+            'Scramble eggs in pan and set aside',
+            'Sauté garlic and onions',
+            'Add rice and break clumps',
+            'Add soy sauce',
+            'Mix in scrambled eggs',
+            'Garnish with green onions',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '275',
+            'Protein': '12g',
+            'Carbs': '42g',
+            'Fat': '7g',
+            'Fiber': '2g'
+        },
+        prepTime: '5 min',
+        cookTime: '10 min'
+    },
+    {
+        title: 'Cheese Sandwich',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'quick', 'budget-friendly', 'comfort-food'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['bread slices', 'cheese slices', 'butter', 'black pepper', 'mustard (optional)'],
+        instructions: [
+            'Butter bread slices',
+            'Place cheese slices on bread',
+            'Add pepper and mustard',
+            'Cover with other bread slice',
+            'Toast on pan or grill',
+            'Cut in half',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '320',
+            'Protein': '16g',
+            'Carbs': '30g',
+            'Fat': '16g',
+            'Fiber': '2g'
+        },
+        prepTime: '3 min',
+        cookTime: '5 min'
+    },
+    {
+        title: 'Chicken Soup',
+        cuisine: 'Quick & Easy',
+        tags: ['high-protein', 'comfort-food', 'gluten-free', 'healing'],
+        healthCondition: ['high-protein', 'low-calorie', 'easy-digest'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['chicken pieces', 'onions', 'carrots', 'celery', 'garlic', 'salt', 'pepper', 'herbs'],
+        instructions: [
+            'Boil chicken in water',
+            'Add chopped vegetables',
+            'Simmer for 45 minutes',
+            'Add garlic and herbs',
+            'Season with salt and pepper',
+            'Remove chicken and shred',
+            'Add back to soup',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '140',
+            'Protein': '16g',
+            'Carbs': '8g',
+            'Fat': '5g',
+            'Fiber': '2g'
+        },
+        prepTime: '15 min',
+        cookTime: '50 min'
+    },
+    {
+        title: 'Vegetable Stir Fry',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'vegan', 'low-calorie', 'quick', 'gluten-free'],
+        healthCondition: ['low-calorie', 'low-fat', 'high-fiber'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['mixed vegetables', 'garlic', 'ginger', 'soy sauce', 'sesame oil', 'salt', 'pepper'],
+        instructions: [
+            'Cut vegetables into bite sizes',
+            'Heat oil in pan',
+            'Sauté garlic and ginger',
+            'Add vegetables and stir-fry',
+            'Add soy sauce',
+            'Cook until crisp-tender',
+            'Season and serve',
+            'Optional: sprinkle sesame seeds'
+        ],
+        nutrition: {
+            'Calories': '95',
+            'Protein': '4g',
+            'Carbs': '14g',
+            'Fat': '3g',
+            'Fiber': '5g'
+        },
+        prepTime: '10 min',
+        cookTime: '10 min'
+    },
+    {
+        title: 'Scrambled Eggs',
+        cuisine: 'Quick & Easy',
+        tags: ['high-protein', 'quick', 'breakfast', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-carb'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['eggs', 'butter', 'milk', 'salt', 'pepper', 'chives (optional)'],
+        instructions: [
+            'Beat eggs with milk',
+            'Heat butter in pan',
+            'Pour eggs in pan',
+            'Scramble gently',
+            'Cook until creamy',
+            'Season with salt and pepper',
+            'Garnish with chives',
+            'Serve immediately'
+        ],
+        nutrition: {
+            'Calories': '200',
+            'Protein': '14g',
+            'Carbs': '2g',
+            'Fat': '15g',
+            'Fiber': '0g'
+        },
+        prepTime: '3 min',
+        cookTime: '5 min'
+    },
+    {
+        title: 'Omelette',
+        cuisine: 'Quick & Easy',
+        tags: ['high-protein', 'quick', 'breakfast', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-carb'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['eggs', 'onions', 'tomatoes', 'green chilies', 'salt', 'butter', 'pepper'],
+        instructions: [
+            'Beat eggs well',
+            'Add chopped vegetables',
+            'Season with salt and pepper',
+            'Heat butter in pan',
+            'Pour egg mixture',
+            'Cook on low heat',
+            'Fold in half when set',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '220',
+            'Protein': '14g',
+            'Carbs': '4g',
+            'Fat': '16g',
+            'Fiber': '1g'
+        },
+        prepTime: '5 min',
+        cookTime: '7 min'
+    },
+    {
+        title: 'Maggi Noodles',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'quick', 'comfort-food', 'budget-friendly'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['maggi noodles', 'water', 'noodles masala', 'oil', 'vegetables (optional)'],
+        instructions: [
+            'Boil water in pan',
+            'Add maggi noodles',
+            'Add masala from packet',
+            'Cook for 2 minutes',
+            'Stir occasionally',
+            'Add vegetables if using',
+            'Cook until noodles tender',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '250',
+            'Protein': '6g',
+            'Carbs': '40g',
+            'Fat': '8g',
+            'Fiber': '2g'
+        },
+        prepTime: '2 min',
+        cookTime: '5 min'
+    },
+    {
+        title: 'Tomato Rice',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'vegan', 'gluten-free', 'quick', 'balanced'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['cooked rice', 'tomatoes', 'onions', 'garlic', 'curry leaves', 'mustard seeds', 'turmeric', 'spices'],
+        instructions: [
+            'Use leftover cooked rice',
+            'Heat oil and temper mustard',
+            'Add curry leaves',
+            'Sauté onions until golden',
+            'Add chopped tomatoes',
+            'Cook until soft',
+            'Add spices and turmeric',
+            'Mix with rice and serve'
+        ],
+        nutrition: {
+            'Calories': '215',
+            'Protein': '5g',
+            'Carbs': '42g',
+            'Fat': '4g',
+            'Fiber': '2g'
+        },
+        prepTime: '8 min',
+        cookTime: '12 min'
+    },
+    {
+        title: 'French Toast',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'breakfast', 'comfort-food', 'quick'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['bread slices', 'eggs', 'milk', 'vanilla', 'cinnamon', 'butter', 'maple syrup'],
+        instructions: [
+            'Beat eggs with milk',
+            'Add vanilla and cinnamon',
+            'Dip bread slices',
+            'Heat butter in pan',
+            'Cook until golden brown',
+            'Flip and cook other side',
+            'Serve with maple syrup'
+        ],
+        nutrition: {
+            'Calories': '280',
+            'Protein': '12g',
+            'Carbs': '32g',
+            'Fat': '12g',
+            'Fiber': '1g'
+        },
+        prepTime: '5 min',
+        cookTime: '10 min'
+    },
+    {
+        title: 'Boiled Eggs with Bread',
+        cuisine: 'Quick & Easy',
+        tags: ['high-protein', 'quick', 'breakfast', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-carb'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['eggs', 'bread', 'butter', 'salt', 'pepper'],
+        instructions: [
+            'Boil eggs in water',
+            'Cook for 7-8 minutes',
+            'Cool and peel',
+            'Toast bread slices',
+            'Butter the toast',
+            'Cut eggs in half',
+            'Season with salt and pepper',
+            'Serve together'
+        ],
+        nutrition: {
+            'Calories': '260',
+            'Protein': '15g',
+            'Carbs': '22g',
+            'Fat': '11g',
+            'Fiber': '1g'
+        },
+        prepTime: '5 min',
+        cookTime: '8 min'
+    },
+    {
+        title: 'Grilled Cheese Sandwich',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'quick', 'comfort-food'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['bread', 'cheese slices', 'butter', 'garlic powder (optional)'],
+        instructions: [
+            'Butter both bread slices',
+            'Place cheese between slices',
+            'Add garlic powder if desired',
+            'Heat pan on medium',
+            'Grill sandwich until golden',
+            'Flip and grill other side',
+            'Cheese should be melted',
+            'Cut and serve hot'
+        ],
+        nutrition: {
+            'Calories': '335',
+            'Protein': '16g',
+            'Carbs': '30g',
+            'Fat': '17g',
+            'Fiber': '2g'
+        },
+        prepTime: '3 min',
+        cookTime: '6 min'
+    },
+    {
+        title: 'Potato Fry',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'vegan', 'gluten-free', 'quick'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['potatoes', 'onions', 'turmeric', 'red chili powder', 'salt', 'oil', 'mustard seeds'],
+        instructions: [
+            'Cut potatoes into cubes',
+            'Boil until half cooked',
+            'Heat oil in pan',
+            'Temper mustard seeds',
+            'Add onions and sauté',
+            'Add potatoes',
+            'Add spices',
+            'Fry until golden and crispy'
+        ],
+        nutrition: {
+            'Calories': '180',
+            'Protein': '3g',
+            'Carbs': '32g',
+            'Fat': '5g',
+            'Fiber': '4g'
+        },
+        prepTime: '10 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Cucumber Raita',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'low-calorie', 'cooling', 'gluten-free', 'quick'],
+        healthCondition: ['low-calorie', 'probiotic'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['cucumber', 'yogurt', 'cumin powder', 'salt', 'fresh coriander', 'mint (optional)'],
+        instructions: [
+            'Peel and grate cucumber',
+            'Beat yogurt until smooth',
+            'Mix in grated cucumber',
+            'Add cumin powder and salt',
+            'Garnish with coriander',
+            'Chill for 30 minutes',
+            'Serve as side dish'
+        ],
+        nutrition: {
+            'Calories': '45',
+            'Protein': '3g',
+            'Carbs': '5g',
+            'Fat': '1g',
+            'Fiber': '1g'
+        },
+        prepTime: '10 min',
+        cookTime: '0 min'
+    },
+    {
+        title: 'Onion Rings',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'vegan', 'crispy', 'appetizer'],
+        healthCondition: ['moderate-calorie', 'crispy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['onions', 'flour', 'cornstarch', 'baking powder', 'salt', 'oil'],
+        instructions: [
+            'Slice onions into rings',
+            'Separate rings',
+            'Make batter with flour and water',
+            'Add cornstarch and spices',
+            'Dip rings in batter',
+            'Deep fry until golden',
+            'Drain on paper towel',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '185',
+            'Protein': '3g',
+            'Carbs': '28g',
+            'Fat': '8g',
+            'Fiber': '2g'
+        },
+        prepTime: '15 min',
+        cookTime: '10 min'
+    },
+    {
+        title: 'Garlic Bread',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'quick', 'appetizer', 'comfort-food'],
+        healthCondition: ['high-carb', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['bread', 'butter', 'garlic', 'parsley', 'cheese (optional)'],
+        instructions: [
+            'Mix butter with minced garlic',
+            'Add chopped parsley',
+            'Add grated cheese if using',
+            'Spread on bread slices',
+            'Bake at 200°C for 8 minutes',
+            'Or grill on pan',
+            'Serve hot and crispy'
+        ],
+        nutrition: {
+            'Calories': '210',
+            'Protein': '5g',
+            'Carbs': '24g',
+            'Fat': '11g',
+            'Fiber': '1g'
+        },
+        prepTime: '5 min',
+        cookTime: '8 min'
+    },
+    {
+        title: 'Crispy Fried Egg',
+        cuisine: 'Quick & Easy',
+        tags: ['high-protein', 'quick', 'breakfast', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-carb'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['eggs', 'oil', 'salt', 'pepper'],
+        instructions: [
+            'Heat oil in pan',
+            'Crack egg into hot oil',
+            'Fry until edges crispy',
+            'Flip if desired',
+            'Cook to preference',
+            'Season with salt and pepper',
+            'Serve on bread or rice'
+        ],
+        nutrition: {
+            'Calories': '180',
+            'Protein': '12g',
+            'Carbs': '1g',
+            'Fat': '14g',
+            'Fiber': '0g'
+        },
+        prepTime: '2 min',
+        cookTime: '3 min'
+    },
+    {
+        title: 'Corn Sandwich',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'quick', 'balanced', 'budget-friendly'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['corn kernels', 'bread', 'onions', 'bell peppers', 'mayonnaise', 'black pepper', 'butter'],
+        instructions: [
+            'Boil corn kernels',
+            'Mix with mayonnaise',
+            'Add chopped vegetables',
+            'Season with pepper',
+            'Butter bread slices',
+            'Spread corn mixture',
+            'Grill sandwich',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '285',
+            'Protein': '9g',
+            'Carbs': '42g',
+            'Fat': '11g',
+            'Fiber': '4g'
+        },
+        prepTime: '10 min',
+        cookTime: '8 min'
+    },
+    {
+        title: 'Banana Toast',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'vegan', 'quick', 'breakfast', 'sweet'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['bread slices', 'bananas', 'honey', 'cinnamon (optional)'],
+        instructions: [
+            'Toast bread slices',
+            'Slice bananas thinly',
+            'Arrange on toast',
+            'Drizzle with honey',
+            'Sprinkle cinnamon',
+            'Serve immediately'
+        ],
+        nutrition: {
+            'Calories': '195',
+            'Protein': '4g',
+            'Carbs': '42g',
+            'Fat': '3g',
+            'Fiber': '4g'
+        },
+        prepTime: '3 min',
+        cookTime: '3 min'
+    },
+    {
+        title: 'Quick Poha',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'vegan', 'gluten-free', 'quick', 'breakfast'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['flattened rice (poha)', 'onions', 'peanuts', 'mustard seeds', 'turmeric', 'green chilies', 'lemon'],
+        instructions: [
+            'Wash and drain poha',
+            'Heat oil and temper mustard',
+            'Add peanuts and roast',
+            'Add onions and chilies',
+            'Add turmeric',
+            'Add poha and mix gently',
+            'Cook for 2 minutes',
+            'Squeeze lemon and serve'
+        ],
+        nutrition: {
+            'Calories': '225',
+            'Protein': '5g',
+            'Carbs': '42g',
+            'Fat': '5g',
+            'Fiber': '2g'
+        },
+        prepTime: '10 min',
+        cookTime: '8 min'
+    },
+    {
+        title: 'Beans Toast',
+        cuisine: 'Quick & Easy',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'quick', 'breakfast'],
+        healthCondition: ['high-protein', 'high-fiber'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['bread', 'baked beans', 'onions', 'bell peppers', 'black pepper'],
+        instructions: [
+            'Toast bread slices',
+            'Heat baked beans',
+            'Add chopped vegetables',
+            'Add pepper',
+            'Spread on toast',
+            'Serve hot',
+            'Optional: add cheese'
+        ],
+        nutrition: {
+            'Calories': '245',
+            'Protein': '12g',
+            'Carbs': '38g',
+            'Fat': '5g',
+            'Fiber': '10g'
+        },
+        prepTime: '5 min',
+        cookTime: '5 min'
     }
 ];
 
