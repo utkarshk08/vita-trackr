@@ -14,7 +14,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Set today's date as default for activity tracker, meal log, and weight tracking
-    document.getElementById('activityDate').valueAsDate = new Date();
+    if (document.getElementById('activityDate')) {
+        document.getElementById('activityDate').valueAsDate = new Date();
+    }
     if (document.getElementById('mealDate')) {
         document.getElementById('mealDate').valueAsDate = new Date();
     }
@@ -22,18 +24,20 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('weightDate').valueAsDate = new Date();
     }
     
-    // Load existing profile data if available
-    if (userProfile) {
+    // Load existing profile data if available (only if on app screen)
+    if (userProfile && document.getElementById('home')) {
         loadProfileData();
         if (userProfile.isSetupComplete) {
             showPage('home');
         }
     }
     
-    // Display existing data from localStorage or from API
-    displayActivities();
-    displayMeals();
-    updateOverview();
+    // Display existing data from localStorage or from API (only if on app screen)
+    if (document.getElementById('home')) {
+        displayActivities();
+        displayMeals();
+        updateOverview();
+    }
     
     // Navigation
     document.querySelectorAll('.nav-link').forEach(link => {
