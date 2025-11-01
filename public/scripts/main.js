@@ -453,18 +453,28 @@ async function saveProfile() {
 // Load user data from API
 async function loadUserData() {
     try {
+        console.log('Loading user data from API...');
         // Load activities
         activities = await getActivities();
+        console.log('Loaded activities:', activities.length);
         // Load meals
         meals = await getMeals();
+        console.log('Loaded meals:', meals.length);
         // Load weights
         weights = await getWeights();
+        console.log('Loaded weights:', weights.length);
+        
+        // Store in localStorage as backup
+        localStorage.setItem('activities', JSON.stringify(activities));
+        localStorage.setItem('meals', JSON.stringify(meals));
+        localStorage.setItem('weights', JSON.stringify(weights));
     } catch (error) {
         console.error('Error loading user data:', error);
         // Fallback to localStorage if API fails
         activities = JSON.parse(localStorage.getItem('activities')) || [];
         meals = JSON.parse(localStorage.getItem('meals')) || [];
         weights = JSON.parse(localStorage.getItem('weights')) || [];
+        console.log('Using fallback data:', { activities: activities.length, meals: meals.length, weights: weights.length });
     }
 }
 
@@ -2111,11 +2121,11 @@ function updateActivityChart() {
         return dayActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
     });
     
-    console.log('Activity chart data:', {
-        activities: activities.length,
-        last7Days,
-        activityCaloriesByDay
-    });
+    // console.log('Activity chart data:', {
+    //     activities: activities.length,
+    //     last7Days,
+    //     activityCaloriesByDay
+    // });
     
     // Show message if no activity data
     const totalCalories = activityCaloriesByDay.reduce((a, b) => a + b, 0);
@@ -2264,11 +2274,11 @@ function updateNutritionChart() {
         };
     });
     
-    console.log('Nutrition chart data:', {
-        meals: meals.length,
-        last7Days,
-        nutritionByDay
-    });
+    // console.log('Nutrition chart data:', {
+    //     meals: meals.length,
+    //     last7Days,
+    //     nutritionByDay
+    // });
     
     // Show message if no nutrition data
     const totalCalories = nutritionByDay.reduce((sum, n) => sum + n.calories, 0);

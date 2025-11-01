@@ -2,14 +2,14 @@
 
 // Score-based matching algorithm
 function getRecommendedRecipes(userProfile, availableIngredients = []) {
-    console.log('🤖 AI Recommendation System Starting...');
+    // console.log('🤖 AI Recommendation System Starting...');
     
-    // Log current state
-    console.log('User Profile:', {
-        goalType: userProfile.goalType,
-        cuisines: userProfile.preferredCuisines,
-        dietaryPreference: userProfile.dietaryPreference
-    });
+    // Log current state (disabled to reduce console spam)
+    // console.log('User Profile:', {
+    //     goalType: userProfile.goalType,
+    //     cuisines: userProfile.preferredCuisines,
+    //     dietaryPreference: userProfile.dietaryPreference
+    // });
     
     return getRecipesFromDB().then(recipes => {
         if (!recipes || recipes.length === 0) {
@@ -17,7 +17,7 @@ function getRecommendedRecipes(userProfile, availableIngredients = []) {
             return [];
         }
         
-        console.log(`📚 Found ${recipes.length} recipes to analyze`);
+        // console.log(`📚 Found ${recipes.length} recipes to analyze`);
 
         // Score each recipe based on multiple factors
         const scoredRecipes = recipes.map(recipe => {
@@ -176,12 +176,12 @@ function getRecommendedRecipes(userProfile, availableIngredients = []) {
             .filter(item => item.score > 0)
             .sort((a, b) => b.score - a.score);
         
-        console.log(`✅ Top 6 recommendations selected from ${filteredScored.length} scored recipes`);
-        console.log('Top recommendations:', filteredScored.slice(0, 3).map(r => ({
-            name: r.recipe.title,
-            score: r.score,
-            reasons: r.reasons.slice(0, 3)
-        })));
+        // console.log(`✅ Top 6 recommendations selected from ${filteredScored.length} scored recipes`);
+        // console.log('Top recommendations:', filteredScored.slice(0, 3).map(r => ({
+        //     name: r.recipe.title,
+        //     score: r.score,
+        //     reasons: r.reasons.slice(0, 3)
+        // })));
         
         return filteredScored.slice(0, 6); // Return top 6 recommendations
     });
@@ -376,14 +376,14 @@ function analyzePreviousDayActivity() {
     const totalCalories = yesterdayActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
     const totalDuration = yesterdayActivities.reduce((sum, act) => sum + (act.duration || 0), 0);
     
-    // Log for debugging
-    console.log('Previous day activity analysis:', {
-        date: yesterdayStr,
-        activitiesCount: yesterdayActivities.length,
-        totalCalories: totalCalories,
-        highActivity: totalCalories > 300,
-        lightActivity: totalCalories < 100
-    });
+    // Log for debugging (disabled to reduce console spam)
+    // console.log('Previous day activity analysis:', {
+    //     date: yesterdayStr,
+    //     activitiesCount: yesterdayActivities.length,
+    //     totalCalories: totalCalories,
+    //     highActivity: totalCalories > 300,
+    //     lightActivity: totalCalories < 100
+    // });
     
     return {
         highCalories: totalCalories > 300,  // More than 300 calories burned
@@ -410,16 +410,16 @@ function analyzePreviousDayNutrition() {
     const avgProtein = totalProtein / Math.max(1, yesterdayMeals.length);
     const avgCarbs = totalCarbs / Math.max(1, yesterdayMeals.length);
     
-    // Log for debugging
-    console.log('Previous day nutrition analysis:', {
-        date: yesterdayStr,
-        mealsCount: yesterdayMeals.length,
-        totalProtein: totalProtein,
-        totalCarbs: totalCarbs,
-        totalCalories: totalCalories,
-        needsProtein: totalProtein < 50 || avgProtein < 15,
-        highCarbs: totalCarbs > 200 || avgCarbs > 50
-    });
+    // Log for debugging (disabled to reduce console spam)
+    // console.log('Previous day nutrition analysis:', {
+    //     date: yesterdayStr,
+    //     mealsCount: yesterdayMeals.length,
+    //     totalProtein: totalProtein,
+    //     totalCarbs: totalCarbs,
+    //     totalCalories: totalCalories,
+    //     needsProtein: totalProtein < 50 || avgProtein < 15,
+    //     highCarbs: totalCarbs > 200 || avgCarbs > 50
+    // });
     
     return {
         needsProtein: totalProtein < 50 || avgProtein < 15,  // Less than 50g total or 15g per meal
@@ -491,7 +491,7 @@ function analyzeWeeklyActivityTrend() {
         averageDailyCalories: dailyCalories.reduce((a, b) => a + b, 0) / 7
     };
     
-    console.log('Weekly Activity Trend:', result);
+    // console.log('Weekly Activity Trend:', result);
     
     return result;
 }
@@ -529,7 +529,7 @@ function analyzeWeeklyNutritionTrend() {
         avgDailyProtein: avgDailyProtein
     };
     
-    console.log('Weekly Nutrition Trend:', result);
+    // console.log('Weekly Nutrition Trend:', result);
     
     return result;
 }
