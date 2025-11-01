@@ -2044,7 +2044,7 @@ function updateActivityChart() {
     window.activityChartInstance = new Chart(ctx, {
         type: 'line',
         data: {
-            labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { weekday: 'short' })),
+            labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
             datasets: [{
                 label: 'Calories Burned',
                 data: activityCaloriesByDay,
@@ -2142,7 +2142,7 @@ function updateNutritionChart() {
     window.nutritionChartInstance = new Chart(ctx, {
         type: 'bar',
         data: {
-            labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { weekday: 'short' })),
+            labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
             datasets: [
                 {
                     label: 'Calories',
