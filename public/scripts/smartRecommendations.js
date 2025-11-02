@@ -176,14 +176,44 @@ function getRecommendedRecipes(userProfile, availableIngredients = []) {
             .filter(item => item.score > 0)
             .sort((a, b) => b.score - a.score);
         
-        // console.log(`✅ Top 6 recommendations selected from ${filteredScored.length} scored recipes`);
+        // Group recipes by score tiers for variety
+        if (filteredScored.length > 5) {
+            // Split into broader tiers for maximum variety
+            const totalRecipes = filteredScored.length;
+            const topTier = filteredScored.slice(0, Math.min(15, Math.floor(totalRecipes * 0.3))); // Top 30% or 15 max
+            const midTier = filteredScored.slice(topTier.length, Math.min(25, Math.floor(totalRecipes * 0.6))); // Next 30%
+            const lowerTier = filteredScored.slice(midTier.length + topTier.length, totalRecipes); // All remaining
+            
+            // Shuffle each tier
+            const shuffle = (array) => {
+                const shuffled = [...array];
+                for (let i = shuffled.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+                }
+                return shuffled;
+            };
+            
+            const shuffledTop = shuffle(topTier);
+            const shuffledMid = shuffle(midTier);
+            const shuffledLower = shuffle(lowerTier);
+            
+            // Return mix: 2 from top tier + 2 from mid tier + 1 from lower tier (randomized)
+            return [
+                ...shuffledTop.slice(0, Math.min(2, shuffledTop.length)),
+                ...shuffledMid.slice(0, Math.min(2, shuffledMid.length)),
+                ...shuffledLower.slice(0, Math.min(1, shuffledLower.length))
+            ].slice(0, 5); // Ensure exactly 5 results
+        }
+        
+        // console.log(`✅ Top 5 recommendations selected from ${filteredScored.length} scored recipes`);
         // console.log('Top recommendations:', filteredScored.slice(0, 3).map(r => ({
         //     name: r.recipe.title,
         //     score: r.score,
         //     reasons: r.reasons.slice(0, 3)
         // })));
         
-        return filteredScored.slice(0, 6); // Return top 6 recommendations
+        return filteredScored.slice(0, 5); // Return top 5 if fewer available
     });
 }
 

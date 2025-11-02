@@ -2215,6 +2215,1310 @@ const recipeDatabase = [
         },
         prepTime: '5 min',
         cookTime: '5 min'
+    },
+    // Additional Breakfast & Light Meals
+    {
+        title: 'Vegetable Upma',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'vegan', 'breakfast', 'gluten-free'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['semolina (rava)', 'vegetables', 'onions', 'green chilies', 'mustard seeds', 'curry leaves', 'turmeric'],
+        instructions: [
+            'Heat oil in a pan',
+            'Add mustard seeds and curry leaves',
+            'Add chopped onions and green chilies',
+            'Sauté until golden',
+            'Add vegetables and cook slightly',
+            'Add semolina and roast until aromatic',
+            'Add hot water gradually, stirring continuously',
+            'Cook until semolina is soft and fluffy',
+            'Season with salt and garnish with coriander'
+        ],
+        nutrition: {
+            'Calories': '195',
+            'Protein': '5g',
+            'Carbs': '38g',
+            'Fat': '4g',
+            'Fiber': '3g'
+        },
+        prepTime: '10 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Poha with Peanuts',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'vegan', 'breakfast', 'gluten-free', 'quick'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['flattened rice (poha)', 'peanuts', 'onions', 'potatoes', 'mustard seeds', 'turmeric', 'green chilies', 'lemon'],
+        instructions: [
+            'Rinse poha and drain well',
+            'Heat oil and roast peanuts until golden',
+            'Temper mustard seeds',
+            'Add chopped potatoes and cook until tender',
+            'Add onions and green chilies',
+            'Add turmeric and salt',
+            'Add poha and mix gently',
+            'Cook for 2-3 minutes',
+            'Squeeze lemon juice and serve'
+        ],
+        nutrition: {
+            'Calories': '240',
+            'Protein': '6g',
+            'Carbs': '45g',
+            'Fat': '6g',
+            'Fiber': '3g'
+        },
+        prepTime: '10 min',
+        cookTime: '12 min'
+    },
+    {
+        title: 'Masala Oats',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'vegan', 'breakfast', 'high-fiber', 'quick'],
+        healthCondition: ['high-fiber', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['oats', 'onions', 'tomatoes', 'green chilies', 'mustard seeds', 'turmeric', 'curry leaves'],
+        instructions: [
+            'Heat oil and temper mustard seeds',
+            'Add curry leaves and green chilies',
+            'Sauté onions until translucent',
+            'Add chopped tomatoes and cook until soft',
+            'Add turmeric and spices',
+            'Add oats and roast for a minute',
+            'Add water and cook until creamy',
+            'Season with salt and serve hot'
+        ],
+        nutrition: {
+            'Calories': '180',
+            'Protein': '7g',
+            'Carbs': '30g',
+            'Fat': '4g',
+            'Fiber': '6g'
+        },
+        prepTime: '5 min',
+        cookTime: '10 min'
+    },
+    {
+        title: 'Idli with Sambar',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'vegan', 'breakfast', 'high-protein', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['idli', 'lentils (toor dal)', 'vegetables', 'tamarind', 'sambar powder', 'mustard seeds', 'curry leaves'],
+        instructions: [
+            'Prepare idli batter and steam in idli moulds',
+            'Cook toor dal until soft',
+            'Heat oil and temper mustard seeds and curry leaves',
+            'Add vegetables and cook',
+            'Add tamarind water and sambar powder',
+            'Add cooked dal and simmer',
+            'Season with salt',
+            'Serve hot idli with sambar and coconut chutney'
+        ],
+        nutrition: {
+            'Calories': '265',
+            'Protein': '12g',
+            'Carbs': '45g',
+            'Fat': '5g',
+            'Fiber': '8g'
+        },
+        prepTime: '15 min',
+        cookTime: '20 min'
+    },
+    {
+        title: 'Besan Chilla',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'vegan', 'breakfast', 'high-protein', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-carb'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['gram flour (besan)', 'onions', 'tomatoes', 'green chilies', 'cumin seeds', 'turmeric', 'coriander leaves'],
+        instructions: [
+            'Mix besan with water to make thin batter',
+            'Add chopped vegetables',
+            'Add spices and salt',
+            'Heat oil in a pan',
+            'Pour ladleful of batter',
+            'Spread evenly to make thin chilla',
+            'Cook until golden on both sides',
+            'Serve hot with chutney or pickle'
+        ],
+        nutrition: {
+            'Calories': '165',
+            'Protein': '8g',
+            'Carbs': '22g',
+            'Fat': '5g',
+            'Fiber': '5g'
+        },
+        prepTime: '10 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Rava Dosa',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'vegan', 'breakfast', 'crispy', 'quick'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['semolina (rava)', 'rice flour', 'onions', 'green chilies', 'cumin seeds', 'curry leaves', 'pepper'],
+        instructions: [
+            'Mix rava, rice flour, and salt',
+            'Add water to make thin batter',
+            'Add chopped onions, chilies, and spices',
+            'Let batter rest for 10 minutes',
+            'Heat oil in a non-stick pan',
+            'Pour batter in circular motion',
+            'Drizzle oil and cook until crispy',
+            'Flip and cook until golden brown'
+        ],
+        nutrition: {
+            'Calories': '245',
+            'Protein': '5g',
+            'Carbs': '48g',
+            'Fat': '5g',
+            'Fiber': '2g'
+        },
+        prepTime: '15 min',
+        cookTime: '8 min'
+    },
+    {
+        title: 'Vegetable Sandwich',
+        cuisine: 'Continental',
+        tags: ['vegetarian', 'quick', 'breakfast', 'balanced'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['bread slices', 'cucumber', 'tomato', 'onions', 'bell peppers', 'mayonnaise', 'butter', 'salt', 'pepper'],
+        instructions: [
+            'Butter bread slices',
+            'Slice vegetables thinly',
+            'Spread mayonnaise on bread',
+            'Layer vegetables evenly',
+            'Season with salt and pepper',
+            'Cover with second bread slice',
+            'Toast sandwich maker or pan grill',
+            'Cut diagonally and serve'
+        ],
+        nutrition: {
+            'Calories': '235',
+            'Protein': '8g',
+            'Carbs': '35g',
+            'Fat': '8g',
+            'Fiber': '4g'
+        },
+        prepTime: '10 min',
+        cookTime: '5 min'
+    },
+    {
+        title: 'Sprouts Salad',
+        cuisine: 'Healthy',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'high-fiber', 'gluten-free'],
+        healthCondition: ['high-protein', 'high-fiber', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['sprouted moong beans', 'onions', 'tomatoes', 'cucumber', 'lemon juice', 'black pepper', 'salt', 'coriander'],
+        instructions: [
+            'Wash and drain sprouted beans',
+            'Chop all vegetables',
+            'Mix sprouts with vegetables',
+            'Add lemon juice and spices',
+            'Season with salt and pepper',
+            'Toss well to combine',
+            'Garnish with fresh coriander',
+            'Serve fresh and chilled'
+        ],
+        nutrition: {
+            'Calories': '125',
+            'Protein': '10g',
+            'Carbs': '20g',
+            'Fat': '2g',
+            'Fiber': '8g'
+        },
+        prepTime: '15 min',
+        cookTime: '0 min'
+    },
+    {
+        title: 'Paneer Bhurji',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'high-protein', 'breakfast', 'quick'],
+        healthCondition: ['high-protein', 'low-carb'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['crumbled paneer', 'onions', 'tomatoes', 'ginger-garlic paste', 'turmeric', 'garam masala', 'green chilies'],
+        instructions: [
+            'Heat oil in a pan',
+            'Add cumin seeds until they crackle',
+            'Add chopped onions and sauté',
+            'Add ginger-garlic paste',
+            'Add tomatoes and cook until soft',
+            'Add spices and turmeric',
+            'Add crumbled paneer',
+            'Cook for 3-4 minutes',
+            'Garnish with coriander and serve'
+        ],
+        nutrition: {
+            'Calories': '285',
+            'Protein': '18g',
+            'Carbs': '12g',
+            'Fat': '18g',
+            'Fiber': '2g'
+        },
+        prepTime: '10 min',
+        cookTime: '12 min'
+    },
+    {
+        title: 'Egg White Omelette',
+        cuisine: 'Healthy',
+        tags: ['high-protein', 'low-fat', 'breakfast', 'gluten-free'],
+        healthCondition: ['high-protein', 'low-fat', 'low-calorie'],
+        dietaryPreference: ['omnivore'],
+        ingredients: ['egg whites', 'mushrooms', 'spinach', 'onions', 'bell peppers', 'salt', 'pepper'],
+        instructions: [
+            'Separate egg whites from yolks',
+            'Whisk egg whites until frothy',
+            'Sauté vegetables until tender',
+            'Add vegetables to egg whites',
+            'Season with salt and pepper',
+            'Heat oil in pan',
+            'Pour mixture and cook until set',
+            'Fold in half and serve'
+        ],
+        nutrition: {
+            'Calories': '120',
+            'Protein': '16g',
+            'Carbs': '4g',
+            'Fat': '3g',
+            'Fiber': '2g'
+        },
+        prepTime: '8 min',
+        cookTime: '6 min'
+    },
+    {
+        title: 'Peanut Butter Toast',
+        cuisine: 'Continental',
+        tags: ['vegetarian', 'vegan', 'breakfast', 'high-protein', 'quick'],
+        healthCondition: ['high-protein', 'balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['whole grain bread', 'peanut butter', 'banana (optional)', 'honey (optional)'],
+        instructions: [
+            'Toast bread slices until golden',
+            'Spread generous amount of peanut butter',
+            'Slice banana if using',
+            'Layer banana slices on top',
+            'Drizzle honey if desired',
+            'Serve immediately',
+            'Optional: add chia seeds or flax seeds'
+        ],
+        nutrition: {
+            'Calories': '285',
+            'Protein': '12g',
+            'Carbs': '32g',
+            'Fat': '14g',
+            'Fiber': '6g'
+        },
+        prepTime: '3 min',
+        cookTime: '2 min'
+    },
+    {
+        title: 'Banana Pancakes',
+        cuisine: 'Continental',
+        tags: ['vegetarian', 'breakfast', 'balanced', 'quick'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['banana', 'eggs', 'baking powder', 'cinnamon', 'vanilla', 'butter', 'maple syrup'],
+        instructions: [
+            'Mash ripe banana',
+            'Mix with eggs and baking powder',
+            'Add cinnamon and vanilla',
+            'Heat butter in pan',
+            'Pour small amount of batter',
+            'Cook until bubbles form',
+            'Flip and cook until golden',
+            'Serve with maple syrup'
+        ],
+        nutrition: {
+            'Calories': '210',
+            'Protein': '8g',
+            'Carbs': '28g',
+            'Fat': '7g',
+            'Fiber': '3g'
+        },
+        prepTime: '5 min',
+        cookTime: '10 min'
+    },
+    // Continental & Western
+    {
+        title: 'Veg Burger',
+        cuisine: 'Continental',
+        tags: ['vegetarian', 'comfort-food', 'balanced'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['burger bun', 'vegetable patty', 'lettuce', 'tomato', 'onion', 'cheese', 'mayonnaise'],
+        instructions: [
+            'Toast burger buns',
+            'Grill or pan-fry vegetable patty',
+            'Wash and dry lettuce leaves',
+            'Slice vegetables thinly',
+            'Assemble: bottom bun, patty, cheese',
+            'Add vegetables and sauce',
+            'Cover with top bun',
+            'Serve with fries'
+        ],
+        nutrition: {
+            'Calories': '380',
+            'Protein': '14g',
+            'Carbs': '48g',
+            'Fat': '14g',
+            'Fiber': '5g'
+        },
+        prepTime: '10 min',
+        cookTime: '8 min'
+    },
+    {
+        title: 'Spaghetti Aglio e Olio',
+        cuisine: 'Italian',
+        tags: ['vegetarian', 'vegan', 'quick', 'pasta'],
+        healthCondition: ['high-carb', 'balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['spaghetti', 'garlic', 'olive oil', 'red chili flakes', 'parsley', 'salt', 'pepper'],
+        instructions: [
+            'Cook spaghetti until al dente',
+            'Heat olive oil in pan',
+            'Add sliced garlic and cook until golden',
+            'Add red chili flakes',
+            'Add cooked pasta',
+            'Toss well with oil',
+            'Season with salt and pepper',
+            'Garnish with fresh parsley'
+        ],
+        nutrition: {
+            'Calories': '365',
+            'Protein': '12g',
+            'Carbs': '58g',
+            'Fat': '10g',
+            'Fiber': '3g'
+        },
+        prepTime: '5 min',
+        cookTime: '12 min'
+    },
+    {
+        title: 'Mac and Cheese',
+        cuisine: 'Continental',
+        tags: ['vegetarian', 'comfort-food', 'creamy'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['macaroni', 'cheddar cheese', 'butter', 'flour', 'milk', 'mustard powder', 'salt', 'pepper'],
+        instructions: [
+            'Cook macaroni until al dente',
+            'Melt butter in pan',
+            'Add flour to make roux',
+            'Gradually add milk, whisking constantly',
+            'Add shredded cheese',
+            'Season with mustard, salt, pepper',
+            'Add cooked pasta',
+            'Mix well and serve hot'
+        ],
+        nutrition: {
+            'Calories': '425',
+            'Protein': '18g',
+            'Carbs': '52g',
+            'Fat': '16g',
+            'Fiber': '2g'
+        },
+        prepTime: '10 min',
+        cookTime: '20 min'
+    },
+    {
+        title: 'Veg Lasagna',
+        cuisine: 'Italian',
+        tags: ['vegetarian', 'comfort-food', 'balanced', 'hearty'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['lasagna sheets', 'mozzarella cheese', 'ricotta cheese', 'spinach', 'mushrooms', 'marinara sauce', 'herbs'],
+        instructions: [
+            'Cook lasagna sheets until al dente',
+            'Sauté vegetables',
+            'Layer: sauce, pasta, vegetables, cheese',
+            'Repeat layers',
+            'Top with mozzarella',
+            'Bake until golden and bubbly',
+            'Let rest before cutting',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '385',
+            'Protein': '22g',
+            'Carbs': '45g',
+            'Fat': '14g',
+            'Fiber': '5g'
+        },
+        prepTime: '20 min',
+        cookTime: '45 min'
+    },
+    {
+        title: 'Garlic Bread',
+        cuisine: 'Italian',
+        tags: ['vegetarian', 'appetizer', 'quick'],
+        healthCondition: ['moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['bread', 'butter', 'garlic', 'parsley', 'parmesan cheese', 'salt'],
+        instructions: [
+            'Preheat oven to 375°F',
+            'Mix butter with minced garlic',
+            'Add chopped parsley and salt',
+            'Slice bread diagonally',
+            'Spread garlic butter generously',
+            'Sprinkle parmesan cheese',
+            'Bake until golden and crispy',
+            'Serve hot'
+        ],
+        nutrition: {
+            'Calories': '185',
+            'Protein': '5g',
+            'Carbs': '22g',
+            'Fat': '9g',
+            'Fiber': '1g'
+        },
+        prepTime: '5 min',
+        cookTime: '10 min'
+    },
+    {
+        title: 'Veg Quesadilla',
+        cuisine: 'Mexican',
+        tags: ['vegetarian', 'quick', 'comfort-food'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['tortilla', 'cheese', 'bell peppers', 'onions', 'black beans', 'jalapeños', 'sour cream'],
+        instructions: [
+            'Heat tortilla in pan',
+            'Add grated cheese on one half',
+            'Top with vegetables and beans',
+            'Add jalapeños if desired',
+            'Fold tortilla in half',
+            'Cook until cheese melts',
+            'Flip and cook until golden',
+            'Cut and serve with sour cream'
+        ],
+        nutrition: {
+            'Calories': '315',
+            'Protein': '14g',
+            'Carbs': '35g',
+            'Fat': '12g',
+            'Fiber': '5g'
+        },
+        prepTime: '10 min',
+        cookTime: '8 min'
+    },
+    // Healthy & Diet Meals
+    {
+        title: 'Quinoa Salad',
+        cuisine: 'Healthy',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'gluten-free', 'low-fat'],
+        healthCondition: ['high-protein', 'low-fat', 'balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['quinoa', 'cucumber', 'tomatoes', 'bell peppers', 'black beans', 'lemon juice', 'olive oil', 'herbs'],
+        instructions: [
+            'Cook quinoa until fluffy',
+            'Let quinoa cool completely',
+            'Chop all vegetables',
+            'Mix quinoa with vegetables',
+            'Add beans and herbs',
+            'Dress with lemon and olive oil',
+            'Season with salt and pepper',
+            'Chill and serve'
+        ],
+        nutrition: {
+            'Calories': '235',
+            'Protein': '10g',
+            'Carbs': '38g',
+            'Fat': '6g',
+            'Fiber': '5g'
+        },
+        prepTime: '15 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Chickpea Salad',
+        cuisine: 'Healthy',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'high-fiber', 'gluten-free'],
+        healthCondition: ['high-protein', 'high-fiber', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['chickpeas', 'red onions', 'cucumber', 'tomatoes', 'feta cheese', 'olive oil', 'lemon juice', 'herbs'],
+        instructions: [
+            'Drain and rinse chickpeas',
+            'Chop vegetables finely',
+            'Mix chickpeas with vegetables',
+            'Add crumbled feta',
+            'Dress with olive oil and lemon',
+            'Add fresh herbs',
+            'Season and toss',
+            'Serve chilled'
+        ],
+        nutrition: {
+            'Calories': '265',
+            'Protein': '14g',
+            'Carbs': '32g',
+            'Fat': '9g',
+            'Fiber': '12g'
+        },
+        prepTime: '15 min',
+        cookTime: '0 min'
+    },
+    {
+        title: 'Grilled Tofu Bowl',
+        cuisine: 'Healthy',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'low-fat'],
+        healthCondition: ['high-protein', 'low-fat', 'balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['firm tofu', 'brown rice', 'broccoli', 'carrots', 'bell peppers', 'soy sauce', 'sesame oil'],
+        instructions: [
+            'Press tofu to remove water',
+            'Cut tofu into cubes',
+            'Marinate in soy sauce',
+            'Grill tofu until golden',
+            'Cook brown rice',
+            'Steam vegetables',
+            'Assemble bowl with rice and vegetables',
+            'Top with grilled tofu'
+        ],
+        nutrition: {
+            'Calories': '285',
+            'Protein': '18g',
+            'Carbs': '38g',
+            'Fat': '7g',
+            'Fiber': '8g'
+        },
+        prepTime: '20 min',
+        cookTime: '25 min'
+    },
+    {
+        title: 'Brown Rice with Veggies',
+        cuisine: 'Healthy',
+        tags: ['vegetarian', 'vegan', 'high-fiber', 'gluten-free', 'balanced'],
+        healthCondition: ['high-fiber', 'low-fat', 'balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['brown rice', 'vegetables', 'garlic', 'ginger', 'soy sauce', 'sesame oil', 'herbs'],
+        instructions: [
+            'Cook brown rice until tender',
+            'Heat oil in wok',
+            'Add minced garlic and ginger',
+            'Stir-fry vegetables until crisp-tender',
+            'Add cooked rice',
+            'Season with soy sauce',
+            'Toss everything together',
+            'Garnish with herbs and serve'
+        ],
+        nutrition: {
+            'Calories': '225',
+            'Protein': '6g',
+            'Carbs': '42g',
+            'Fat': '4g',
+            'Fiber': '4g'
+        },
+        prepTime: '15 min',
+        cookTime: '30 min'
+    },
+    {
+        title: 'Oats Smoothie Bowl',
+        cuisine: 'Healthy',
+        tags: ['vegetarian', 'vegan', 'high-fiber', 'breakfast', 'quick'],
+        healthCondition: ['high-fiber', 'balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['oats', 'banana', 'berries', 'almond milk', 'nuts', 'seeds', 'honey'],
+        instructions: [
+            'Blend oats, banana, and milk',
+            'Make smooth, thick consistency',
+            'Pour into bowl',
+            'Top with fresh berries',
+            'Add nuts and seeds',
+            'Drizzle honey',
+            'Add granola if desired',
+            'Serve immediately'
+        ],
+        nutrition: {
+            'Calories': '320',
+            'Protein': '10g',
+            'Carbs': '55g',
+            'Fat': '8g',
+            'Fiber': '8g'
+        },
+        prepTime: '5 min',
+        cookTime: '2 min'
+    },
+    {
+        title: 'Cucumber Detox Salad',
+        cuisine: 'Healthy',
+        tags: ['vegetarian', 'vegan', 'low-calorie', 'gluten-free', 'detox'],
+        healthCondition: ['low-calorie', 'low-fat'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['cucumber', 'tomatoes', 'onions', 'lemon juice', 'mint leaves', 'salt', 'pepper', 'cumin'],
+        instructions: [
+            'Chop cucumber into bite-sized pieces',
+            'Dice tomatoes and onions',
+            'Mix all vegetables',
+            'Add freshly squeezed lemon juice',
+            'Add chopped mint leaves',
+            'Season with salt and pepper',
+            'Add a pinch of roasted cumin',
+            'Toss and serve chilled'
+        ],
+        nutrition: {
+            'Calories': '45',
+            'Protein': '2g',
+            'Carbs': '10g',
+            'Fat': '0g',
+            'Fiber': '3g'
+        },
+        prepTime: '10 min',
+        cookTime: '0 min'
+    },
+    {
+        title: 'Stir-Fried Vegetables',
+        cuisine: 'Asian',
+        tags: ['vegetarian', 'vegan', 'low-calorie', 'gluten-free', 'quick'],
+        healthCondition: ['low-calorie', 'low-fat', 'high-fiber'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['mixed vegetables', 'garlic', 'ginger', 'soy sauce', 'sesame oil', 'cornstarch', 'salt'],
+        instructions: [
+            'Cut vegetables into uniform pieces',
+            'Heat oil in wok',
+            'Add minced garlic and ginger',
+            'Add hard vegetables first',
+            'Stir-fry on high heat',
+            'Add leafy vegetables last',
+            'Season with soy sauce',
+            'Serve hot over rice'
+        ],
+        nutrition: {
+            'Calories': '95',
+            'Protein': '4g',
+            'Carbs': '14g',
+            'Fat': '3g',
+            'Fiber': '5g'
+        },
+        prepTime: '10 min',
+        cookTime: '10 min'
+    },
+    {
+        title: 'Steamed Broccoli Bowl',
+        cuisine: 'Healthy',
+        tags: ['vegetarian', 'vegan', 'low-calorie', 'gluten-free', 'detox'],
+        healthCondition: ['low-calorie', 'low-fat', 'high-fiber'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['broccoli', 'carrots', 'cauliflower', 'olive oil', 'lemon juice', 'salt', 'pepper', 'herbs'],
+        instructions: [
+            'Cut vegetables into florets',
+            'Steam for 5-7 minutes',
+            'Keep crisp-tender texture',
+            'Drain well',
+            'Dress with olive oil',
+            'Add lemon juice',
+            'Season with salt and pepper',
+            'Garnish with fresh herbs'
+        ],
+        nutrition: {
+            'Calories': '85',
+            'Protein': '5g',
+            'Carbs': '12g',
+            'Fat': '3g',
+            'Fiber': '6g'
+        },
+        prepTime: '10 min',
+        cookTime: '8 min'
+    },
+    {
+        title: 'Protein-Packed Wrap',
+        cuisine: 'Healthy',
+        tags: ['vegetarian', 'high-protein', 'quick', 'balanced'],
+        healthCondition: ['high-protein', 'balanced'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['whole wheat tortilla', 'hummus', 'grilled chicken/tofu', 'vegetables', 'avocado', 'cheese'],
+        instructions: [
+            'Heat tortilla slightly',
+            'Spread hummus evenly',
+            'Add protein source',
+            'Layer fresh vegetables',
+            'Add avocado slices',
+            'Sprinkle cheese',
+            'Roll tightly',
+            'Cut in half and serve'
+        ],
+        nutrition: {
+            'Calories': '345',
+            'Protein': '22g',
+            'Carbs': '35g',
+            'Fat': '12g',
+            'Fiber': '8g'
+        },
+        prepTime: '10 min',
+        cookTime: '5 min'
+    },
+    // South Indian Specials
+    {
+        title: 'Pongal',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'breakfast', 'gluten-free', 'comfort-food'],
+        healthCondition: ['high-carb', 'balanced'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['rice', 'moong dal', 'ginger', 'pepper', 'cumin', 'ghee', 'cashews', 'curry leaves'],
+        instructions: [
+            'Cook rice and dal together',
+            'Heat ghee and temper spices',
+            'Add curry leaves and ginger',
+            'Add cashews and roast',
+            'Add cooked rice-dal mixture',
+            'Mash slightly',
+            'Season with salt and pepper',
+            'Serve hot with chutney'
+        ],
+        nutrition: {
+            'Calories': '285',
+            'Protein': '8g',
+            'Carbs': '48g',
+            'Fat': '7g',
+            'Fiber': '4g'
+        },
+        prepTime: '10 min',
+        cookTime: '25 min'
+    },
+    {
+        title: 'Lemon Rice',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'vegan', 'quick', 'gluten-free'],
+        healthCondition: ['high-carb', 'quick-energy'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['cooked rice', 'lemon juice', 'mustard seeds', 'chana dal', 'urad dal', 'peanuts', 'turmeric', 'curry leaves'],
+        instructions: [
+            'Use cooked and cooled rice',
+            'Heat oil and temper mustard seeds',
+            'Add dals and peanuts',
+            'Roast until golden',
+            'Add curry leaves and turmeric',
+            'Mix with rice',
+            'Add lemon juice',
+            'Season and serve'
+        ],
+        nutrition: {
+            'Calories': '245',
+            'Protein': '6g',
+            'Carbs': '45g',
+            'Fat': '5g',
+            'Fiber': '2g'
+        },
+        prepTime: '10 min',
+        cookTime: '5 min'
+    },
+    {
+        title: 'Curd Rice',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'breakfast', 'gluten-free', 'probiotic'],
+        healthCondition: ['balanced', 'easy-digest'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['cooked rice', 'yogurt', 'tempering spices', 'grapes', 'pomegranate', 'grated carrot', 'salt'],
+        instructions: [
+            'Cool cooked rice completely',
+            'Mix with fresh yogurt',
+            'Add salt to taste',
+            'Add chopped fruits',
+            'Prepare tempering with spices',
+            'Mix everything gently',
+            'Let stand for 10 minutes',
+            'Serve chilled or at room temperature'
+        ],
+        nutrition: {
+            'Calories': '195',
+            'Protein': '6g',
+            'Carbs': '36g',
+            'Fat': '3g',
+            'Fiber': '2g'
+        },
+        prepTime: '10 min',
+        cookTime: '5 min'
+    },
+    {
+        title: 'Tomato Rasam',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'vegan', 'soup', 'gluten-free', 'healing'],
+        healthCondition: ['low-calorie', 'anti-inflammatory'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['tomatoes', 'tamarind', 'rasam powder', 'garlic', 'curry leaves', 'mustard seeds', 'coriander leaves'],
+        instructions: [
+            'Boil tomatoes until soft',
+            'Mash tomatoes well',
+            'Extract tamarind juice',
+            'Mix tomato and tamarind',
+            'Add rasam powder and salt',
+            'Boil until frothy',
+            'Temper with mustard and curry leaves',
+            'Garnish with coriander'
+        ],
+        nutrition: {
+            'Calories': '45',
+            'Protein': '2g',
+            'Carbs': '10g',
+            'Fat': '1g',
+            'Fiber': '2g'
+        },
+        prepTime: '10 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Vegetable Kurma',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'creamy', 'gluten-free', 'balanced'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['mixed vegetables', 'onions', 'tomatoes', 'cashews', 'coconut', 'yogurt', 'spices', 'curry leaves'],
+        instructions: [
+            'Cook vegetables until tender',
+            'Sauté onions and tomatoes',
+            'Grind cashews and coconut',
+            'Add to vegetables',
+            'Simmer until creamy',
+            'Add yogurt gradually',
+            'Season with spices',
+            'Garnish and serve with rice or dosa'
+        ],
+        nutrition: {
+            'Calories': '185',
+            'Protein': '5g',
+            'Carbs': '22g',
+            'Fat': '8g',
+            'Fiber': '4g'
+        },
+        prepTime: '15 min',
+        cookTime: '20 min'
+    },
+    {
+        title: 'Appam with Stew',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'breakfast', 'gluten-free'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['rice', 'fermented batter', 'coconut milk', 'vegetables', 'onions', 'coconut', 'spices', 'curry leaves'],
+        instructions: [
+            'Prepare appam batter',
+            'Ferment overnight',
+            'Cook appam in appam pan',
+            'Sauté onions and spices for stew',
+            'Add vegetables and cook',
+            'Add coconut milk',
+            'Simmer until creamy',
+            'Serve hot appam with stew'
+        ],
+        nutrition: {
+            'Calories': '245',
+            'Protein': '6g',
+            'Carbs': '42g',
+            'Fat': '8g',
+            'Fiber': '3g'
+        },
+        prepTime: '20 min',
+        cookTime: '25 min'
+    },
+    {
+        title: 'Vegetable Uttapam',
+        cuisine: 'South Indian',
+        tags: ['vegetarian', 'vegan', 'breakfast', 'gluten-free'],
+        healthCondition: ['balanced', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['dosa batter', 'onions', 'tomatoes', 'green chilies', 'carrots', 'bell peppers', 'carom seeds'],
+        instructions: [
+            'Use fermented dosa batter',
+            'Chop vegetables finely',
+            'Heat tawa or pan',
+            'Pour ladleful of batter',
+            'Top with vegetables',
+            'Drizzle oil around edges',
+            'Cook until base is crispy',
+            'Flip and cook other side'
+        ],
+        nutrition: {
+            'Calories': '185',
+            'Protein': '5g',
+            'Carbs': '32g',
+            'Fat': '5g',
+            'Fiber': '3g'
+        },
+        prepTime: '10 min',
+        cookTime: '8 min'
+    },
+    // Snacks & Sides
+    {
+        title: 'Bhel Puri',
+        cuisine: 'Indian Street Food',
+        tags: ['vegetarian', 'vegan', 'crispy', 'snack', 'quick'],
+        healthCondition: ['moderate-calorie'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['puffed rice', 'onions', 'tomatoes', 'green chilies', 'tamarind chutney', 'coriander chutney', 'sev', 'lemon'],
+        instructions: [
+            'Mix puffed rice in large bowl',
+            'Add chopped vegetables',
+            'Add both chutneys',
+            'Add sev for crunch',
+            'Squeeze fresh lemon juice',
+            'Toss everything together',
+            'Serve immediately',
+            'Garnish with coriander'
+        ],
+        nutrition: {
+            'Calories': '185',
+            'Protein': '4g',
+            'Carbs': '32g',
+            'Fat': '5g',
+            'Fiber': '3g'
+        },
+        prepTime: '10 min',
+        cookTime: '0 min'
+    },
+    {
+        title: 'Samosa',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'snack', 'fried', 'comfort-food'],
+        healthCondition: ['high-carb', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['all-purpose flour', 'potatoes', 'peas', 'spices', 'cumin seeds', 'green chilies', 'oil for frying'],
+        instructions: [
+            'Make dough with flour and oil',
+            'Boil and mash potatoes',
+            'Sauté spices and peas',
+            'Mix with mashed potatoes',
+            'Roll dough and fill',
+            'Seal in triangular shape',
+            'Deep fry until golden',
+            'Serve hot with chutney'
+        ],
+        nutrition: {
+            'Calories': '265',
+            'Protein': '5g',
+            'Carbs': '35g',
+            'Fat': '12g',
+            'Fiber': '4g'
+        },
+        prepTime: '20 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Dhokla',
+        cuisine: 'Gujarati',
+        tags: ['vegetarian', 'vegan', 'steamed', 'snack', 'gluten-free'],
+        healthCondition: ['low-fat', 'high-protein'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['gram flour', 'semolina', 'yogurt', 'salt', 'sugar', 'green chilies', 'ginger', 'mustard seeds'],
+        instructions: [
+            'Mix besan and semolina',
+            'Add yogurt to make batter',
+            'Add spices and sweetener',
+            'Let batter ferment',
+            'Steam in dhokla plates',
+            'Temper with mustard seeds',
+            'Garnish with coriander',
+            'Cut and serve'
+        ],
+        nutrition: {
+            'Calories': '125',
+            'Protein': '6g',
+            'Carbs': '22g',
+            'Fat': '2g',
+            'Fiber': '3g'
+        },
+        prepTime: '15 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Aloo Tikki',
+        cuisine: 'Indian Street Food',
+        tags: ['vegetarian', 'vegan', 'snack', 'fried'],
+        healthCondition: ['high-carb', 'moderate-calorie'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['potatoes', 'bread crumbs', 'spices', 'green chilies', 'coriander leaves', 'oil for frying'],
+        instructions: [
+            'Boil and mash potatoes',
+            'Add spices and chilies',
+            'Mix bread crumbs',
+            'Shape into round tikkis',
+            'Heat oil in pan',
+            'Shallow fry until golden',
+            'Flip and cook other side',
+            'Serve with chutney'
+        ],
+        nutrition: {
+            'Calories': '195',
+            'Protein': '4g',
+            'Carbs': '28g',
+            'Fat': '8g',
+            'Fiber': '3g'
+        },
+        prepTime: '20 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Hummus with Pita',
+        cuisine: 'Mediterranean',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'gluten-free'],
+        healthCondition: ['high-protein', 'high-fiber'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['chickpeas', 'tahini', 'lemon juice', 'garlic', 'olive oil', 'pita bread', 'paprika', 'cumin'],
+        instructions: [
+            'Soak and cook chickpeas',
+            'Blend chickpeas until smooth',
+            'Add tahini and lemon juice',
+            'Add minced garlic',
+            'Drizzle olive oil',
+            'Season with cumin and salt',
+            'Toast pita bread',
+            'Serve with hummus and olive oil'
+        ],
+        nutrition: {
+            'Calories': '225',
+            'Protein': '8g',
+            'Carbs': '28g',
+            'Fat': '9g',
+            'Fiber': '8g'
+        },
+        prepTime: '20 min',
+        cookTime: '5 min'
+    },
+    {
+        title: 'Corn Chaat',
+        cuisine: 'Indian Street Food',
+        tags: ['vegetarian', 'vegan', 'snack', 'quick', 'gluten-free'],
+        healthCondition: ['moderate-calorie'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['corn kernels', 'onions', 'tomatoes', 'green chilies', 'chaat masala', 'lemon juice', 'herbs'],
+        instructions: [
+            'Boil corn until tender',
+            'Drain and cool',
+            'Mix with chopped vegetables',
+            'Add chaat masala',
+            'Squeeze fresh lemon',
+            'Garnish with herbs',
+            'Serve chilled',
+            'Optional: add sev'
+        ],
+        nutrition: {
+            'Calories': '145',
+            'Protein': '4g',
+            'Carbs': '32g',
+            'Fat': '2g',
+            'Fiber': '4g'
+        },
+        prepTime: '10 min',
+        cookTime: '10 min'
+    },
+    {
+        title: 'Masala Papad',
+        cuisine: 'Indian',
+        tags: ['vegetarian', 'vegan', 'snack', 'gluten-free', 'quick'],
+        healthCondition: ['low-calorie'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['papad', 'onions', 'tomatoes', 'coriander', 'chaat masala', 'lemon juice', 'cumin powder'],
+        instructions: [
+            'Deep fry or roast papad',
+            'Chop vegetables finely',
+            'Mix with spices',
+            'Add lemon juice',
+            'Spread mixture on papad',
+            'Garnish with coriander',
+            'Serve immediately',
+            'Cut into pieces if desired'
+        ],
+        nutrition: {
+            'Calories': '65',
+            'Protein': '3g',
+            'Carbs': '10g',
+            'Fat': '2g',
+            'Fiber': '2g'
+        },
+        prepTime: '5 min',
+        cookTime: '2 min'
+    },
+    // Desserts
+    {
+        title: 'Fruit Custard',
+        cuisine: 'Dessert',
+        tags: ['vegetarian', 'dessert', 'sweet'],
+        healthCondition: ['moderate-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['custard powder', 'milk', 'sugar', 'assorted fruits', 'nuts', 'vanilla extract'],
+        instructions: [
+            'Dissolve custard powder in milk',
+            'Boil remaining milk with sugar',
+            'Add custard mixture gradually',
+            'Stir continuously until thick',
+            'Let cool completely',
+            'Add chopped fruits',
+            'Mix gently',
+            'Chill and serve'
+        ],
+        nutrition: {
+            'Calories': '220',
+            'Protein': '6g',
+            'Carbs': '38g',
+            'Fat': '6g',
+            'Fiber': '2g'
+        },
+        prepTime: '10 min',
+        cookTime: '15 min'
+    },
+    {
+        title: 'Gajar ka Halwa',
+        cuisine: 'Indian Dessert',
+        tags: ['vegetarian', 'dessert', 'sweet', 'comfort-food'],
+        healthCondition: ['high-calorie', 'sweet'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['carrots', 'milk', 'ghee', 'sugar', 'cardamom', 'nuts', 'raisins'],
+        instructions: [
+            'Grate carrots finely',
+            'Cook in ghee until soft',
+            'Add milk and simmer',
+            'Cook until milk reduces',
+            'Add sugar and stir',
+            'Add cardamom powder',
+            'Garnish with nuts and raisins',
+            'Serve warm'
+        ],
+        nutrition: {
+            'Calories': '285',
+            'Protein': '6g',
+            'Carbs': '42g',
+            'Fat': '12g',
+            'Fiber': '3g'
+        },
+        prepTime: '15 min',
+        cookTime: '45 min'
+    },
+    {
+        title: 'Rice Kheer',
+        cuisine: 'Indian Dessert',
+        tags: ['vegetarian', 'dessert', 'comfort-food', 'sweet'],
+        healthCondition: ['high-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['rice', 'milk', 'sugar', 'cardamom', 'nuts', 'saffron', 'ghee'],
+        instructions: [
+            'Soak rice for 30 minutes',
+            'Boil milk in heavy bottom pan',
+            'Add rice and cook until soft',
+            'Keep stirring frequently',
+            'Add sugar',
+            'Add cardamom and saffron',
+            'Garnish with nuts',
+            'Serve warm or chilled'
+        ],
+        nutrition: {
+            'Calories': '265',
+            'Protein': '7g',
+            'Carbs': '42g',
+            'Fat': '8g',
+            'Fiber': '1g'
+        },
+        prepTime: '10 min',
+        cookTime: '40 min'
+    },
+    {
+        title: 'Rasmalai',
+        cuisine: 'Indian Dessert',
+        tags: ['vegetarian', 'dessert', 'sweet', 'rich'],
+        healthCondition: ['high-calorie'],
+        dietaryPreference: ['vegetarian'],
+        ingredients: ['chenna', 'milk', 'sugar', 'cardamom', 'pistachios', 'saffron'],
+        instructions: [
+            'Knead chenna until smooth',
+            'Make small flat discs',
+            'Cook in sugar syrup',
+            'Heat milk and reduce slightly',
+            'Add cardamom and saffron',
+            'Cool milk completely',
+            'Dunk chenna discs in milk',
+            'Garnish with nuts and serve chilled'
+        ],
+        nutrition: {
+            'Calories': '225',
+            'Protein': '8g',
+            'Carbs': '32g',
+            'Fat': '7g',
+            'Fiber': '0g'
+        },
+        prepTime: '30 min',
+        cookTime: '25 min'
+    },
+    {
+        title: 'Mango Smoothie',
+        cuisine: 'Drinks',
+        tags: ['vegetarian', 'vegan', 'healthy', 'smoothie', 'quick'],
+        healthCondition: ['balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['mango', 'yogurt/milk', 'honey', 'ice', 'cardamom'],
+        instructions: [
+            'Peel and chop ripe mango',
+            'Blend mango until smooth',
+            'Add yogurt or milk',
+            'Add honey for sweetness',
+            'Add ice cubes',
+            'Blend until frothy',
+            'Add pinch of cardamom',
+            'Serve chilled'
+        ],
+        nutrition: {
+            'Calories': '180',
+            'Protein': '5g',
+            'Carbs': '38g',
+            'Fat': '3g',
+            'Fiber': '3g'
+        },
+        prepTime: '5 min',
+        cookTime: '2 min'
+    },
+    {
+        title: 'Chia Pudding',
+        cuisine: 'Healthy',
+        tags: ['vegetarian', 'vegan', 'high-fiber', 'gluten-free', 'breakfast'],
+        healthCondition: ['high-fiber', 'high-protein'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['chia seeds', 'almond milk', 'honey/maple syrup', 'vanilla', 'fruits', 'nuts'],
+        instructions: [
+            'Mix chia seeds with milk',
+            'Add sweetener and vanilla',
+            'Stir well and let sit',
+            'Refrigerate overnight',
+            'Top with fresh fruits',
+            'Add nuts and seeds',
+            'Drizzle with honey',
+            'Serve chilled'
+        ],
+        nutrition: {
+            'Calories': '185',
+            'Protein': '6g',
+            'Carbs': '22g',
+            'Fat': '8g',
+            'Fiber': '10g'
+        },
+        prepTime: '5 min',
+        cookTime: '0 min (overnight)'
+    },
+    {
+        title: 'Oats Energy Bar',
+        cuisine: 'Healthy',
+        tags: ['vegetarian', 'vegan', 'high-protein', 'snack', 'meal-prep'],
+        healthCondition: ['high-protein', 'balanced'],
+        dietaryPreference: ['vegetarian', 'vegan'],
+        ingredients: ['oats', 'nuts', 'dates', 'honey', 'peanut butter', 'chia seeds', 'cocoa powder'],
+        instructions: [
+            'Mix oats and chopped nuts',
+            'Blend dates to make paste',
+            'Warm honey and peanut butter',
+            'Mix everything together',
+            'Add chia seeds and cocoa',
+            'Press into baking dish',
+            'Refrigerate until firm',
+            'Cut into bars'
+        ],
+        nutrition: {
+            'Calories': '245',
+            'Protein': '8g',
+            'Carbs': '32g',
+            'Fat': '10g',
+            'Fiber': '6g'
+        },
+        prepTime: '15 min',
+        cookTime: '0 min (chill)'
     }
 ];
 

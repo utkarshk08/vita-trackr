@@ -230,6 +230,8 @@ function showPage(pageName) {
         getSuggestions(); // Auto-load suggestions
     } else if (pageName === 'progress') {
         updateProgressPage(); // Load progress, achievements, and charts
+    } else if (pageName === 'tracker') {
+        displayActivityRecommendation(); // Load activity recommendation
     }
 }
 
@@ -1104,7 +1106,7 @@ function generateDishSuggestions(recommendation) {
         );
     }
     
-    return suggestions.slice(0, 4);
+    return suggestions.slice(0, 5);
 }
 
 // Activity Calorie Calculator
@@ -1611,23 +1613,25 @@ function updateOverview() {
     const overviewActivitiesDiv = document.getElementById('overviewActivities');
     const recentActivities = [...activities].sort((a, b) => 
         new Date(b.date) - new Date(a.date)
-    ).slice(0, 5);
+    ).slice(0, 10);
     
     if (recentActivities.length === 0) {
-        overviewActivitiesDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No recent activities</p>';
+        overviewActivitiesDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary); width: 100%;">No recent activities</p>';
     } else {
         overviewActivitiesDiv.innerHTML = recentActivities.map(activity => {
             const formattedDate = new Date(activity.date).toLocaleDateString('en-US', {
-                year: 'numeric',
                 month: 'short',
                 day: 'numeric'
             });
+            const icon = getActivityIcon(activity.type);
             return `
-                <div style="padding: 15px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--primary-color);">
-                    <strong>${activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}</strong> 
-                    <span style="color: var(--text-secondary);">- ${formattedDate}</span>
-                    <div style="margin-top: 5px; color: var(--text-secondary); font-size: 14px;">
-                        ${activity.duration} min | ${activity.calories} calories
+                <div style="padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid var(--primary-color); flex: 0 0 calc(33.333% - 6px); min-width: 200px; font-size: 0.9em;">
+                    <strong>${icon} ${activity.type.charAt(0).toUpperCase() + activity.type.slice(1)}</strong>
+                    <div style="margin-top: 4px; color: var(--text-secondary); font-size: 0.85em;">
+                        ${activity.duration} min | ${activity.calories} cal
+                    </div>
+                    <div style="margin-top: 2px; color: var(--text-secondary); font-size: 0.8em; opacity: 0.7;">
+                        ${formattedDate}
                     </div>
                 </div>
             `;
@@ -1638,25 +1642,26 @@ function updateOverview() {
     const overviewMealsDiv = document.getElementById('overviewMeals');
     const recentMeals = [...meals].sort((a, b) => 
         new Date(b.date) - new Date(a.date)
-    ).slice(0, 5);
+    ).slice(0, 10);
     
     if (recentMeals.length === 0) {
-        overviewMealsDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No recent meals logged</p>';
+        overviewMealsDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary); width: 100%;">No recent meals logged</p>';
     } else {
         overviewMealsDiv.innerHTML = recentMeals.map(meal => {
             const formattedDate = new Date(meal.date).toLocaleDateString('en-US', {
-                year: 'numeric',
                 month: 'short',
                 day: 'numeric'
             });
-    const quantityDisplay = meal.quantity ? 
-        (meal.quantityType === 'grams' ? ` (${meal.quantity}g)` : ` x${meal.quantity}`) : '';
+            const quantityDisplay = meal.quantity ? 
+                (meal.quantityType === 'grams' ? ` (${meal.quantity}g)` : ` x${meal.quantity}`) : '';
             return `
-                <div style="padding: 15px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 4px solid var(--secondary-color);">
-                    <strong>${meal.name}${quantityDisplay}</strong> 
-                    <span style="color: var(--text-secondary);">- ${formattedDate}</span>
-                    <div style="margin-top: 5px; color: var(--text-secondary); font-size: 14px;">
-                        ${meal.calories} calories | P: ${meal.protein}g C: ${meal.carbs}g F: ${meal.fats}g
+                <div style="padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid var(--secondary-color); flex: 0 0 calc(33.333% - 6px); min-width: 200px; font-size: 0.9em;">
+                    <strong>🍽️ ${meal.name}${quantityDisplay}</strong>
+                    <div style="margin-top: 4px; color: var(--text-secondary); font-size: 0.85em;">
+                        ${meal.calories} cal | P:${meal.protein}g C:${meal.carbs}g F:${meal.fats}g
+                    </div>
+                    <div style="margin-top: 2px; color: var(--text-secondary); font-size: 0.8em; opacity: 0.7;">
+                        ${formattedDate}
                     </div>
                 </div>
             `;
@@ -1728,6 +1733,9 @@ function updateOverview() {
             <p>${insight.description}</p>
         </div>
     `).join('');
+    
+    // Display daily plan
+    displayDailyPlan();
 }
 
 // Modal Functions
@@ -2611,4 +2619,427 @@ function updateWeightChart() {
             }
         }
     });
+}
+
+// ==================== ENHANCED RECOMMENDATION SYSTEM ====================
+
+// Display Activity Recommendation for Activity Tracker page
+function displayActivityRecommendation() {
+    if (!userProfile || !userProfile.isSetupComplete) {
+        const contentDiv = document.getElementById('activityRecommendationContent');
+        if (contentDiv) {
+            contentDiv.innerHTML = '<p style="margin: 0; color: var(--text-secondary);">Complete your profile setup to get personalized activity recommendations!</p>';
+        }
+        return;
+    }
+    
+    // Check if goal is completed
+    const completionCheck = checkActivityGoalCompletion();
+    if (completionCheck.completed) {
+        const contentDiv = document.getElementById('activityRecommendationContent');
+        if (contentDiv) {
+            contentDiv.innerHTML = `
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 4em; margin-bottom: 15px;">🎉</div>
+                    <p style="margin: 0 0 10px 0; font-size: 1.3em; font-weight: 700; color: var(--accent-color);">
+                        Hooray! You've completed today's goal!
+                    </p>
+                    <p style="margin: 0; color: var(--text-secondary); font-size: 1em; line-height: 1.6;">
+                        ${completionCheck.message}
+                    </p>
+                </div>
+            `;
+        }
+        return;
+    }
+    
+    const recommendation = generateActivityRecommendation();
+    const contentDiv = document.getElementById('activityRecommendationContent');
+    
+    if (contentDiv) {
+        const icon = getActivityIcon(recommendation.activity);
+        contentDiv.innerHTML = `
+            <div style="display: flex; align-items: start; gap: 15px;">
+                <div style="font-size: 2em; color: var(--accent-color);">${icon}</div>
+                <div style="flex: 1;">
+                    <p style="margin: 0 0 10px 0; font-size: 1.1em; font-weight: 600;">
+                        Do <span style="color: var(--accent-color);">${recommendation.duration} minutes of ${recommendation.activity}</span> today
+                    </p>
+                    <p style="margin: 0; color: var(--text-secondary); font-size: 0.95em;">
+                        <i class="fas fa-info-circle"></i> ${recommendation.reason}
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Generate Activity Recommendation
+function generateActivityRecommendation() {
+    const today = new Date().toISOString().split('T')[0];
+    const todayActivities = activities.filter(act => act.date === today);
+    const todayCalories = todayActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
+    
+    // Get yesterday's activity
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    const yesterdayActivities = activities.filter(act => act.date === yesterdayStr);
+    const yesterdayCalories = yesterdayActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
+    
+    // Get last 7 days data
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        return date.toISOString().split('T')[0];
+    });
+    
+    const weekActivities = activities.filter(act => last7Days.includes(act.date));
+    const avgDailyCalories = weekActivities.reduce((sum, act) => sum + (act.calories || 0), 0) / 7;
+    
+    // Check for excessive activity
+    const age = userProfile.age || 30;
+    const isExcessive = checkExcessiveActivity(age, todayCalories, userProfile);
+    
+    let recommendation;
+    
+    if (isExcessive.excessive) {
+        // User over-exercised - recommend rest or light activity
+        recommendation = {
+            activity: 'yoga',
+            duration: 15,
+            reason: isExcessive.reason
+        };
+    } else if (todayCalories === 0) {
+        // No activity today - recommend based on weekly average
+        if (avgDailyCalories > 500) {
+            recommendation = {
+                activity: getRecommendedActivity(avgDailyCalories),
+                duration: calculateRecommendedDuration(userProfile.goalType, age),
+                reason: `Your weekly average is ${Math.round(avgDailyCalories)} calories/day. Keep the momentum going!`
+            };
+        } else if (avgDailyCalories > 200) {
+            recommendation = {
+                activity: 'walking',
+                duration: 30,
+                reason: `You've been active this week (${Math.round(avgDailyCalories)} cal/day avg). A brisk walk will help maintain your progress.`
+            };
+        } else {
+            recommendation = {
+                activity: 'walking',
+                duration: 20,
+                reason: 'Start with a gentle walk to begin your fitness journey!'
+            };
+        }
+    } else if (todayCalories < 100) {
+        // Light activity today
+        recommendation = {
+            activity: 'walking',
+            duration: 20,
+            reason: `You've burned ${todayCalories} calories today. A short walk would help you reach your daily goal.`
+        };
+    } else if (todayCalories >= 100 && todayCalories < 300) {
+        // Moderate activity - encourage to continue
+        recommendation = {
+            activity: getRecommendedActivity(avgDailyCalories),
+            duration: 15,
+            reason: `Great start! You've burned ${todayCalories} calories. Add 15 more minutes to maximize your results.`
+        };
+    } else {
+        // Good activity - light activity or rest
+        recommendation = {
+            activity: 'yoga',
+            duration: 15,
+            reason: `Excellent work! You've burned ${todayCalories} calories today. A light yoga session will help with recovery.`
+        };
+    }
+    
+    return recommendation;
+}
+
+// Check if user is over-exercising
+function checkExcessiveActivity(age, todayCalories, userProfile) {
+    const healthConditions = userProfile.diseases || [];
+    const hasHeartCondition = healthConditions.some(d => 
+        d.toLowerCase().includes('heart') || 
+        d.toLowerCase().includes('hypertension') || 
+        d.toLowerCase().includes('pressure')
+    );
+    
+    // Age-based thresholds
+    let maxCaloriesThreshold = 1000;
+    if (age > 60) maxCaloriesThreshold = 500;
+    else if (age > 50) maxCaloriesThreshold = 700;
+    else if (age > 40) maxCaloriesThreshold = 900;
+    
+    // Health condition adjustments
+    if (hasHeartCondition) maxCaloriesThreshold *= 0.7;
+    
+    if (todayCalories > maxCaloriesThreshold) {
+        const overBy = todayCalories - maxCaloriesThreshold;
+        return {
+            excessive: true,
+            reason: `Warning: You've over-exercised by ~${Math.round(overBy)} calories today. Rest is crucial for recovery and preventing injuries.${age > 50 ? ' Take it easier at your age.' : ''}${hasHeartCondition ? ' Given your heart condition, reduce intensity.' : ''}`
+        };
+    }
+    
+    return { excessive: false };
+}
+
+// Check if activity goal is completed for the day
+function checkActivityGoalCompletion() {
+    const today = new Date().toISOString().split('T')[0];
+    const todayActivities = activities.filter(act => act.date === today);
+    const todayCalories = todayActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
+    const todayDuration = todayActivities.reduce((sum, act) => sum + (act.duration || 0), 0);
+    
+    // Define completion thresholds based on goal type
+    const goalType = userProfile.goalType || 'maintain';
+    let targetCalories = 300; // Default moderate activity goal
+    let targetDuration = 30;  // Default 30 minutes
+    
+    if (goalType === 'weight-loss') {
+        targetCalories = 400;
+        targetDuration = 45;
+    } else if (goalType === 'muscle-gain') {
+        targetCalories = 500;
+        targetDuration = 60;
+    } else if (goalType === 'weight-gain') {
+        targetCalories = 250;
+        targetDuration = 30;
+    }
+    
+    // Adjust for age
+    const age = userProfile.age || 30;
+    if (age > 60) {
+        targetCalories *= 0.6;
+        targetDuration *= 0.6;
+    } else if (age > 50) {
+        targetCalories *= 0.75;
+        targetDuration *= 0.75;
+    }
+    
+    // Check if goal met
+    if (todayCalories >= targetCalories || todayDuration >= targetDuration) {
+        const messages = [
+            `You've burned ${Math.round(todayCalories)} calories and exercised for ${todayDuration} minutes today! Your body is thanking you for this amazing effort. Rest well and stay hydrated! 🏆`,
+            `Incredible! ${Math.round(todayCalories)} calories burned today! You're crushing your fitness goals. Keep this momentum going tomorrow! 💪`,
+            `Outstanding achievement! ${todayDuration} minutes of activity completed. Your dedication is inspiring! Remember to fuel your body with nutritious meals. 🌟`,
+            `You did it! You've exceeded today's activity goal with ${Math.round(todayCalories)} calories burned. This is the dedication that leads to real results! 🎯`,
+            `Fantastic work! ${todayDuration} minutes of exercise today shows serious commitment to your health. You deserve this celebration! ✨`
+        ];
+        
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+        
+        return {
+            completed: true,
+            message: randomMessage
+        };
+    }
+    
+    return { completed: false };
+}
+
+// Get recommended activity type based on weekly average
+function getRecommendedActivity(avgCalories) {
+    const activities = ['running', 'cycling', 'swimming', 'walking', 'gym', 'yoga'];
+    // Add some randomness to avoid repetition
+    const recentActivities = getRecentActivityTypes(7);
+    const availableActivities = activities.filter(a => !recentActivities.includes(a));
+    const pool = availableActivities.length > 0 ? availableActivities : activities;
+    
+    // Recommend based on calories burned
+    if (avgCalories > 500) return pool.includes('running') ? 'running' : pool[0];
+    if (avgCalories > 300) return pool.includes('cycling') ? 'cycling' : pool[0];
+    if (avgCalories > 200) return pool.includes('walking') ? 'walking' : pool[0];
+    return 'walking';
+}
+
+// Get recent activity types for variety
+function getRecentActivityTypes(days) {
+    const last7Days = Array.from({ length: days }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        return date.toISOString().split('T')[0];
+    });
+    
+    const recentActs = activities.filter(act => last7Days.includes(act.date));
+    return [...new Set(recentActs.map(act => act.type))];
+}
+
+// Calculate recommended duration
+function calculateRecommendedDuration(goalType, age) {
+    let baseDuration = 30;
+    
+    // Adjust based on goal
+    if (goalType === 'weight-loss') baseDuration = 45;
+    else if (goalType === 'muscle-gain') baseDuration = 60;
+    else if (goalType === 'weight-gain') baseDuration = 30;
+    else baseDuration = 30;
+    
+    // Adjust for age
+    if (age > 60) baseDuration = Math.min(20, baseDuration);
+    else if (age > 50) baseDuration = Math.min(30, baseDuration);
+    else if (age > 40) baseDuration = Math.min(40, baseDuration);
+    
+    // Add some randomness (10-20% variation) to avoid repetition
+    const variation = 0.1 + Math.random() * 0.1;
+    return Math.round(baseDuration * (1 + (Math.random() > 0.5 ? variation : -variation)));
+}
+
+// Get activity icon
+function getActivityIcon(activity) {
+    const icons = {
+        running: '🏃',
+        cycling: '🚴',
+        swimming: '🏊',
+        walking: '🚶',
+        gym: '💪',
+        yoga: '🧘'
+    };
+    return icons[activity] || '🏃';
+}
+
+// Display Daily Plan for Overview page
+function displayDailyPlan() {
+    if (!userProfile || !userProfile.isSetupComplete) {
+        const contentDiv = document.getElementById('dailyPlanContent');
+        if (contentDiv) {
+            contentDiv.innerHTML = '<p style="margin: 0;">Complete your profile setup to get your personalized daily plan!</p>';
+        }
+        return;
+    }
+    
+    const dailyPlan = generateDailyPlan();
+    const contentDiv = document.getElementById('dailyPlanContent');
+    
+    if (contentDiv) {
+        const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+        contentDiv.innerHTML = `
+            <div style="margin-bottom: 20px;">
+                <p style="margin: 0 0 15px 0; font-size: 1.05em; font-weight: 600; color: var(--text-primary);">
+                    <i class="fas fa-calendar-day"></i> Your plan for ${today}
+                </p>
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px;">
+                    <h4 style="margin: 0 0 10px 0; color: var(--accent-color);">
+                        <i class="fas fa-running"></i> Activity Recommendation
+                    </h4>
+                    <p style="margin: 0; color: var(--text-secondary); line-height: 1.6;">
+                        ${dailyPlan.activityRecommendation}
+                    </p>
+                </div>
+                <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px;">
+                    <h4 style="margin: 0 0 10px 0; color: var(--secondary-color);">
+                        <i class="fas fa-utensils"></i> Nutrition Focus
+                    </h4>
+                    <p style="margin: 0; color: var(--text-secondary); line-height: 1.6;">
+                        ${dailyPlan.nutritionRecommendation}
+                    </p>
+                </div>
+            </div>
+        `;
+    }
+}
+
+// Generate Complete Daily Plan
+function generateDailyPlan() {
+    const today = new Date().toISOString().split('T')[0];
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayStr = yesterday.toISOString().split('T')[0];
+    
+    // Get yesterday's data
+    const yesterdayActivities = activities.filter(act => act.date === yesterdayStr);
+    const yesterdayMeals = meals.filter(meal => meal.date === yesterdayStr);
+    const yesterdayCaloriesBurned = yesterdayActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
+    const yesterdayCaloriesEaten = yesterdayMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+    const yesterdayProtein = yesterdayMeals.reduce((sum, meal) => sum + (parseFloat(meal.protein) || 0), 0);
+    const yesterdayCarbs = yesterdayMeals.reduce((sum, meal) => sum + (parseFloat(meal.carbs) || 0), 0);
+    
+    // Get last 7 days data
+    const last7Days = Array.from({ length: 7 }, (_, i) => {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        return date.toISOString().split('T')[0];
+    });
+    
+    const weekActivities = activities.filter(act => last7Days.includes(act.date));
+    const weekMeals = meals.filter(meal => last7Days.includes(meal.date));
+    const avgDailyCaloriesBurned = weekActivities.reduce((sum, act) => sum + (act.calories || 0), 0) / 7;
+    const avgDailyCaloriesEaten = weekMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0) / 7;
+    const avgDailyProtein = weekMeals.reduce((sum, meal) => sum + (parseFloat(meal.protein) || 0), 0) / 7;
+    
+    const activityRec = generateActivityRecommendation();
+    const age = userProfile.age || 30;
+    
+    // Build activity recommendation with context
+    let activityContext = '';
+    if (yesterdayCaloriesBurned > 500) {
+        activityContext = `Yesterday you had an intense workout (${Math.round(yesterdayCaloriesBurned)} cal), so today focus on recovery and lighter movement.`;
+    } else if (yesterdayCaloriesBurned > 200) {
+        activityContext = `You were moderately active yesterday (${Math.round(yesterdayCaloriesBurned)} cal). Today you can push a bit more!`;
+    } else if (avgDailyCaloriesBurned > 400) {
+        activityContext = `Your weekly average is ${Math.round(avgDailyCaloriesBurned)} calories/day. Maintain this excellent momentum!`;
+    } else {
+        activityContext = 'Based on your weekly activity patterns, let\'s boost your fitness journey!';
+    }
+    
+    const activityRecommendation = `${activityContext} ${activityRec.reason} Recommended: ${activityRec.duration} minutes of ${activityRec.activity}.`;
+    
+    // Build nutrition recommendation with context
+    let nutritionContext = '';
+    let nutritionFocus = '';
+    
+    if (yesterdayProtein < 50) {
+        nutritionContext = `Your protein intake was low yesterday (${Math.round(yesterdayProtein)}g).`;
+        nutritionFocus = 'Focus on high-protein foods today like chicken, fish, eggs, legumes, or Greek yogurt to support muscle recovery and growth.';
+    } else if (avgDailyProtein < 60) {
+        nutritionContext = `Your weekly protein average (${Math.round(avgDailyProtein)}g/day) could be improved.`;
+        nutritionFocus = 'Incorporate protein-rich snacks between meals to boost your intake throughout the day.';
+    } else {
+        nutritionContext = `Your nutrition has been balanced recently.`;
+        nutritionFocus = 'Maintain variety in your meals. Include colorful vegetables, whole grains, and healthy fats for optimal nutrition.';
+    }
+    
+    if (yesterdayCaloriesEaten > 2500 && avgDailyCaloriesBurned < 300) {
+        nutritionContext += ' You consumed more calories yesterday than you burned through activities.';
+        nutritionFocus = 'Today, focus on nutrient-dense foods that provide satiety without excess calories. Choose lean proteins, vegetables, and whole grains.';
+    }
+    
+    // Add goal-specific recommendations
+    if (userProfile.goalType) {
+        switch(userProfile.goalType) {
+            case 'weight-loss':
+                if (nutritionFocus.includes('Focus on')) {
+                    nutritionFocus += ' For weight loss, prioritize portion control and high-fiber foods.';
+                } else {
+                    nutritionFocus = 'Focus on portion control, high-fiber foods, and lean proteins. Stay hydrated and avoid sugary drinks.';
+                }
+                break;
+            case 'muscle-gain':
+                nutritionFocus += ' For muscle gain, ensure you\'re eating enough calories and protein. Consider protein-rich snacks post-workout.';
+                break;
+            case 'weight-gain':
+                nutritionFocus += ' For healthy weight gain, focus on calorie-dense but nutritious foods like nuts, avocados, and whole grains.';
+                break;
+        }
+    }
+    
+    // Add condition-specific recommendations
+    if (userProfile.diseases && userProfile.diseases.length > 0) {
+        const diseases = userProfile.diseases.map(d => d.toLowerCase());
+        if (diseases.some(d => d.includes('diabetes'))) {
+            nutritionFocus += ' With diabetes, maintain consistent meal timing and choose low-glycemic foods. Monitor your carb intake.';
+        }
+        if (diseases.some(d => d.includes('hypertension'))) {
+            nutritionFocus += ' For hypertension, limit sodium intake and increase potassium-rich foods like bananas and leafy greens.';
+        }
+    }
+    
+    const nutritionRecommendation = `${nutritionContext} ${nutritionFocus}`;
+    
+    return {
+        activityRecommendation,
+        nutritionRecommendation
+    };
 }
