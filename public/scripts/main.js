@@ -592,8 +592,8 @@ function loadProfileData() {
     }
 }
 
-// Recipe Generator with multiple recipes
-function generateRecipe() {
+// Recipe Generator with Gemini AI
+async function generateRecipe() {
     const recipeSearchInput = document.getElementById('recipeSearch') ? document.getElementById('recipeSearch').value.trim() : '';
     const ingredientsInput = document.getElementById('ingredients').value.trim();
     const resultDiv = document.getElementById('recipeResult');
@@ -604,37 +604,56 @@ function generateRecipe() {
     }
     
     // Show loading state
-    resultDiv.innerHTML = '<p style="text-align: center; color: var(--secondary-color);"><i class="fas fa-spinner fa-spin"></i> Finding recipes...</p>';
+    resultDiv.innerHTML = '<p style="text-align: center; color: var(--secondary-color);"><i class="fas fa-spinner fa-spin"></i> 🤖 AI is crafting the perfect recipe for you...</p>';
     resultDiv.classList.add('show');
     
-    // If recipe name is provided, search by name
-    if (recipeSearchInput) {
-        searchRecipeByName(recipeSearchInput).then(recipes => {
-            if (recipes.length === 0 && ingredientsInput) {
-                // Fallback to ingredient search
-                const ingredients = ingredientsInput.split(',').map(i => i.trim());
-                const fallbackRecipes = generateMultipleRecipes(ingredients);
-                displayRecipes(fallbackRecipes);
-            } else if (recipes.length > 0) {
-                displayRecipes(recipes);
+    try {
+        let recipes = [];
+        
+        // If recipe name is provided, search database first, then use Gemini if not found
+        if (recipeSearchInput) {
+            const dbRecipes = await searchRecipeByName(recipeSearchInput);
+            if (dbRecipes.length > 0) {
+                recipes = dbRecipes;
             } else {
-                resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);">No recipes found. Try searching with a different name or use ingredients.</p>';
+                // Use Gemini to generate recipe by name
+                const geminiRecipe = await generateRecipeWithGemini(null, recipeSearchInput, userProfile);
+                recipes = [geminiRecipe];
             }
-        }).catch(error => {
-            console.error('Error searching recipes:', error);
-            // Fallback to ingredient search
-            if (ingredientsInput) {
+        } else {
+            // Generate recipe(s) from ingredients using Gemini AI
+            const ingredients = ingredientsInput.split(',').map(i => i.trim()).filter(i => i);
+            const geminiRecipes = await generateMultipleRecipesWithGemini(ingredients, 3);
+            recipes = geminiRecipes;
+        }
+        
+        displayRecipes(recipes);
+    } catch (error) {
+        console.error('Error generating recipes:', error);
+        
+        // Fallback to database search or basic generator
+        if (recipeSearchInput) {
+            try {
+                const dbRecipes = await searchRecipeByName(recipeSearchInput);
+                if (dbRecipes.length > 0) {
+                    displayRecipes(dbRecipes);
+                } else {
+                    const ingredients = ingredientsInput ? ingredientsInput.split(',').map(i => i.trim()) : [];
+                    const fallbackRecipes = generateMultipleRecipes(ingredients);
+                    displayRecipes(fallbackRecipes);
+                }
+            } catch (fallbackError) {
+                resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);"><i class="fas fa-exclamation-triangle"></i> Unable to generate recipes. Please check your connection or try again later.</p>';
+            }
+        } else {
+            try {
                 const ingredients = ingredientsInput.split(',').map(i => i.trim());
-                const fallbackRecipes = generateMultipleRecipes(ingredients);
+                await searchRecipesByIngredients(ingredients);
+            } catch (fallbackError) {
+                const fallbackRecipes = generateMultipleRecipes(ingredientsInput.split(',').map(i => i.trim()));
                 displayRecipes(fallbackRecipes);
-            } else {
-                resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);">Error searching recipes. Please try again.</p>';
             }
-        });
-    } else {
-        // Search by ingredients from recipe database
-        const ingredients = ingredientsInput.split(',').map(i => i.trim());
-        searchRecipesByIngredients(ingredients);
+        }
     }
 }
 

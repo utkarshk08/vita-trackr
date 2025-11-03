@@ -257,6 +257,24 @@ async function searchRecipes(query) {
     return data.data;
 }
 
+// ==================== GEMINI AI API ====================
+
+async function generateRecipeWithGemini(ingredients, recipeName, userProfile = null) {
+    const data = await apiCall('/gemini/generate-recipe', {
+        method: 'POST',
+        body: JSON.stringify({ ingredients, recipeName, userProfile })
+    });
+    return data.data;
+}
+
+async function generateMultipleRecipesWithGemini(ingredients, count = 3) {
+    const data = await apiCall('/gemini/generate-recipes', {
+        method: 'POST',
+        body: JSON.stringify({ ingredients, count })
+    });
+    return data.data;
+}
+
 // Export all functions
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
@@ -290,7 +308,10 @@ if (typeof module !== 'undefined' && module.exports) {
         // Recipe
         getRecipes,
         getRecipeById,
-        searchRecipes
+        searchRecipes,
+        // Gemini AI
+        generateRecipeWithGemini,
+        generateMultipleRecipesWithGemini
     };
 }
 

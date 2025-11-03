@@ -1,6 +1,6 @@
 # VitaTrackr - Your Complete Health Companion
 
-A modern, all-in-one health and wellness web application that combines recipe generation, **AI-powered personalized dish suggestions**, and physical activity tracking in a beautiful, user-friendly interface with **IndexedDB** for robust data storage.
+A modern, all-in-one health and wellness web application that combines **Gemini AI-powered recipe generation**, AI-powered personalized dish suggestions, and physical activity tracking in a beautiful, user-friendly interface with **IndexedDB** for robust data storage.
 
 ## Features
 
@@ -53,15 +53,17 @@ A modern, all-in-one health and wellness web application that combines recipe ge
 - Personalized caloric goals adjusted for your goal type
 - Optimal macro splits for your specific goal
 
-### 🍳 Recipe Generator
+### 🍳 Recipe Generator (Powered by Gemini AI 🤖)
+- **AI-Powered Generation**: Uses Google's Gemini AI to create unique, creative recipes
 - **Dual search modes**:
-  - Search by recipe name (e.g., "Paneer Tikka", "Chicken Curry")
-  - Generate recipes from available ingredients
-- **Smart fallback**: If name search fails, automatically searches by ingredients
+  - Search by recipe name (database first, then AI-generated if not found)
+  - Generate 3 different recipe variations from available ingredients
+- **Personalized Intelligence**: Considers your health conditions and allergies
+- **Smart fallback**: Multi-layer fallback (AI → Database → Basic templates)
 - **Click any recipe card** to view full details in beautiful modal
-- Smart ingredient-based recipe matching
 - Step-by-step cooking instructions with complete ingredients list
 - Complete nutritional information for each recipe
+- See [GEMINI_SETUP.md](GEMINI_SETUP.md) for setup instructions
 
 ### 💡 Dish Suggestions (AI-POWERED AUTO-RECOMMENDATIONS)
 - **Intelligent AI-powered recommendations** based on your complete health profile
@@ -161,11 +163,12 @@ A modern, all-in-one health and wellness web application that combines recipe ge
 
 ## Technologies Used
 
-- **HTML5** - Structure
-- **CSS3** - Styling with gradients, animations, and glassmorphism
-- **JavaScript** - Functionality and localStorage data management
-- **Font Awesome** - Icons
-- **Local Storage** - Persistent data storage
+- **Backend**: Node.js, Express.js, MongoDB (Atlas), Mongoose ODM
+- **Frontend**: HTML5, CSS3 (Glassmorphism), JavaScript (ES6+)
+- **AI**: Google Gemini AI for recipe generation
+- **Icons**: Font Awesome
+- **Storage**: IndexedDB + LocalStorage for offline support
+- **Deployment**: GitHub, Render.com compatible
 
 ## Design Features
 
