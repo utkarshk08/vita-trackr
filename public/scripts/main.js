@@ -622,7 +622,46 @@ function loadProfileData() {
     }
 }
 
-// Load and display AI recipe suggestions
+// Find recipes from database that contain ALL listed ingredients
+function findRecipesWithAllIngredients(userIngredients, allRecipes) {
+    if (!userIngredients || userIngredients.length === 0) {
+        return [];
+    }
+    
+    // Normalize user ingredients (lowercase, trim)
+    const normalizedUserIngredients = userIngredients.map(ing => ing.toLowerCase().trim());
+    
+    // Filter recipes that contain ALL user ingredients
+    const matchingRecipes = allRecipes.filter(recipe => {
+        if (!recipe.ingredients || !Array.isArray(recipe.ingredients)) {
+            return false;
+        }
+        
+        // Normalize recipe ingredients
+        const recipeIngredients = recipe.ingredients.map(ing => {
+            // Handle both string and object formats
+            const ingName = typeof ing === 'string' ? ing : (ing.name || ing);
+            return ingName.toLowerCase().trim();
+        });
+        
+        // Check if ALL user ingredients are present in recipe
+        const allIngredientsFound = normalizedUserIngredients.every(userIng => {
+            // Check for exact match or partial match (e.g., "chicken" matches "chicken breast")
+            return recipeIngredients.some(recipeIng => 
+                recipeIng === userIng || 
+                recipeIng.includes(userIng) || 
+                userIng.includes(recipeIng)
+            );
+        });
+        
+        return allIngredientsFound;
+    });
+    
+    // Return only 2-3 recipes (limit to 3 as requested)
+    return matchingRecipes.slice(0, 3);
+}
+
+// Load and display AI recipe suggestions (using Gemini AI)
 async function loadRecipeSuggestions() {
     const suggestionsDiv = document.getElementById('recipeSuggestions');
     const ingredientsInput = document.getElementById('ingredients') ? document.getElementById('ingredients').value.trim() : '';
@@ -635,8 +674,9 @@ async function loadRecipeSuggestions() {
             ? ingredientsInput.split(',').map(i => i.trim()).filter(i => i)
             : [];
         
-        suggestionsDiv.innerHTML = '<p class="suggestions-loading"><i class="fas fa-spinner fa-spin"></i> Loading suggestions...</p>';
+        suggestionsDiv.innerHTML = '<p class="suggestions-loading"><i class="fas fa-spinner fa-spin"></i> 🤖 AI is thinking...</p>';
         
+        // Use AI to generate creative recipe name suggestions
         const suggestions = await suggestRecipeNames(ingredients);
         
         if (suggestions && suggestions.length > 0) {
@@ -655,13 +695,13 @@ async function loadRecipeSuggestions() {
                 });
             });
         } else {
-            suggestionsDiv.innerHTML = '<p class="suggestions-empty">No suggestions available</p>';
+            suggestionsDiv.innerHTML = '<p class="suggestions-empty">No AI suggestions available</p>';
         }
     } catch (error) {
-        console.error('Error loading recipe suggestions:', error);
+        console.error('Error loading AI recipe suggestions:', error);
         
-        // Show more helpful error message
-        let errorMessage = 'Unable to load suggestions';
+        // Show helpful error message
+        let errorMessage = 'Unable to load AI suggestions';
         if (error.message && error.message.includes('API key')) {
             errorMessage = '<i class="fas fa-exclamation-triangle"></i> Please configure Gemini API key in .env file';
         } else if (error.message) {
@@ -670,32 +710,43 @@ async function loadRecipeSuggestions() {
         
         suggestionsDiv.innerHTML = `<p class="suggestions-error">${errorMessage}</p>`;
         
-        // Show fallback suggestions if API fails
-        setTimeout(() => {
-            const fallbackSuggestions = ingredients.length > 0 
-                ? ['Quick ' + ingredients[0] + ' Recipe', 'Simple ' + ingredients[0] + ' Dish', 'Easy ' + ingredients[0] + ' Meal']
-                : ['Chicken Curry', 'Vegetable Stir Fry', 'Pasta Primavera'];
+        // Fallback: Show database recipes if AI fails
+        try {
+            const ingredients = ingredientsInput 
+                ? ingredientsInput.split(',').map(i => i.trim()).filter(i => i)
+                : [];
             
-            suggestionsDiv.innerHTML = `
-                <p style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 10px; font-style: italic;">
-                    <i class="fas fa-info-circle"></i> Showing sample suggestions (API unavailable)
-                </p>
-                ${fallbackSuggestions.map((name, index) => {
-                    const escapedName = name.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
-                    return `<div class="suggestion-item" data-recipe-name="${escapedName}">
-                        <i class="fas fa-utensils"></i> ${name}
-                    </div>`;
-                }).join('')}
-            `;
-            
-            // Add click event listeners to fallback suggestions
-            suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
-                item.addEventListener('click', function() {
-                    const recipeName = this.getAttribute('data-recipe-name');
-                    selectSuggestedRecipe(recipeName);
-                });
-            });
-        }, 2000);
+            if (ingredients.length > 0) {
+                setTimeout(async () => {
+                    const allRecipes = await getRecipesFromDB();
+                    const matchingRecipes = findRecipesWithAllIngredients(ingredients, allRecipes);
+                    
+                    if (matchingRecipes && matchingRecipes.length > 0) {
+                        suggestionsDiv.innerHTML = `
+                            <p style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 10px; font-style: italic;">
+                                <i class="fas fa-info-circle"></i> Showing database recipes (AI unavailable)
+                            </p>
+                            ${matchingRecipes.map((recipe, index) => {
+                                const escapedName = recipe.title.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                                return `<div class="suggestion-item" data-recipe-name="${escapedName}">
+                                    <i class="fas fa-utensils"></i> ${recipe.title}
+                                </div>`;
+                            }).join('')}
+                        `;
+                        
+                        // Add click event listeners
+                        suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
+                            item.addEventListener('click', function() {
+                                const recipeName = this.getAttribute('data-recipe-name');
+                                selectSuggestedRecipe(recipeName);
+                            });
+                        });
+                    }
+                }, 2000);
+            }
+        } catch (fallbackError) {
+            console.error('Fallback also failed:', fallbackError);
+        }
     }
 }
 
@@ -723,7 +774,11 @@ async function generateRecipe() {
     }
     
     // Show loading state
-    resultDiv.innerHTML = '<p style="text-align: center; color: var(--secondary-color);"><i class="fas fa-spinner fa-spin"></i> 🤖 AI is crafting the perfect recipe for you...</p>';
+    if (recipeSearchInput) {
+        resultDiv.innerHTML = '<p style="text-align: center; color: var(--secondary-color);"><i class="fas fa-spinner fa-spin"></i> Searching for recipes...</p>';
+    } else {
+        resultDiv.innerHTML = '<p style="text-align: center; color: var(--secondary-color);"><i class="fas fa-spinner fa-spin"></i> Searching database for recipes with your ingredients...</p>';
+    }
     resultDiv.classList.add('show');
     
     try {
@@ -740,10 +795,24 @@ async function generateRecipe() {
                 recipes = [geminiRecipe];
             }
         } else {
-            // Generate recipe(s) from ingredients using Gemini AI
+            // Search database for recipes that contain ALL listed ingredients
             const ingredients = ingredientsInput.split(',').map(i => i.trim()).filter(i => i);
-            const geminiRecipes = await generateMultipleRecipesWithGemini(ingredients, 3);
-            recipes = geminiRecipes;
+            if (ingredients.length > 0) {
+                // Get recipes from database that have ALL ingredients
+                const allRecipes = await getRecipesFromDB();
+                const matchingRecipes = findRecipesWithAllIngredients(ingredients, allRecipes);
+                
+                if (matchingRecipes.length > 0) {
+                    recipes = matchingRecipes;
+                } else {
+                    // If no recipes found with all ingredients, show message
+                    resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);"><i class="fas fa-info-circle"></i> No recipes found that contain all these ingredients: ' + ingredients.join(', ') + '. Try different ingredients or search by recipe name.</p>';
+                    return;
+                }
+            } else {
+                alert('Please enter ingredients!');
+                return;
+            }
         }
         
         displayRecipes(recipes);
@@ -766,11 +835,20 @@ async function generateRecipe() {
             }
         } else {
             try {
-                const ingredients = ingredientsInput.split(',').map(i => i.trim());
-                await searchRecipesByIngredients(ingredients);
+                const ingredients = ingredientsInput.split(',').map(i => i.trim()).filter(i => i);
+                if (ingredients.length > 0) {
+                    // Search database for recipes with ALL ingredients
+                    const allRecipes = await getRecipesFromDB();
+                    const matchingRecipes = findRecipesWithAllIngredients(ingredients, allRecipes);
+                    
+                    if (matchingRecipes.length > 0) {
+                        displayRecipes(matchingRecipes);
+                    } else {
+                        resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);"><i class="fas fa-info-circle"></i> No recipes found that contain all these ingredients: ' + ingredients.join(', ') + '. Try different ingredients.</p>';
+                    }
+                }
             } catch (fallbackError) {
-                const fallbackRecipes = generateMultipleRecipes(ingredientsInput.split(',').map(i => i.trim()));
-                displayRecipes(fallbackRecipes);
+                resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);"><i class="fas fa-exclamation-triangle"></i> Unable to search recipes. Please try again.</p>';
             }
         }
     }

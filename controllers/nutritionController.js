@@ -218,7 +218,14 @@ async function getNutritionFromCustomAPI(foodName, quantity) {
 // Gemini AI fallback for nutrition estimation
 async function getNutritionFromGemini(foodName, quantity) {
     const { GoogleGenerativeAI } = require('@google/generative-ai');
-    const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+    
+    // Validate API key
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey.trim() === '') {
+        throw new Error('Gemini API key not configured');
+    }
+    
+    const genAI = new GoogleGenerativeAI(apiKey);
 
     const prompt = `Estimate the nutritional information for ${quantity}g of ${foodName}. 
 
@@ -234,6 +241,7 @@ Return ONLY a JSON object in this exact format:
 
 Make realistic estimates based on common nutritional values. Return ONLY the JSON, no markdown formatting.`;
 
+    // Use gemini-pro for nutrition estimation
     const model = genAI.getGenerativeModel({ model: "gemini-pro" });
     const result = await model.generateContent(prompt);
     const response = await result.response;

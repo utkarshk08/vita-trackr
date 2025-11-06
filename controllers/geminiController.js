@@ -2,12 +2,37 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize Gemini with API key from environment
+// Cache the genAI instance for efficiency
+let cachedGenAI = null;
+
 const getGenAI = () => {
-    const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-        throw new Error('Gemini API key not configured');
+    // Return cached instance if available
+    if (cachedGenAI) {
+        return cachedGenAI;
     }
-    return new GoogleGenerativeAI(apiKey);
+    
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
+        throw new Error('Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.');
+    }
+    
+    // Create and cache the instance
+    cachedGenAI = new GoogleGenerativeAI(apiKey);
+    return cachedGenAI;
+};
+
+// Helper function to get model - explicitly sets model name
+const getModelWithFallback = (genAI, preferredModel = "gemini-pro") => {
+    // Use gemini-pro as the primary model
+    const modelName = "gemini-pro";
+    
+    // Explicitly create model with model name
+    const model = genAI.getGenerativeModel({ 
+        model: modelName
+    });
+    
+    console.log(`Using Gemini model: ${modelName}`);
+    return { model, modelName };
 };
 
 // @desc    Generate recipe using Gemini AI
@@ -17,12 +42,13 @@ const generateRecipeWithGemini = async (req, res) => {
     try {
         const { ingredients, recipeName, userProfile } = req.body;
 
-        // Check if API key is configured
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
+        // Check if API key is configured (will throw error if not)
+        try {
+            getGenAI(); // This will validate the API key
+        } catch (error) {
             return res.status(500).json({
                 success: false,
-                error: 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
+                error: error.message || 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
             });
         }
 
@@ -80,11 +106,11 @@ IMPORTANT CONSTRAINTS:
 
 Ensure all nutrition values are realistic and the recipe is practical to cook. Return ONLY the JSON, no markdown formatting.`;
 
-        // Get the generative model
-        // Note: Make sure Generative Language API is enabled in Google Cloud Console
+        // Get the generative model - explicitly set model name
         const genAI = getGenAI();
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const { model, modelName } = getModelWithFallback(genAI, "gemini-pro");
 
+        // Explicitly call generateContent with the model
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let recipeText = response.text();
@@ -127,12 +153,13 @@ const generateMultipleRecipesWithGemini = async (req, res) => {
             });
         }
 
-        // Check if API key is configured
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
+        // Check if API key is configured (will throw error if not)
+        try {
+            getGenAI(); // This will validate the API key
+        } catch (error) {
             return res.status(500).json({
                 success: false,
-                error: 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
+                error: error.message || 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
             });
         }
 
@@ -170,7 +197,9 @@ Please provide each recipe in the following JSON array format:
 
 Ensure all recipes are different and creative. Return ONLY the JSON array, no markdown formatting.`;
 
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        // Get the generative model - explicitly set model name
+        const genAI = getGenAI();
+        const { model, modelName } = getModelWithFallback(genAI, "gemini-pro");
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let recipesText = response.text();
@@ -206,12 +235,13 @@ const suggestRecipeNames = async (req, res) => {
     try {
         const { ingredients } = req.body;
 
-        // Check if API key is configured
-        const apiKey = process.env.GEMINI_API_KEY;
-        if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
+        // Check if API key is configured (will throw error if not)
+        try {
+            getGenAI(); // This will validate the API key
+        } catch (error) {
             return res.status(500).json({
                 success: false,
-                error: 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
+                error: error.message || 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
             });
         }
 
@@ -233,11 +263,11 @@ Return ONLY a JSON array of recipe names (strings), like this:
 Make the names creative and appetizing. Return ONLY the JSON array, no markdown formatting, no additional text.`;
         }
 
-        // Get the generative model
-        // Note: Make sure Generative Language API is enabled in Google Cloud Console
+        // Get the generative model - explicitly set model name
         const genAI = getGenAI();
-        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+        const { model, modelName } = getModelWithFallback(genAI, "gemini-pro");
 
+        // Explicitly call generateContent with the model
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let suggestionsText = response.text();
