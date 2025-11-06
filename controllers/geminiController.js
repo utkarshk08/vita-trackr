@@ -318,19 +318,26 @@ const suggestRecipeNames = async (req, res) => {
         // Build prompt for recipe name suggestions only
         let prompt = '';
         if (ingredients && ingredients.length > 0) {
-            prompt = `Suggest 2-3 creative recipe names that can be made using these ingredients: ${ingredients.join(', ')}.
-            
-Return ONLY a JSON array of recipe names (strings), like this:
-["Recipe Name 1", "Recipe Name 2", "Recipe Name 3"]
+            prompt = `Suggest 2-3 BASIC recipe names that can be made using these ingredients: ${ingredients.join(', ')}.
 
-Make the names creative, appetizing, and suitable for the given ingredients. Return ONLY the JSON array, no markdown formatting, no additional text.`;
+IMPORTANT REQUIREMENTS:
+1. Suggest ONLY basic, simple, and common recipe names (e.g., "Chicken Curry", "Tomato Pasta", "Onion Soup")
+2. The recipes MUST be possible to make with the provided ingredients (you may assume basic pantry staples like salt, oil, water are available)
+3. Prioritize recipes that use the listed ingredients as main components
+4. Keep names simple and straightforward - avoid elaborate or fancy names
+5. If no suitable recipes can be made from the ingredients, return an empty array []
+
+Return ONLY a JSON array of recipe names (strings), like this:
+["Basic Recipe Name 1", "Basic Recipe Name 2", "Basic Recipe Name 3"]
+
+Return ONLY the JSON array, no markdown formatting, no additional text.`;
         } else {
-            prompt = `Suggest 2-3 popular and delicious recipe names that are commonly enjoyed.
+            prompt = `Suggest 2-3 basic and popular recipe names that are commonly enjoyed.
 
 Return ONLY a JSON array of recipe names (strings), like this:
-["Recipe Name 1", "Recipe Name 2", "Recipe Name 3"]
+["Basic Recipe Name 1", "Basic Recipe Name 2", "Basic Recipe Name 3"]
 
-Make the names creative and appetizing. Return ONLY the JSON array, no markdown formatting, no additional text.`;
+Keep names simple and straightforward. Return ONLY the JSON array, no markdown formatting, no additional text.`;
         }
 
         // Get the generative model - explicitly set model name
@@ -354,10 +361,16 @@ Make the names creative and appetizing. Return ONLY the JSON array, no markdown 
         // Parse the JSON response
         const suggestions = JSON.parse(suggestionsText);
 
-        // Ensure we only return 2-3 recipes
-        const limitedSuggestions = Array.isArray(suggestions) 
-            ? suggestions.slice(0, 3) 
-            : [suggestions].slice(0, 3);
+        // Ensure we only return 2-3 recipes (or empty array if no suitable recipes)
+        let limitedSuggestions = [];
+        if (Array.isArray(suggestions)) {
+            // Filter out empty strings and null values
+            limitedSuggestions = suggestions.filter(s => s && s.trim()).slice(0, 3);
+        } else if (suggestions && typeof suggestions === 'string') {
+            // If it's a single string, wrap it in array
+            limitedSuggestions = [suggestions].slice(0, 3);
+        }
+        // If empty array or no valid suggestions, return empty array
 
         console.log(`[Gemini] Generated ${limitedSuggestions.length} recipe suggestions`);
         res.json({
