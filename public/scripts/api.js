@@ -301,6 +301,16 @@ async function getFoodNutrition(foodName, quantity = 100, quantityType = 'grams'
     return data.data;
 }
 
+// ==================== ACTIVITY RECOMMENDATIONS API ====================
+
+async function getActivityRecommendations(userId, previousActivities, previousMeals, userProfile) {
+    const data = await apiCall('/gemini/recommend-activities', {
+        method: 'POST',
+        body: JSON.stringify({ userId, previousActivities, previousMeals, userProfile })
+    });
+    return data.data;
+}
+
 // Export all functions
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {

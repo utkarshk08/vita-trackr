@@ -230,6 +230,112 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
+// Load AI activity recommendations
+async function loadActivityRecommendations() {
+    const recommendationBox = document.getElementById('activityRecommendationContent');
+    if (!recommendationBox || !currentUserId) return;
+    
+    // Show loading state
+    recommendationBox.innerHTML = '<p style="margin: 0;"><i class="fas fa-spinner fa-spin"></i> 🤖 AI is analyzing your activity history and meal logs...</p>';
+    
+    try {
+        // Get previous activities (last 14 days)
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 14);
+        const startDateStr = startDate.toISOString().split('T')[0];
+        
+        const [previousActivities, previousMeals] = await Promise.all([
+            getActivitiesByRange(startDateStr, endDate).catch(() => []),
+            getMealsByRange(startDateStr, endDate).catch(() => [])
+        ]);
+        
+        // Get user profile
+        const profile = userProfile || await getUserProfile().catch(() => null);
+        
+        // Get AI recommendations
+        const recommendations = await getActivityRecommendations(
+            currentUserId,
+            previousActivities,
+            previousMeals,
+            profile
+        );
+        
+        if (recommendations && recommendations.length > 0) {
+            // Display recommendations
+            let html = '<div style="display: flex; flex-direction: column; gap: 15px;">';
+            recommendations.forEach((rec, index) => {
+                const activityIcons = {
+                    running: 'fa-running',
+                    cycling: 'fa-bicycle',
+                    swimming: 'fa-swimmer',
+                    walking: 'fa-walking',
+                    gym: 'fa-dumbbell',
+                    yoga: 'fa-spa'
+                };
+                const icon = activityIcons[rec.type] || 'fa-running';
+                const intensityColors = {
+                    light: '#50c878',
+                    moderate: '#ffa500',
+                    vigorous: '#ff4444'
+                };
+                const intensityColor = intensityColors[rec.intensity] || '#50c878';
+                
+                html += `
+                    <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; border-left: 4px solid ${intensityColor};">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                            <i class="fas ${icon}" style="font-size: 1.2em; color: var(--accent-color);"></i>
+                            <strong style="color: var(--text-primary); text-transform: capitalize;">${rec.type}</strong>
+                            <span style="margin-left: auto; font-size: 0.9em; color: ${intensityColor};">
+                                ${rec.intensity.charAt(0).toUpperCase() + rec.intensity.slice(1)}
+                            </span>
+                        </div>
+                        <div style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 8px;">
+                            <i class="fas fa-clock"></i> ${rec.duration} minutes
+                        </div>
+                        <div style="font-size: 0.85em; color: var(--text-secondary); font-style: italic;">
+                            ${rec.reason}
+                        </div>
+                        <button onclick="useActivityRecommendation('${rec.type}', ${rec.duration}, '${rec.intensity}')" 
+                                style="margin-top: 10px; padding: 8px 15px; background: var(--accent-color); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em;">
+                            <i class="fas fa-check"></i> Use This Recommendation
+                        </button>
+                    </div>
+                `;
+            });
+            html += '</div>';
+            recommendationBox.innerHTML = html;
+        } else {
+            recommendationBox.innerHTML = '<p style="margin: 0; color: var(--text-secondary);">No specific recommendations at this time. Keep up your regular activity routine!</p>';
+        }
+    } catch (error) {
+        console.error('Error loading activity recommendations:', error);
+        recommendationBox.innerHTML = `<p style="margin: 0; color: var(--accent-color);"><i class="fas fa-exclamation-triangle"></i> Unable to load recommendations: ${error.message || 'Unknown error'}</p>`;
+    }
+}
+
+// Use activity recommendation (fill form with recommended values)
+function useActivityRecommendation(type, duration, intensity) {
+    const activityTypeSelect = document.getElementById('activityType');
+    const durationInput = document.getElementById('duration');
+    
+    if (activityTypeSelect) activityTypeSelect.value = type;
+    if (durationInput) {
+        durationInput.value = duration;
+        calculateActivityCalories(); // Auto-calculate calories
+    }
+    
+    // Show success message
+    const recommendationBox = document.getElementById('activityRecommendationContent');
+    if (recommendationBox) {
+        const successMsg = document.createElement('div');
+        successMsg.style.cssText = 'background: rgba(80, 200, 120, 0.2); padding: 10px; border-radius: 5px; margin-top: 10px; color: var(--secondary-color);';
+        successMsg.innerHTML = `<i class="fas fa-check-circle"></i> ${type.charAt(0).toUpperCase() + type.slice(1)} (${duration} min) has been filled in!`;
+        recommendationBox.appendChild(successMsg);
+        setTimeout(() => successMsg.remove(), 3000);
+    }
+}
+
 // Show page function
 function showPage(pageName) {
     // Hide all pages
@@ -259,7 +365,7 @@ function showPage(pageName) {
     } else if (pageName === 'progress') {
         updateProgressPage(); // Load progress, achievements, and charts
     } else if (pageName === 'tracker') {
-        displayActivityRecommendation(); // Load activity recommendation
+        loadActivityRecommendations(); // Load AI activity recommendations
     } else if (pageName === 'recipe') {
         loadRecipeSuggestions(); // Load AI recipe suggestions
     }
@@ -1606,9 +1712,9 @@ async function lookupRecipeNutrition() {
                         autoFillDiv.appendChild(msg);
                     }
                 }
-            } else {
-                clearAutoFill();
-            }
+        } else {
+            clearAutoFill();
+        }
         } catch (apiError) {
             console.error('Nutrition API error:', apiError);
             // If API fails, just clear (database lookup already failed)

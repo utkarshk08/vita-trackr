@@ -413,9 +413,187 @@ Keep names simple and straightforward. Return ONLY the JSON array, no markdown f
     }
 };
 
+// @desc    Get AI-powered activity recommendations
+// @route   POST /api/gemini/recommend-activities
+// @access  Public
+const recommendActivities = async (req, res) => {
+    try {
+        const { userId, previousActivities, previousMeals, userProfile } = req.body;
+
+        // Check if API key is configured (will throw error if not)
+        try {
+            getGenAI(); // This will validate the API key
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                error: error.message || getApiKeyErrorMessage()
+            });
+        }
+
+        // Available activity types (must match frontend options)
+        const availableActivityTypes = ['running', 'cycling', 'swimming', 'walking', 'gym', 'yoga'];
+
+        // Build context from previous activities (last 7-14 days)
+        let activityContext = '';
+        if (previousActivities && previousActivities.length > 0) {
+            const activityCounts = {};
+            let totalCalories = 0;
+            let totalDuration = 0;
+            
+            previousActivities.forEach(activity => {
+                activityCounts[activity.type] = (activityCounts[activity.type] || 0) + 1;
+                totalCalories += activity.calories || 0;
+                totalDuration += activity.duration || 0;
+            });
+
+            activityContext = `Previous Activities (last ${previousActivities.length} activities):\n`;
+            activityContext += `- Most frequent: ${Object.entries(activityCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'none'}\n`;
+            activityContext += `- Total calories burned: ${totalCalories} kcal\n`;
+            activityContext += `- Total duration: ${totalDuration} minutes\n`;
+            activityContext += `- Activity breakdown: ${Object.entries(activityCounts).map(([type, count]) => `${type} (${count}x)`).join(', ')}\n`;
+        } else {
+            activityContext = 'No previous activities logged.\n';
+        }
+
+        // Build context from previous meals (last 7-14 days)
+        let mealContext = '';
+        if (previousMeals && previousMeals.length > 0) {
+            const totalCaloriesConsumed = previousMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+            const avgCaloriesPerMeal = totalCaloriesConsumed / previousMeals.length;
+            const avgProtein = previousMeals.reduce((sum, meal) => sum + (meal.protein || 0), 0) / previousMeals.length;
+            
+            mealContext = `Previous Meals (last ${previousMeals.length} meals):\n`;
+            mealContext += `- Total calories consumed: ${totalCaloriesConsumed} kcal\n`;
+            mealContext += `- Average calories per meal: ${Math.round(avgCaloriesPerMeal)} kcal\n`;
+            mealContext += `- Average protein per meal: ${Math.round(avgProtein)}g\n`;
+        } else {
+            mealContext = 'No previous meals logged.\n';
+        }
+
+        // Build user profile context
+        let profileContext = '';
+        if (userProfile) {
+            profileContext = 'User Profile:\n';
+            if (userProfile.age) profileContext += `- Age: ${userProfile.age}\n`;
+            if (userProfile.gender) profileContext += `- Gender: ${userProfile.gender}\n`;
+            if (userProfile.weight) profileContext += `- Weight: ${userProfile.weight} kg\n`;
+            if (userProfile.height) profileContext += `- Height: ${userProfile.height} cm\n`;
+            if (userProfile.goalType) profileContext += `- Goal: ${userProfile.goalType}\n`;
+            if (userProfile.occupation) profileContext += `- Activity level: ${userProfile.occupation}\n`;
+            if (userProfile.exerciseFrequency) profileContext += `- Exercise frequency: ${userProfile.exerciseFrequency} days/week\n`;
+            if (userProfile.diseases && userProfile.diseases.length > 0) {
+                profileContext += `- Health conditions: ${userProfile.diseases.join(', ')}\n`;
+            }
+            if (userProfile.allergies && userProfile.allergies.length > 0) {
+                profileContext += `- Allergies: ${userProfile.allergies.join(', ')}\n`;
+            }
+        }
+
+        // Build the prompt
+        const prompt = `You are a fitness and health AI assistant. Recommend 1-3 activities for the user based on their profile, previous activities, and meal logs.
+
+${profileContext}
+
+${activityContext}
+
+${mealContext}
+
+IMPORTANT CONSTRAINTS:
+1. You MUST only recommend activities from this exact list: ${availableActivityTypes.join(', ')}
+2. Consider the user's health conditions - avoid activities that could be harmful
+3. Consider their previous activity patterns - suggest variety to avoid overuse injuries
+4. Consider their meal logs - if they've consumed high calories, suggest more intense activities; if low calories, suggest moderate activities
+5. Consider their fitness goals (weight-loss, muscle-gain, maintain, etc.)
+6. Consider their current activity level and exercise frequency
+7. Suggest appropriate duration (in minutes) and intensity (light, moderate, vigorous) for each activity
+8. Provide a brief reason for each recommendation
+
+Return ONLY a JSON array of activity recommendations, like this:
+[
+    {
+        "type": "running",
+        "duration": 30,
+        "intensity": "moderate",
+        "reason": "Brief explanation why this activity is recommended"
+    },
+    {
+        "type": "yoga",
+        "duration": 45,
+        "intensity": "light",
+        "reason": "Brief explanation why this activity is recommended"
+    }
+]
+
+Return ONLY the JSON array, no markdown formatting, no additional text.`;
+
+        // Get the generative model
+        const genAI = getGenAI();
+        const { model, modelName } = getModelWithFallback(genAI);
+
+        console.log(`[Gemini] Generating activity recommendations with model: ${modelName}`);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let recommendationsText = response.text();
+
+        // Clean up the response
+        recommendationsText = recommendationsText.trim();
+        if (recommendationsText.startsWith('```json')) {
+            recommendationsText = recommendationsText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
+        } else if (recommendationsText.startsWith('```')) {
+            recommendationsText = recommendationsText.replace(/```\n?/g, '');
+        }
+
+        // Parse the JSON response
+        const recommendations = JSON.parse(recommendationsText);
+
+        // Validate and filter recommendations to only include available activity types
+        const validRecommendations = Array.isArray(recommendations)
+            ? recommendations
+                .filter(rec => rec && rec.type && availableActivityTypes.includes(rec.type.toLowerCase()))
+                .map(rec => ({
+                    type: rec.type.toLowerCase(),
+                    duration: rec.duration || 30,
+                    intensity: rec.intensity || 'moderate',
+                    reason: rec.reason || 'Recommended based on your profile and activity history'
+                }))
+                .slice(0, 3) // Limit to 3 recommendations
+            : [];
+
+        console.log(`[Gemini] Generated ${validRecommendations.length} activity recommendations`);
+        res.json({
+            success: true,
+            data: validRecommendations
+        });
+    } catch (error) {
+        console.error('[Gemini API Error - Activity Recommendations]', {
+            message: error.message,
+            stack: error.stack,
+            apiKeySet: !!process.env.GEMINI_API_KEY,
+            userId: req.body.userId
+        });
+        
+        let errorMessage = 'Failed to get activity recommendations';
+        if (error.message.includes('API key')) {
+            errorMessage = getApiKeyErrorMessage();
+        } else if (error.message.includes('model')) {
+            errorMessage = 'Gemini model not available. Please check that Generative Language API is enabled in Google Cloud Console.';
+        } else if (error.message.includes('quota') || error.message.includes('rate')) {
+            errorMessage = 'API quota exceeded. Please try again later.';
+        } else {
+            errorMessage = error.message || errorMessage;
+        }
+        
+        res.status(500).json({
+            success: false,
+            error: errorMessage
+        });
+    }
+};
+
 module.exports = {
     generateRecipeWithGemini,
     generateMultipleRecipesWithGemini,
-    suggestRecipeNames
+    suggestRecipeNames,
+    recommendActivities
 };
 
