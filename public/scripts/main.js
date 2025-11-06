@@ -314,6 +314,171 @@ async function loadActivityRecommendations() {
     }
 }
 
+// Load AI daily plan for overview dashboard
+async function loadDailyPlan() {
+    const dailyPlanDiv = document.getElementById('dailyPlanContent');
+    if (!dailyPlanDiv || !currentUserId) return;
+    
+    // Show loading state
+    dailyPlanDiv.innerHTML = '<p style="margin: 0;"><i class="fas fa-spinner fa-spin"></i> 🤖 AI is creating your personalized daily plan...</p>';
+    
+    try {
+        // Get previous activities and meals (last 14 days)
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 14);
+        const startDateStr = startDate.toISOString().split('T')[0];
+        
+        const [previousActivities, previousMeals] = await Promise.all([
+            getActivitiesByRange(startDateStr, endDate).catch(() => []),
+            getMealsByRange(startDateStr, endDate).catch(() => [])
+        ]);
+        
+        // Get user profile
+        const profile = userProfile || await getUserProfile().catch(() => null);
+        
+        // Get AI daily plan
+        const dailyPlan = await getDailyPlan(
+            currentUserId,
+            previousActivities,
+            previousMeals,
+            profile
+        );
+        
+        if (dailyPlan) {
+            // Display daily plan
+            let html = '';
+            
+            // Summary
+            if (dailyPlan.summary) {
+                html += `<div style="background: rgba(74, 144, 226, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid var(--accent-color);">
+                    <p style="margin: 0; font-weight: 500; color: var(--text-primary);">${dailyPlan.summary}</p>
+                </div>`;
+            }
+            
+            // Activities
+            if (dailyPlan.activities && dailyPlan.activities.length > 0) {
+                html += `<div style="margin-bottom: 20px;">
+                    <h4 style="color: var(--accent-color); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-running"></i> Recommended Activities
+                    </h4>`;
+                dailyPlan.activities.forEach(act => {
+                    const activityIcons = {
+                        running: 'fa-running',
+                        cycling: 'fa-bicycle',
+                        swimming: 'fa-swimmer',
+                        walking: 'fa-walking',
+                        gym: 'fa-dumbbell',
+                        yoga: 'fa-spa'
+                    };
+                    const icon = activityIcons[act.type] || 'fa-running';
+                    const intensityColors = {
+                        light: '#50c878',
+                        moderate: '#ffa500',
+                        vigorous: '#ff4444'
+                    };
+                    const intensityColor = intensityColors[act.intensity] || '#50c878';
+                    
+                    html += `<div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid ${intensityColor};">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                            <i class="fas ${icon}" style="color: var(--accent-color);"></i>
+                            <strong style="color: var(--text-primary); text-transform: capitalize;">${act.type}</strong>
+                            <span style="margin-left: auto; font-size: 0.85em; color: ${intensityColor};">
+                                ${act.intensity.charAt(0).toUpperCase() + act.intensity.slice(1)}
+                            </span>
+                        </div>
+                        <div style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 5px;">
+                            <i class="fas fa-clock"></i> ${act.duration} minutes | <i class="fas fa-calendar"></i> ${act.time}
+                        </div>
+                        <div style="font-size: 0.85em; color: var(--text-secondary); font-style: italic;">
+                            ${act.reason}
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+            
+            // Meals
+            if (dailyPlan.meals) {
+                html += `<div style="margin-bottom: 20px;">
+                    <h4 style="color: var(--secondary-color); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-utensils"></i> Meal Suggestions
+                    </h4>`;
+                
+                const mealTypes = ['breakfast', 'lunch', 'dinner'];
+                mealTypes.forEach(mealType => {
+                    if (dailyPlan.meals[mealType]) {
+                        const meal = dailyPlan.meals[mealType];
+                        html += `<div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--secondary-color);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                                <strong style="color: var(--text-primary); text-transform: capitalize;">${mealType}</strong>
+                                <span style="margin-left: auto; font-size: 0.85em; color: var(--text-secondary);">
+                                    ${meal.calories} cal | P:${meal.protein}g
+                                </span>
+                            </div>
+                            <div style="font-size: 0.95em; color: var(--text-primary); margin-bottom: 5px; font-weight: 500;">
+                                ${meal.suggestion}
+                            </div>
+                            <div style="font-size: 0.85em; color: var(--text-secondary); font-style: italic;">
+                                ${meal.reason}
+                            </div>
+                        </div>`;
+                    }
+                });
+                
+                if (dailyPlan.meals.snacks && dailyPlan.meals.snacks.length > 0) {
+                    html += `<div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--secondary-color);">
+                        <strong style="color: var(--text-primary); margin-bottom: 5px; display: block;">Snacks:</strong>
+                        <div style="font-size: 0.9em; color: var(--text-secondary);">
+                            ${dailyPlan.meals.snacks.map(snack => `• ${snack}`).join('<br>')}
+                        </div>
+                    </div>`;
+                }
+                html += `</div>`;
+            }
+            
+            // Water intake
+            if (dailyPlan.waterIntake) {
+                html += `<div style="background: rgba(74, 144, 226, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 3px solid var(--accent-color);">
+                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+                        <i class="fas fa-tint" style="color: var(--accent-color);"></i>
+                        <strong style="color: var(--text-primary);">Water Intake:</strong>
+                        <span style="margin-left: auto; font-size: 1.1em; color: var(--accent-color); font-weight: bold;">
+                            ${dailyPlan.waterIntake.liters}L
+                        </span>
+                    </div>
+                    <div style="font-size: 0.85em; color: var(--text-secondary); font-style: italic;">
+                        ${dailyPlan.waterIntake.reason}
+                    </div>
+                </div>`;
+            }
+            
+            // Health tips
+            if (dailyPlan.healthTips && dailyPlan.healthTips.length > 0) {
+                html += `<div style="margin-bottom: 10px;">
+                    <h4 style="color: var(--primary-color); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-lightbulb"></i> Health Tips
+                    </h4>`;
+                dailyPlan.healthTips.forEach(tip => {
+                    html += `<div style="background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--primary-color);">
+                        <div style="font-size: 0.9em; color: var(--text-secondary);">
+                            <i class="fas fa-check-circle" style="color: var(--primary-color); margin-right: 8px;"></i>${tip}
+                        </div>
+                    </div>`;
+                });
+                html += `</div>`;
+            }
+            
+            dailyPlanDiv.innerHTML = html;
+        } else {
+            dailyPlanDiv.innerHTML = '<p style="margin: 0; color: var(--text-secondary);">Unable to generate daily plan at this time. Please try again later.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading daily plan:', error);
+        dailyPlanDiv.innerHTML = `<p style="margin: 0; color: var(--accent-color);"><i class="fas fa-exclamation-triangle"></i> Unable to load daily plan: ${error.message || 'Unknown error'}</p>`;
+    }
+}
+
 // Use activity recommendation (fill form with recommended values)
 function useActivityRecommendation(type, duration, intensity) {
     const activityTypeSelect = document.getElementById('activityType');
@@ -2057,6 +2222,9 @@ function updateOverview() {
             `;
         }).join('');
     }
+    
+    // Load daily plan (async, won't block other updates)
+    loadDailyPlan();
     
     // Display nutrition insights
     const nutritionDiv = document.getElementById('nutritionInsights');

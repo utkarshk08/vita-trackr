@@ -590,10 +590,227 @@ Return ONLY the JSON array, no markdown formatting, no additional text.`;
     }
 };
 
+// @desc    Generate personalized daily plan using Gemini AI
+// @route   POST /api/gemini/daily-plan
+// @access  Public
+const generateDailyPlan = async (req, res) => {
+    try {
+        const { userId, previousActivities, previousMeals, userProfile } = req.body;
+
+        // Check if API key is configured (will throw error if not)
+        try {
+            getGenAI(); // This will validate the API key
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                error: error.message || getApiKeyErrorMessage()
+            });
+        }
+
+        // Available activity types (must match frontend options)
+        const availableActivityTypes = ['running', 'cycling', 'swimming', 'walking', 'gym', 'yoga'];
+
+        // Build context from previous activities (last 14 days)
+        let activityContext = '';
+        if (previousActivities && previousActivities.length > 0) {
+            const activityCounts = {};
+            let totalCalories = 0;
+            let totalDuration = 0;
+            
+            previousActivities.forEach(activity => {
+                activityCounts[activity.type] = (activityCounts[activity.type] || 0) + 1;
+                totalCalories += activity.calories || 0;
+                totalDuration += activity.duration || 0;
+            });
+
+            activityContext = `Previous Activities (last ${previousActivities.length} activities):\n`;
+            activityContext += `- Most frequent: ${Object.entries(activityCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'none'}\n`;
+            activityContext += `- Total calories burned: ${totalCalories} kcal\n`;
+            activityContext += `- Total duration: ${totalDuration} minutes\n`;
+            activityContext += `- Activity breakdown: ${Object.entries(activityCounts).map(([type, count]) => `${type} (${count}x)`).join(', ')}\n`;
+        } else {
+            activityContext = 'No previous activities logged.\n';
+        }
+
+        // Build context from previous meals (last 14 days)
+        let mealContext = '';
+        if (previousMeals && previousMeals.length > 0) {
+            const totalCaloriesConsumed = previousMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+            const avgCaloriesPerMeal = totalCaloriesConsumed / previousMeals.length;
+            const avgProtein = previousMeals.reduce((sum, meal) => sum + (meal.protein || 0), 0) / previousMeals.length;
+            const avgCarbs = previousMeals.reduce((sum, meal) => sum + (meal.carbs || 0), 0) / previousMeals.length;
+            const avgFats = previousMeals.reduce((sum, meal) => sum + (meal.fats || 0), 0) / previousMeals.length;
+            
+            mealContext = `Previous Meals (last ${previousMeals.length} meals):\n`;
+            mealContext += `- Total calories consumed: ${totalCaloriesConsumed} kcal\n`;
+            mealContext += `- Average calories per meal: ${Math.round(avgCaloriesPerMeal)} kcal\n`;
+            mealContext += `- Average protein per meal: ${Math.round(avgProtein)}g\n`;
+            mealContext += `- Average carbs per meal: ${Math.round(avgCarbs)}g\n`;
+            mealContext += `- Average fats per meal: ${Math.round(avgFats)}g\n`;
+        } else {
+            mealContext = 'No previous meals logged.\n';
+        }
+
+        // Build user profile context
+        let profileContext = '';
+        if (userProfile) {
+            profileContext = 'User Profile:\n';
+            if (userProfile.age) profileContext += `- Age: ${userProfile.age}\n`;
+            if (userProfile.gender) profileContext += `- Gender: ${userProfile.gender}\n`;
+            if (userProfile.weight) profileContext += `- Weight: ${userProfile.weight} kg\n`;
+            if (userProfile.height) profileContext += `- Height: ${userProfile.height} cm\n`;
+            if (userProfile.goalType) profileContext += `- Goal: ${userProfile.goalType}\n`;
+            if (userProfile.occupation) profileContext += `- Activity level: ${userProfile.occupation}\n`;
+            if (userProfile.exerciseFrequency) profileContext += `- Exercise frequency: ${userProfile.exerciseFrequency} days/week\n`;
+            if (userProfile.caloricGoal) profileContext += `- Daily caloric goal: ${userProfile.caloricGoal} kcal\n`;
+            if (userProfile.diseases && userProfile.diseases.length > 0) {
+                profileContext += `- Health conditions: ${userProfile.diseases.join(', ')}\n`;
+            }
+            if (userProfile.allergies && userProfile.allergies.length > 0) {
+                profileContext += `- Allergies: ${userProfile.allergies.join(', ')}\n`;
+            }
+        }
+
+        // Build the prompt
+        const prompt = `You are a personalized health and fitness AI assistant. Create a comprehensive daily plan for the user based on their profile, previous activities, and meal logs.
+
+${profileContext}
+
+${activityContext}
+
+${mealContext}
+
+IMPORTANT REQUIREMENTS:
+1. Create a personalized daily plan that includes:
+   - Recommended activities for today (only from: ${availableActivityTypes.join(', ')})
+   - Meal suggestions (breakfast, lunch, dinner, snacks)
+   - Health tips and reminders
+   - Water intake recommendations
+   - Rest/recovery suggestions if needed
+
+2. Consider the user's health conditions - avoid activities or foods that could be harmful
+3. Consider their previous activity patterns - suggest variety to avoid overuse injuries
+4. Consider their meal logs - suggest meals that balance their nutrition
+5. Consider their fitness goals (weight-loss, muscle-gain, maintain, etc.)
+6. Consider their current activity level and exercise frequency
+7. Make the plan realistic and achievable
+8. Provide specific recommendations with durations, intensities, and meal ideas
+
+Return ONLY a JSON object with this structure:
+{
+    "activities": [
+        {
+            "type": "running",
+            "duration": 30,
+            "intensity": "moderate",
+            "time": "Morning",
+            "reason": "Brief explanation"
+        }
+    ],
+    "meals": {
+        "breakfast": {
+            "suggestion": "Meal name/idea",
+            "calories": 400,
+            "protein": 25,
+            "reason": "Brief explanation"
+        },
+        "lunch": {
+            "suggestion": "Meal name/idea",
+            "calories": 600,
+            "protein": 35,
+            "reason": "Brief explanation"
+        },
+        "dinner": {
+            "suggestion": "Meal name/idea",
+            "calories": 500,
+            "protein": 30,
+            "reason": "Brief explanation"
+        },
+        "snacks": ["Snack idea 1", "Snack idea 2"]
+    },
+    "healthTips": [
+        "Tip 1",
+        "Tip 2",
+        "Tip 3"
+    ],
+    "waterIntake": {
+        "liters": 2.5,
+        "reason": "Brief explanation"
+    },
+    "summary": "Brief summary of the daily plan"
+}
+
+Return ONLY the JSON object, no markdown formatting, no additional text.`;
+
+        // Get the generative model
+        const genAI = getGenAI();
+        const { model, modelName } = getModelWithFallback(genAI);
+
+        console.log(`[Gemini] Generating daily plan with model: ${modelName}`);
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let planText = response.text();
+
+        // Clean up the response
+        planText = planText.trim();
+        if (planText.startsWith('```json')) {
+            planText = planText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
+        } else if (planText.startsWith('```')) {
+            planText = planText.replace(/```\n?/g, '');
+        }
+
+        // Parse the JSON response
+        const dailyPlan = JSON.parse(planText);
+
+        // Validate activities to only include available activity types
+        if (dailyPlan.activities && Array.isArray(dailyPlan.activities)) {
+            dailyPlan.activities = dailyPlan.activities
+                .filter(act => act && act.type && availableActivityTypes.includes(act.type.toLowerCase()))
+                .map(act => ({
+                    type: act.type.toLowerCase(),
+                    duration: act.duration || 30,
+                    intensity: act.intensity || 'moderate',
+                    time: act.time || 'Anytime',
+                    reason: act.reason || 'Recommended for your goals'
+                }));
+        }
+
+        console.log(`[Gemini] Generated daily plan successfully`);
+        res.json({
+            success: true,
+            data: dailyPlan
+        });
+    } catch (error) {
+        console.error('[Gemini API Error - Daily Plan]', {
+            message: error.message,
+            stack: error.stack,
+            apiKeySet: !!process.env.GEMINI_API_KEY,
+            userId: req.body.userId
+        });
+        
+        let errorMessage = 'Failed to generate daily plan';
+        if (error.message.includes('API key')) {
+            errorMessage = getApiKeyErrorMessage();
+        } else if (error.message.includes('model')) {
+            errorMessage = 'Gemini model not available. Please check that Generative Language API is enabled in Google Cloud Console.';
+        } else if (error.message.includes('quota') || error.message.includes('rate')) {
+            errorMessage = 'API quota exceeded. Please try again later.';
+        } else {
+            errorMessage = error.message || errorMessage;
+        }
+        
+        res.status(500).json({
+            success: false,
+            error: errorMessage
+        });
+    }
+};
+
 module.exports = {
     generateRecipeWithGemini,
     generateMultipleRecipesWithGemini,
     suggestRecipeNames,
-    recommendActivities
+    recommendActivities,
+    generateDailyPlan
 };
 

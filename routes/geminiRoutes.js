@@ -4,7 +4,8 @@ const {
     generateRecipeWithGemini,
     generateMultipleRecipesWithGemini,
     suggestRecipeNames,
-    recommendActivities
+    recommendActivities,
+    generateDailyPlan
 } = require('../controllers/geminiController');
 
 // @route   POST /api/gemini/generate-recipe
@@ -18,6 +19,9 @@ router.post('/suggest-recipes', suggestRecipeNames);
 
 // @route   POST /api/gemini/recommend-activities
 router.post('/recommend-activities', recommendActivities);
+
+// @route   POST /api/gemini/daily-plan
+router.post('/daily-plan', generateDailyPlan);
 
 module.exports = router;
 

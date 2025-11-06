@@ -311,6 +311,14 @@ async function getActivityRecommendations(userId, previousActivities, previousMe
     return data.data;
 }
 
+async function getDailyPlan(userId, previousActivities, previousMeals, userProfile) {
+    const data = await apiCall('/gemini/daily-plan', {
+        method: 'POST',
+        body: JSON.stringify({ userId, previousActivities, previousMeals, userProfile })
+    });
+    return data.data;
+}
+
 // Export all functions
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {
