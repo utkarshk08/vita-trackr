@@ -10,6 +10,16 @@ if (!process.env.GEMINI_API_KEY) {
 
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
+// Helper function to get environment-aware error message
+const getApiKeyErrorMessage = () => {
+    const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER;
+    if (isProduction) {
+        return 'Gemini API key not configured. Please add GEMINI_API_KEY as an environment variable in your Render dashboard (Settings > Environment Variables).';
+    } else {
+        return 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.';
+    }
+};
+
 // Initialize Gemini with API key from environment
 // Cache the genAI instance for efficiency
 let cachedGenAI = null;
@@ -22,16 +32,16 @@ const getGenAI = () => {
     
     const apiKey = process.env.GEMINI_API_KEY;
     
-    // Detailed validation and logging
-    if (!apiKey) {
-        console.error('[Gemini] API key not found in process.env.GEMINI_API_KEY');
-        throw new Error('Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.');
-    }
-    
-    if (apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
-        console.error('[Gemini] API key is placeholder or empty');
-        throw new Error('Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.');
-    }
+        // Detailed validation and logging
+        if (!apiKey) {
+            console.error('[Gemini] API key not found in process.env.GEMINI_API_KEY');
+            throw new Error(getApiKeyErrorMessage());
+        }
+        
+        if (apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
+            console.error('[Gemini] API key is placeholder or empty');
+            throw new Error(getApiKeyErrorMessage());
+        }
     
     // Log API key status (first few characters only for security)
     console.log(`[Gemini] Initializing with API key: ${apiKey.substring(0, 10)}...`);
@@ -77,7 +87,7 @@ const generateRecipeWithGemini = async (req, res) => {
         } catch (error) {
             return res.status(500).json({
                 success: false,
-                error: error.message || 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
+                error: error.message || getApiKeyErrorMessage()
             });
         }
 
@@ -208,7 +218,7 @@ const generateMultipleRecipesWithGemini = async (req, res) => {
         } catch (error) {
             return res.status(500).json({
                 success: false,
-                error: error.message || 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
+                error: error.message || getApiKeyErrorMessage()
             });
         }
 
@@ -282,7 +292,7 @@ Ensure all recipes are different and creative. Return ONLY the JSON array, no ma
         
         let errorMessage = 'Failed to generate recipes with Gemini AI';
         if (error.message.includes('API key')) {
-            errorMessage = 'Gemini API key not configured or invalid. Please add GEMINI_API_KEY to your .env file and restart the server.';
+            errorMessage = getApiKeyErrorMessage();
         } else if (error.message.includes('model')) {
             errorMessage = 'Gemini model not available. Please check that Generative Language API is enabled in Google Cloud Console.';
         } else if (error.message.includes('quota') || error.message.includes('rate')) {
@@ -311,7 +321,7 @@ const suggestRecipeNames = async (req, res) => {
         } catch (error) {
             return res.status(500).json({
                 success: false,
-                error: error.message || 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
+                error: error.message || getApiKeyErrorMessage()
             });
         }
 
@@ -387,7 +397,7 @@ Keep names simple and straightforward. Return ONLY the JSON array, no markdown f
         
         let errorMessage = 'Failed to get recipe suggestions';
         if (error.message.includes('API key')) {
-            errorMessage = 'Gemini API key not configured or invalid. Please add GEMINI_API_KEY to your .env file and restart the server.';
+            errorMessage = getApiKeyErrorMessage();
         } else if (error.message.includes('model')) {
             errorMessage = 'Gemini model not available. Please check that Generative Language API is enabled in Google Cloud Console.';
         } else if (error.message.includes('quota') || error.message.includes('rate')) {
