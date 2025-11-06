@@ -750,15 +750,40 @@ async function loadRecipeSuggestions() {
     }
 }
 
-// Select a suggested recipe name
-function selectSuggestedRecipe(recipeName) {
+// Select a suggested recipe name and generate full recipe using AI
+async function selectSuggestedRecipe(recipeName) {
     const recipeSearchInput = document.getElementById('recipeSearch');
-    if (recipeSearchInput) {
-        // Decode HTML entities
-        const decodedName = recipeName.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
-        recipeSearchInput.value = decodedName;
-        // Optionally auto-generate the recipe
-        // generateRecipe();
+    const ingredientsInput = document.getElementById('ingredients');
+    const resultDiv = document.getElementById('recipeResult');
+    
+    if (!recipeSearchInput || !resultDiv) return;
+    
+    // Decode HTML entities
+    const decodedName = recipeName.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+    recipeSearchInput.value = decodedName;
+    
+    // Get ingredients from input if available (to give AI context)
+    const ingredients = ingredientsInput && ingredientsInput.value.trim() 
+        ? ingredientsInput.value.split(',').map(i => i.trim()).filter(i => i)
+        : null;
+    
+    // Show loading state
+    resultDiv.innerHTML = '<p style="text-align: center; color: var(--secondary-color);"><i class="fas fa-spinner fa-spin"></i> 🤖 AI is generating the full recipe for "' + decodedName + '"...</p>';
+    resultDiv.classList.add('show');
+    
+    try {
+        // Generate full recipe using AI with the recipe name (and ingredients if available)
+        const geminiRecipe = await generateRecipeWithGemini(ingredients, decodedName, userProfile);
+        
+        if (geminiRecipe) {
+            // Display the generated recipe
+            displayRecipes([geminiRecipe]);
+        } else {
+            resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);">Failed to generate recipe. Please try again.</p>';
+        }
+    } catch (error) {
+        console.error('Error generating recipe from suggestion:', error);
+        resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);"><i class="fas fa-exclamation-triangle"></i> Unable to generate recipe: ' + (error.message || 'Unknown error') + '</p>';
     }
 }
 
