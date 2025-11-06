@@ -1,8 +1,14 @@
 // Gemini AI Controller for Recipe Generation
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-// Initialize Gemini
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '');
+// Initialize Gemini with API key from environment
+const getGenAI = () => {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey || apiKey === 'your_gemini_api_key_here') {
+        throw new Error('Gemini API key not configured');
+    }
+    return new GoogleGenerativeAI(apiKey);
+};
 
 // @desc    Generate recipe using Gemini AI
 // @route   POST /api/gemini/generate-recipe
@@ -11,10 +17,12 @@ const generateRecipeWithGemini = async (req, res) => {
     try {
         const { ingredients, recipeName, userProfile } = req.body;
 
-        if (!process.env.GEMINI_API_KEY) {
+        // Check if API key is configured
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
             return res.status(500).json({
                 success: false,
-                error: 'Gemini API key not configured'
+                error: 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
             });
         }
 
@@ -23,7 +31,14 @@ const generateRecipeWithGemini = async (req, res) => {
         if (recipeName) {
             prompt = `Generate a detailed recipe for "${recipeName}"`;
         } else if (ingredients && ingredients.length > 0) {
-            prompt = `Generate a detailed recipe using these ingredients: ${ingredients.join(', ')}`;
+            prompt = `CRITICAL REQUIREMENT: Generate a detailed recipe that PRIMARILY uses ALL of these ingredients: ${ingredients.join(', ')}.
+
+IMPORTANT CONSTRAINTS:
+1. The recipe MUST prominently feature and use ALL the listed ingredients as main components
+2. You may only add minimal basic pantry staples (salt, pepper, oil, water) that are absolutely essential
+3. DO NOT add major additional ingredients that aren't in the list (e.g., don't add eggs when only chicken is listed)
+4. The dish should make logical culinary sense with the provided ingredients
+5. Focus on using the exact ingredients listed as the star of the dish`;
         } else {
             return res.status(400).json({
                 success: false,
@@ -66,6 +81,8 @@ const generateRecipeWithGemini = async (req, res) => {
 Ensure all nutrition values are realistic and the recipe is practical to cook. Return ONLY the JSON, no markdown formatting.`;
 
         // Get the generative model
+        // Note: Make sure Generative Language API is enabled in Google Cloud Console
+        const genAI = getGenAI();
         const model = genAI.getGenerativeModel({ model: "gemini-pro" });
 
         const result = await model.generateContent(prompt);
@@ -110,14 +127,24 @@ const generateMultipleRecipesWithGemini = async (req, res) => {
             });
         }
 
-        if (!process.env.GEMINI_API_KEY) {
+        // Check if API key is configured
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
             return res.status(500).json({
                 success: false,
-                error: 'Gemini API key not configured'
+                error: 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
             });
         }
 
-        const prompt = `Generate ${count} different recipe variations using these ingredients: ${ingredients.join(', ')}.
+        const prompt = `CRITICAL REQUIREMENT: Generate ${count} different recipe variations that PRIMARILY use ALL of these ingredients: ${ingredients.join(', ')}.
+
+IMPORTANT CONSTRAINTS:
+1. Each recipe MUST prominently feature and use ALL the listed ingredients as main components
+2. You may only add minimal basic pantry staples (salt, pepper, oil, water) that are absolutely essential
+3. DO NOT add major additional ingredients that aren't in the list (e.g., don't add eggs when only chicken is listed)
+4. Each dish should make logical culinary sense with the provided ingredients
+5. Focus on using the exact ingredients listed as the star of each dish
+6. Create truly different variations - different cooking methods, seasonings, or presentations
 
 Please provide each recipe in the following JSON array format:
 [
@@ -172,8 +199,81 @@ Ensure all recipes are different and creative. Return ONLY the JSON array, no ma
     }
 };
 
+// @desc    Get recipe name suggestions (only names, 2-3 recipes)
+// @route   POST /api/gemini/suggest-recipes
+// @access  Public
+const suggestRecipeNames = async (req, res) => {
+    try {
+        const { ingredients } = req.body;
+
+        // Check if API key is configured
+        const apiKey = process.env.GEMINI_API_KEY;
+        if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
+            return res.status(500).json({
+                success: false,
+                error: 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.'
+            });
+        }
+
+        // Build prompt for recipe name suggestions only
+        let prompt = '';
+        if (ingredients && ingredients.length > 0) {
+            prompt = `Suggest 2-3 creative recipe names that can be made using these ingredients: ${ingredients.join(', ')}.
+            
+Return ONLY a JSON array of recipe names (strings), like this:
+["Recipe Name 1", "Recipe Name 2", "Recipe Name 3"]
+
+Make the names creative, appetizing, and suitable for the given ingredients. Return ONLY the JSON array, no markdown formatting, no additional text.`;
+        } else {
+            prompt = `Suggest 2-3 popular and delicious recipe names that are commonly enjoyed.
+
+Return ONLY a JSON array of recipe names (strings), like this:
+["Recipe Name 1", "Recipe Name 2", "Recipe Name 3"]
+
+Make the names creative and appetizing. Return ONLY the JSON array, no markdown formatting, no additional text.`;
+        }
+
+        // Get the generative model
+        // Note: Make sure Generative Language API is enabled in Google Cloud Console
+        const genAI = getGenAI();
+        const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+
+        const result = await model.generateContent(prompt);
+        const response = await result.response;
+        let suggestionsText = response.text();
+
+        // Clean up the response
+        suggestionsText = suggestionsText.trim();
+        if (suggestionsText.startsWith('```json')) {
+            suggestionsText = suggestionsText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
+        } else if (suggestionsText.startsWith('```')) {
+            suggestionsText = suggestionsText.replace(/```\n?/g, '');
+        }
+
+        // Parse the JSON response
+        const suggestions = JSON.parse(suggestionsText);
+
+        // Ensure we only return 2-3 recipes
+        const limitedSuggestions = Array.isArray(suggestions) 
+            ? suggestions.slice(0, 3) 
+            : [suggestions].slice(0, 3);
+
+        res.json({
+            success: true,
+            data: limitedSuggestions
+        });
+    } catch (error) {
+        console.error('Gemini API Error:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to get recipe suggestions'
+        });
+    }
+};
+
 module.exports = {
     generateRecipeWithGemini,
-    generateMultipleRecipesWithGemini
+    generateMultipleRecipesWithGemini,
+    suggestRecipeNames
 };
 

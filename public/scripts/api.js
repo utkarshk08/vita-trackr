@@ -275,6 +275,32 @@ async function generateMultipleRecipesWithGemini(ingredients, count = 3) {
     return data.data;
 }
 
+async function suggestRecipeNames(ingredients = []) {
+    try {
+        const data = await apiCall('/gemini/suggest-recipes', {
+            method: 'POST',
+            body: JSON.stringify({ ingredients })
+        });
+        return data.data;
+    } catch (error) {
+        // Re-throw with more context
+        if (error.message && error.message.includes('API key')) {
+            throw new Error('Gemini API key not configured. Please add GEMINI_API_KEY to your .env file');
+        }
+        throw error;
+    }
+}
+
+// ==================== NUTRITION API ====================
+
+async function getFoodNutrition(foodName, quantity = 100, quantityType = 'grams') {
+    const data = await apiCall('/nutrition/lookup', {
+        method: 'POST',
+        body: JSON.stringify({ foodName, quantity, quantityType })
+    });
+    return data.data;
+}
+
 // Export all functions
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = {

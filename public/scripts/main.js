@@ -200,6 +200,34 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('signupFormContainer').style.display = 'none';
         document.getElementById('loginFormContainer').style.display = 'block';
     });
+    
+    // Update recipe suggestions when ingredients change (with debounce)
+    const ingredientsInput = document.getElementById('ingredients');
+    if (ingredientsInput) {
+        let suggestionsTimeout;
+        ingredientsInput.addEventListener('input', function() {
+            clearTimeout(suggestionsTimeout);
+            suggestionsTimeout = setTimeout(() => {
+                if (document.getElementById('recipe').classList.contains('active')) {
+                    loadRecipeSuggestions();
+                }
+            }, 1000); // Wait 1 second after user stops typing
+        });
+    }
+    
+    // Auto-lookup nutrition when meal name is entered (with debounce)
+    const mealNameInput = document.getElementById('mealName');
+    if (mealNameInput) {
+        let nutritionTimeout;
+        mealNameInput.addEventListener('input', function() {
+            clearTimeout(nutritionTimeout);
+            nutritionTimeout = setTimeout(() => {
+                if (document.getElementById('tracker').classList.contains('active')) {
+                    lookupRecipeNutrition();
+                }
+            }, 800); // Wait 0.8 seconds after user stops typing
+        });
+    }
 });
 
 // Show page function
@@ -232,6 +260,8 @@ function showPage(pageName) {
         updateProgressPage(); // Load progress, achievements, and charts
     } else if (pageName === 'tracker') {
         displayActivityRecommendation(); // Load activity recommendation
+    } else if (pageName === 'recipe') {
+        loadRecipeSuggestions(); // Load AI recipe suggestions
     }
 }
 
@@ -589,6 +619,95 @@ function loadProfileData() {
     }
     if (document.getElementById('goalType') && document.getElementById('goalType').value) {
         updateCaloricGoals();
+    }
+}
+
+// Load and display AI recipe suggestions
+async function loadRecipeSuggestions() {
+    const suggestionsDiv = document.getElementById('recipeSuggestions');
+    const ingredientsInput = document.getElementById('ingredients') ? document.getElementById('ingredients').value.trim() : '';
+    
+    if (!suggestionsDiv) return;
+    
+    try {
+        // Get ingredients if available, otherwise get general suggestions
+        const ingredients = ingredientsInput 
+            ? ingredientsInput.split(',').map(i => i.trim()).filter(i => i)
+            : [];
+        
+        suggestionsDiv.innerHTML = '<p class="suggestions-loading"><i class="fas fa-spinner fa-spin"></i> Loading suggestions...</p>';
+        
+        const suggestions = await suggestRecipeNames(ingredients);
+        
+        if (suggestions && suggestions.length > 0) {
+            suggestionsDiv.innerHTML = suggestions.map((name, index) => {
+                const escapedName = name.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                return `<div class="suggestion-item" data-recipe-name="${escapedName}">
+                    <i class="fas fa-utensils"></i> ${name}
+                </div>`;
+            }).join('');
+            
+            // Add click event listeners
+            suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const recipeName = this.getAttribute('data-recipe-name');
+                    selectSuggestedRecipe(recipeName);
+                });
+            });
+        } else {
+            suggestionsDiv.innerHTML = '<p class="suggestions-empty">No suggestions available</p>';
+        }
+    } catch (error) {
+        console.error('Error loading recipe suggestions:', error);
+        
+        // Show more helpful error message
+        let errorMessage = 'Unable to load suggestions';
+        if (error.message && error.message.includes('API key')) {
+            errorMessage = '<i class="fas fa-exclamation-triangle"></i> Please configure Gemini API key in .env file';
+        } else if (error.message) {
+            errorMessage = `Unable to load: ${error.message}`;
+        }
+        
+        suggestionsDiv.innerHTML = `<p class="suggestions-error">${errorMessage}</p>`;
+        
+        // Show fallback suggestions if API fails
+        setTimeout(() => {
+            const fallbackSuggestions = ingredients.length > 0 
+                ? ['Quick ' + ingredients[0] + ' Recipe', 'Simple ' + ingredients[0] + ' Dish', 'Easy ' + ingredients[0] + ' Meal']
+                : ['Chicken Curry', 'Vegetable Stir Fry', 'Pasta Primavera'];
+            
+            suggestionsDiv.innerHTML = `
+                <p style="font-size: 0.85em; color: var(--text-secondary); margin-bottom: 10px; font-style: italic;">
+                    <i class="fas fa-info-circle"></i> Showing sample suggestions (API unavailable)
+                </p>
+                ${fallbackSuggestions.map((name, index) => {
+                    const escapedName = name.replace(/'/g, "&#39;").replace(/"/g, "&quot;");
+                    return `<div class="suggestion-item" data-recipe-name="${escapedName}">
+                        <i class="fas fa-utensils"></i> ${name}
+                    </div>`;
+                }).join('')}
+            `;
+            
+            // Add click event listeners to fallback suggestions
+            suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const recipeName = this.getAttribute('data-recipe-name');
+                    selectSuggestedRecipe(recipeName);
+                });
+            });
+        }, 2000);
+    }
+}
+
+// Select a suggested recipe name
+function selectSuggestedRecipe(recipeName) {
+    const recipeSearchInput = document.getElementById('recipeSearch');
+    if (recipeSearchInput) {
+        // Decode HTML entities
+        const decodedName = recipeName.replace(/&#39;/g, "'").replace(/&quot;/g, '"');
+        recipeSearchInput.value = decodedName;
+        // Optionally auto-generate the recipe
+        // generateRecipe();
     }
 }
 
@@ -1324,16 +1443,17 @@ async function deleteActivityById(activityId) {
 // Global variable to store current recipe nutrition
 let currentRecipeNutrition = null;
 
-// Lookup recipe nutrition from database
-function lookupRecipeNutrition() {
+// Lookup recipe nutrition from database or nutrition API
+async function lookupRecipeNutrition() {
     const mealName = document.getElementById('mealName').value.trim();
     if (!mealName) {
         clearAutoFill();
         return;
     }
     
-    getRecipesFromDB().then(recipes => {
-        // Try to find exact or close match
+    try {
+        // First, try to find in local database
+        const recipes = await getRecipesFromDB();
         const searchLower = mealName.toLowerCase();
         const matchedRecipe = recipes.find(recipe => {
             const titleLower = recipe.title.toLowerCase();
@@ -1343,16 +1463,58 @@ function lookupRecipeNutrition() {
         });
         
         if (matchedRecipe && matchedRecipe.nutrition) {
+            // Found in database
             currentRecipeNutrition = matchedRecipe.nutrition;
             updateNutritionFromQuantity();
             document.getElementById('nutritionAutoFill').style.display = 'block';
-        } else {
+            return;
+        }
+        
+        // Not found in database, try nutrition API
+        const quantity = parseFloat(document.getElementById('mealQuantity').value) || 100;
+        const quantityType = document.getElementById('quantityType').value;
+        
+        try {
+            const nutritionData = await getFoodNutrition(mealName, quantity, quantityType);
+            
+            if (nutritionData) {
+                // Convert API format to our format
+                currentRecipeNutrition = {
+                    'Calories': nutritionData.calories.toString(),
+                    'Protein': nutritionData.protein + 'g',
+                    'Carbs': nutritionData.carbs + 'g',
+                    'Fat': nutritionData.fats + 'g',
+                    'Fiber': nutritionData.fiber ? nutritionData.fiber + 'g' : '0g',
+                    'Sugar': nutritionData.sugar ? nutritionData.sugar + 'g' : '0g'
+                };
+                
+                updateNutritionFromQuantity();
+                document.getElementById('nutritionAutoFill').style.display = 'block';
+                
+                // Show a message that data came from API
+                const autoFillDiv = document.getElementById('nutritionAutoFill');
+                if (autoFillDiv) {
+                    const infoMsg = autoFillDiv.querySelector('.api-source-info');
+                    if (!infoMsg) {
+                        const msg = document.createElement('p');
+                        msg.className = 'api-source-info';
+                        msg.style.cssText = 'font-size: 0.85em; color: var(--secondary-color); margin-top: 5px; font-style: italic;';
+                        msg.innerHTML = '<i class="fas fa-cloud"></i> Nutrition data from API';
+                        autoFillDiv.appendChild(msg);
+                    }
+                }
+            } else {
+                clearAutoFill();
+            }
+        } catch (apiError) {
+            console.error('Nutrition API error:', apiError);
+            // If API fails, just clear (database lookup already failed)
             clearAutoFill();
         }
-    }).catch(error => {
+    } catch (error) {
         console.error('Error looking up recipe:', error);
         clearAutoFill();
-    });
+    }
 }
 
 // Handle quantity type change

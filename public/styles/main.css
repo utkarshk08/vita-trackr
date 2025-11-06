@@ -549,6 +549,73 @@ body.light-mode .theme-toggle {
     text-transform: capitalize;
 }
 
+/* Recipe Suggestions Box */
+.recipe-suggestions-box {
+    margin-top: 20px;
+    padding: 15px;
+    background: linear-gradient(135deg, rgba(74, 144, 226, 0.15) 0%, rgba(80, 200, 120, 0.15) 100%);
+    border-radius: 12px;
+    border: 1px solid rgba(74, 144, 226, 0.3);
+}
+
+.recipe-suggestions-box h3 {
+    color: var(--secondary-color);
+    margin: 0 0 12px 0;
+    font-size: 1.1em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.recipe-suggestions-box h3 i {
+    color: #ffd700;
+}
+
+.suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.suggestion-item {
+    background: rgba(255, 255, 255, 0.08);
+    padding: 10px 15px;
+    border-radius: 8px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid rgba(74, 144, 226, 0.2);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.95em;
+}
+
+.suggestion-item:hover {
+    background: rgba(74, 144, 226, 0.2);
+    border-color: var(--secondary-color);
+    transform: translateX(5px);
+}
+
+.suggestion-item i {
+    color: var(--secondary-color);
+    font-size: 0.9em;
+}
+
+.suggestions-loading,
+.suggestions-empty,
+.suggestions-error {
+    text-align: center;
+    color: var(--text-secondary);
+    padding: 10px;
+    font-size: 0.9em;
+    font-style: italic;
+}
+
+.suggestions-loading i {
+    margin-right: 8px;
+}
+
 /* Recipe Result */
 .recipe-result {
     margin-top: 30px;
