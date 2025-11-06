@@ -241,8 +241,9 @@ Return ONLY a JSON object in this exact format:
 
 Make realistic estimates based on common nutritional values. Return ONLY the JSON, no markdown formatting.`;
 
-    // Use gemini-pro for nutrition estimation
-    const model = genAI.getGenerativeModel({ model: "gemini-pro" });
+    // Use gemini-2.5-flash for nutrition estimation (current supported model)
+    const modelName = process.env.MODEL || "gemini-2.5-flash";
+    const model = genAI.getGenerativeModel({ model: modelName });
     const result = await model.generateContent(prompt);
     const response = await result.response;
     let nutritionText = response.text().trim();

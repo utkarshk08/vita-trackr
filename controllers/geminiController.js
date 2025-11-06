@@ -1,4 +1,13 @@
 // Gemini AI Controller for Recipe Generation
+// Ensure dotenv is loaded (in case controller is used standalone)
+if (!process.env.GEMINI_API_KEY) {
+    try {
+        require('dotenv').config();
+    } catch (e) {
+        // dotenv might already be loaded by server.js
+    }
+}
+
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize Gemini with API key from environment
@@ -12,26 +21,46 @@ const getGenAI = () => {
     }
     
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey || apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
+    
+    // Detailed validation and logging
+    if (!apiKey) {
+        console.error('[Gemini] API key not found in process.env.GEMINI_API_KEY');
         throw new Error('Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.');
     }
     
+    if (apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
+        console.error('[Gemini] API key is placeholder or empty');
+        throw new Error('Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.');
+    }
+    
+    // Log API key status (first few characters only for security)
+    console.log(`[Gemini] Initializing with API key: ${apiKey.substring(0, 10)}...`);
+    
     // Create and cache the instance
-    cachedGenAI = new GoogleGenerativeAI(apiKey);
-    return cachedGenAI;
+    try {
+        cachedGenAI = new GoogleGenerativeAI(apiKey);
+        console.log('[Gemini] GoogleGenerativeAI instance created successfully');
+        return cachedGenAI;
+    } catch (error) {
+        console.error('[Gemini] Failed to create GoogleGenerativeAI instance:', error.message);
+        throw new Error(`Failed to initialize Gemini AI: ${error.message}`);
+    }
 };
 
 // Helper function to get model - explicitly sets model name
-const getModelWithFallback = (genAI, preferredModel = "gemini-pro") => {
-    // Use gemini-pro as the primary model
-    const modelName = "gemini-pro";
+// Use newer 2.x model names that are supported in current API
+const getModelWithFallback = (genAI, preferredModel = null) => {
+    // Get model from environment variable or use default
+    // Current supported models: gemini-2.5-flash (fast, recommended) or gemini-2.5-pro (more advanced)
+    // Note: 1.5 models are deprecated, use 2.0/2.5 models
+    const modelName = process.env.MODEL || preferredModel || "gemini-2.5-flash";
     
     // Explicitly create model with model name
     const model = genAI.getGenerativeModel({ 
         model: modelName
     });
     
-    console.log(`Using Gemini model: ${modelName}`);
+    console.log(`[Gemini] Using model: ${modelName}`);
     return { model, modelName };
 };
 
@@ -108,12 +137,14 @@ Ensure all nutrition values are realistic and the recipe is practical to cook. R
 
         // Get the generative model - explicitly set model name
         const genAI = getGenAI();
-        const { model, modelName } = getModelWithFallback(genAI, "gemini-pro");
+        const { model, modelName } = getModelWithFallback(genAI);
 
         // Explicitly call generateContent with the model
+        console.log(`[Gemini] Generating recipe with model: ${modelName}`);
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let recipeText = response.text();
+        console.log(`[Gemini] Recipe generated successfully`);
 
         // Clean up the response (remove markdown code blocks if present)
         recipeText = recipeText.trim();
@@ -131,10 +162,28 @@ Ensure all nutrition values are realistic and the recipe is practical to cook. R
             data: recipe
         });
     } catch (error) {
-        console.error('Gemini API Error:', error);
+        console.error('[Gemini API Error]', {
+            message: error.message,
+            stack: error.stack,
+            apiKeySet: !!process.env.GEMINI_API_KEY,
+            apiKeyLength: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0
+        });
+        
+        // Provide more detailed error messages
+        let errorMessage = 'Failed to generate recipe with Gemini AI';
+        if (error.message.includes('API key')) {
+            errorMessage = 'Gemini API key not configured or invalid';
+        } else if (error.message.includes('model')) {
+            errorMessage = 'Gemini model not available. Please check API permissions.';
+        } else if (error.message.includes('quota') || error.message.includes('rate')) {
+            errorMessage = 'API quota exceeded. Please try again later.';
+        } else {
+            errorMessage = error.message || errorMessage;
+        }
+        
         res.status(500).json({
             success: false,
-            error: error.message || 'Failed to generate recipe with Gemini AI'
+            error: errorMessage
         });
     }
 };
@@ -199,7 +248,9 @@ Ensure all recipes are different and creative. Return ONLY the JSON array, no ma
 
         // Get the generative model - explicitly set model name
         const genAI = getGenAI();
-        const { model, modelName } = getModelWithFallback(genAI, "gemini-pro");
+        const { model, modelName } = getModelWithFallback(genAI);
+        
+        console.log(`[Gemini] Generating ${count} recipes with model: ${modelName}`);
         const result = await model.generateContent(prompt);
         const response = await result.response;
         let recipesText = response.text();
@@ -215,15 +266,34 @@ Ensure all recipes are different and creative. Return ONLY the JSON array, no ma
         // Parse the JSON response
         const recipes = JSON.parse(recipesText);
 
+        console.log(`[Gemini] Generated ${Array.isArray(recipes) ? recipes.length : 1} recipe(s) successfully`);
         res.json({
             success: true,
             data: Array.isArray(recipes) ? recipes : [recipes]
         });
     } catch (error) {
-        console.error('Gemini API Error:', error);
+        console.error('[Gemini API Error - Multiple Recipes]', {
+            message: error.message,
+            stack: error.stack,
+            apiKeySet: !!process.env.GEMINI_API_KEY,
+            apiKeyLength: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0,
+            ingredients: req.body.ingredients
+        });
+        
+        let errorMessage = 'Failed to generate recipes with Gemini AI';
+        if (error.message.includes('API key')) {
+            errorMessage = 'Gemini API key not configured or invalid. Please add GEMINI_API_KEY to your .env file and restart the server.';
+        } else if (error.message.includes('model')) {
+            errorMessage = 'Gemini model not available. Please check that Generative Language API is enabled in Google Cloud Console.';
+        } else if (error.message.includes('quota') || error.message.includes('rate')) {
+            errorMessage = 'API quota exceeded. Please try again later.';
+        } else {
+            errorMessage = error.message || errorMessage;
+        }
+        
         res.status(500).json({
             success: false,
-            error: error.message || 'Failed to generate recipes with Gemini AI'
+            error: errorMessage
         });
     }
 };
@@ -265,8 +335,9 @@ Make the names creative and appetizing. Return ONLY the JSON array, no markdown 
 
         // Get the generative model - explicitly set model name
         const genAI = getGenAI();
-        const { model, modelName } = getModelWithFallback(genAI, "gemini-pro");
+        const { model, modelName } = getModelWithFallback(genAI);
 
+        console.log(`[Gemini] Generating suggestions with model: ${modelName}, ingredients: ${ingredients.length > 0 ? ingredients.join(', ') : 'none'}`);
         // Explicitly call generateContent with the model
         const result = await model.generateContent(prompt);
         const response = await result.response;
@@ -288,15 +359,33 @@ Make the names creative and appetizing. Return ONLY the JSON array, no markdown 
             ? suggestions.slice(0, 3) 
             : [suggestions].slice(0, 3);
 
+        console.log(`[Gemini] Generated ${limitedSuggestions.length} recipe suggestions`);
         res.json({
             success: true,
             data: limitedSuggestions
         });
     } catch (error) {
-        console.error('Gemini API Error:', error);
+        console.error('[Gemini API Error - Suggestions]', {
+            message: error.message,
+            stack: error.stack,
+            apiKeySet: !!process.env.GEMINI_API_KEY,
+            ingredients: req.body.ingredients
+        });
+        
+        let errorMessage = 'Failed to get recipe suggestions';
+        if (error.message.includes('API key')) {
+            errorMessage = 'Gemini API key not configured or invalid. Please add GEMINI_API_KEY to your .env file and restart the server.';
+        } else if (error.message.includes('model')) {
+            errorMessage = 'Gemini model not available. Please check that Generative Language API is enabled in Google Cloud Console.';
+        } else if (error.message.includes('quota') || error.message.includes('rate')) {
+            errorMessage = 'API quota exceeded. Please try again later.';
+        } else {
+            errorMessage = error.message || errorMessage;
+        }
+        
         res.status(500).json({
             success: false,
-            error: error.message || 'Failed to get recipe suggestions'
+            error: errorMessage
         });
     }
 };

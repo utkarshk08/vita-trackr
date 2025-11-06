@@ -1,11 +1,11 @@
 // Main Server File
+// Load environment variables FIRST before any other requires
+require('dotenv').config();
+
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const connectDB = require('./config/database');
-
-// Load environment variables
-require('dotenv').config();
 
 // Connect to database
 connectDB();
