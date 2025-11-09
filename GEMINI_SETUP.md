@@ -31,7 +31,7 @@ GEMINI_API_KEY=your_actual_api_key_here
 
 Example:
 ```bash
-GEMINI_API_KEY=AIzaSyAbCdEfGhIjKlMnOpQrStUvWxYz1234567
+GEMINI_API_KEY=your_actual_api_key_here
 ```
 
 ### 3. Restart the Server

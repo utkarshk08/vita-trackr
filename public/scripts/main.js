@@ -41,6 +41,7 @@ document.addEventListener('DOMContentLoaded', function() {
             displayActivities();
             displayMeals();
             updateOverview();
+            updateSubscriptionBadge(); // Update subscription badge display
             
             const lastPage = localStorage.getItem('lastPage') || 'home';
             showPage(lastPage);
@@ -50,6 +51,9 @@ document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('loginScreen').style.display = 'block';
             document.getElementById('appScreen').style.display = 'none';
         });
+        
+        // Update subscription badge on initial load
+        updateSubscriptionBadge();
     } else if (userProfile && !userProfile.isSetupComplete) {
         // User signed up but didn't finish profile
         document.getElementById('loginScreen').style.display = 'none';
@@ -79,6 +83,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Load user profile
             userProfile = await getUserProfile();
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            updateSubscriptionBadge(); // Update subscription badge after login
             
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appScreen').style.display = 'block';
@@ -149,6 +154,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Load user profile
             userProfile = await getUserProfile();
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
+            updateSubscriptionBadge(); // Update subscription badge after registration
             
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appScreen').style.display = 'block';
@@ -519,6 +525,16 @@ function showPage(pageName) {
         }
     });
     
+    // Update main-content background based on page
+    const mainContent = document.querySelector('.main-content');
+    if (mainContent) {
+        if (pageName === 'home' || pageName === 'overview') {
+            mainContent.classList.add('white-background');
+        } else {
+            mainContent.classList.remove('white-background');
+        }
+    }
+    
     // Save last viewed page to localStorage
     localStorage.setItem('lastPage', pageName);
     
@@ -778,6 +794,7 @@ async function saveProfile() {
     try {
         userProfile = await updateUserProfile(profileData);
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        updateSubscriptionBadge(); // Update subscription badge after profile update
         alert('Profile saved successfully! Your personalized health plan is ready.');
         showPage('home');
     } catch (error) {
@@ -785,6 +802,7 @@ async function saveProfile() {
         // Fallback to localStorage
         userProfile = profileData;
         localStorage.setItem('userProfile', JSON.stringify(userProfile));
+        updateSubscriptionBadge(); // Update subscription badge after profile update
         showPage('home');
     }
 }
@@ -1708,6 +1726,8 @@ async function logActivity() {
             clearActivityAutoFill();
             
             alert('Activity logged successfully! (Demo mode)');
+            // Navigate to progress page
+            showPage('progress');
         } else {
             // Save to API for real users
             const savedActivity = await createActivity(activity);
@@ -1726,6 +1746,8 @@ async function logActivity() {
             clearActivityAutoFill();
             
             alert('Activity logged successfully!');
+            // Navigate to progress page
+            showPage('progress');
         }
     } catch (error) {
         // Fallback to localStorage if API fails
@@ -1748,6 +1770,8 @@ async function logActivity() {
         clearActivityAutoFill();
         
         alert('Activity logged successfully! (Saved locally)');
+        // Navigate to progress page
+        showPage('progress');
     }
 }
 
@@ -2022,6 +2046,8 @@ async function logMeal() {
             clearAutoFill();
             
             alert('Meal logged successfully! (Demo mode)');
+            // Navigate to progress page
+            showPage('progress');
         } else {
             // Save to API for real users
             const savedMeal = await createMeal(meal);
@@ -2043,6 +2069,8 @@ async function logMeal() {
             clearAutoFill();
             
             alert('Meal logged successfully!');
+            // Navigate to progress page
+            showPage('progress');
         }
     } catch (error) {
         // Fallback to localStorage if API fails
@@ -2058,6 +2086,9 @@ async function logMeal() {
         displayMeals();
         updateOverview();
         updateProgressPage();
+        
+        // Navigate to progress page
+        showPage('progress');
         
         // Reset form
         document.getElementById('mealName').value = '';
@@ -2370,8 +2401,20 @@ function displayRecipeModal(recipe) {
                 `).join('')}
             </div>
         </div>
+
+        <div class="recipe-detail-section" style="border-top: 2px solid var(--secondary-color); padding-top: 20px; margin-top: 20px;">
+            <button onclick="addRecipeToMealLog()" 
+                    class="btn-add-to-meal-log" 
+                    style="width: 100%; padding: 15px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); 
+                           border: none; color: white; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; 
+                           display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;">
+                <i class="fas fa-plus-circle"></i> Add to Meal Log
+            </button>
+        </div>
     `;
 
+    // Store recipe in window for easy access
+    window.currentModalRecipe = recipe;
     modal.classList.add('show');
 
     // Close modal on X click
@@ -2433,8 +2476,20 @@ function displayRecipeModalPartial(dish) {
             <p style="color: var(--text-secondary);"><i class="fas fa-fire"></i> Cook Time: ${dish.cookTime}</p>
         </div>
         ` : ''}
+
+        <div class="recipe-detail-section" style="border-top: 2px solid var(--secondary-color); padding-top: 20px; margin-top: 20px;">
+            <button onclick="addRecipeToMealLog()" 
+                    class="btn-add-to-meal-log" 
+                    style="width: 100%; padding: 15px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); 
+                           border: none; color: white; border-radius: 10px; cursor: pointer; font-size: 16px; font-weight: bold; 
+                           display: flex; align-items: center; justify-content: center; gap: 10px; transition: transform 0.2s;">
+                <i class="fas fa-plus-circle"></i> Add to Meal Log
+            </button>
+        </div>
     `;
 
+    // Store dish in window for easy access
+    window.currentModalRecipe = dish;
     modal.classList.add('show');
 
     document.querySelector('.modal-close').onclick = function() {
@@ -2459,6 +2514,221 @@ function showGeneratorRecipeDetails(index) {
     displayRecipeModal(recipe);
 }
 
+// Parse nutrition data from recipe (handles both string format like "420" or "35g" and number format)
+function parseNutritionFromRecipe(recipe) {
+    const nutrition = recipe.nutrition || {};
+    const parsed = {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
+        fats: 0,
+        fiber: 0,
+        sugar: 0
+    };
+
+    // Helper function to extract number from string (handles "420", "35g", "10.5g", etc.)
+    const extractNumber = (value) => {
+        if (typeof value === 'number') return value;
+        if (typeof value === 'string') {
+            // Remove 'g', 'mg', etc. and extract number
+            const match = value.match(/(\d+\.?\d*)/);
+            return match ? parseFloat(match[1]) : 0;
+        }
+        return 0;
+    };
+
+    // Try different key formats (database format vs display format)
+    // Database format: { calories: 420, protein: 35, ... }
+    if (nutrition.calories !== undefined) {
+        parsed.calories = extractNumber(nutrition.calories);
+        parsed.protein = extractNumber(nutrition.protein || 0);
+        parsed.carbs = extractNumber(nutrition.carbs || 0);
+        parsed.fats = extractNumber(nutrition.fats || nutrition.fat || 0);
+        parsed.fiber = extractNumber(nutrition.fiber || 0);
+        parsed.sugar = extractNumber(nutrition.sugar || 0);
+    }
+    // Display format: { "Calories": "420", "Protein": "35g", ... }
+    else if (nutrition.Calories !== undefined) {
+        parsed.calories = extractNumber(nutrition.Calories);
+        parsed.protein = extractNumber(nutrition.Protein || 0);
+        parsed.carbs = extractNumber(nutrition.Carbs || 0);
+        parsed.fats = extractNumber(nutrition.Fat || nutrition.Fats || 0);
+        parsed.fiber = extractNumber(nutrition.Fiber || 0);
+        parsed.sugar = extractNumber(nutrition.Sugar || 0);
+    }
+    // Try lowercase keys
+    else {
+        Object.keys(nutrition).forEach(key => {
+            const lowerKey = key.toLowerCase();
+            const value = nutrition[key];
+            if (lowerKey.includes('calorie')) parsed.calories = extractNumber(value);
+            else if (lowerKey.includes('protein')) parsed.protein = extractNumber(value);
+            else if (lowerKey.includes('carb')) parsed.carbs = extractNumber(value);
+            else if (lowerKey.includes('fat') && !lowerKey.includes('fiber')) parsed.fats = extractNumber(value);
+            else if (lowerKey.includes('fiber')) parsed.fiber = extractNumber(value);
+            else if (lowerKey.includes('sugar')) parsed.sugar = extractNumber(value);
+        });
+    }
+
+    return parsed;
+}
+
+// Add recipe to meal log
+async function addRecipeToMealLog() {
+    const recipe = window.currentModalRecipe;
+    
+    if (!recipe) {
+        alert('Recipe data not found. Please try viewing the recipe again.');
+        return;
+    }
+
+    // Check if user is logged in
+    const currentUserId = localStorage.getItem('currentUserId');
+    if (!currentUserId) {
+        alert('Please log in to add meals to your log.');
+        return;
+    }
+
+    // Parse nutrition data
+    const baseNutrition = parseNutritionFromRecipe(recipe);
+    
+    if (baseNutrition.calories === 0) {
+        alert('Nutritional information not available for this recipe.');
+        return;
+    }
+
+    // Nutrition values are typically per serving in recipe databases
+    // If recipe has servings field, we'll show it for reference, but assume nutrition is per serving
+    const recipeServings = recipe.servings || 1;
+    const nutritionPerServing = baseNutrition; // Nutrition is already per serving
+    
+    // Show recipe servings info if available
+    const servingsInfo = recipeServings > 1 ? ` (Recipe serves ${recipeServings})` : '';
+
+    // Prompt for serving size
+    const servingSizeInput = prompt(
+        `How many servings would you like to add?${servingsInfo}\n\n` +
+        `Recipe: ${recipe.title || recipe.name}\n` +
+        `Nutrition per serving: ${Math.round(nutritionPerServing.calories)} cal, ` +
+        `${Math.round(nutritionPerServing.protein)}g protein\n\n` +
+        `Enter serving size:`,
+        '1'
+    );
+
+    if (servingSizeInput === null) {
+        return; // User cancelled
+    }
+
+    const servingSize = parseFloat(servingSizeInput);
+    if (isNaN(servingSize) || servingSize <= 0) {
+        alert('Please enter a valid serving size (greater than 0).');
+        return;
+    }
+
+    // Prompt for meal type
+    const mealTypeInput = prompt(
+        `Which meal is this for?\n\n` +
+        `1. Breakfast\n` +
+        `2. Lunch\n` +
+        `3. Dinner\n` +
+        `4. Snack\n\n` +
+        `Enter number (1-4):`,
+        '3'
+    );
+
+    if (mealTypeInput === null) {
+        return; // User cancelled
+    }
+
+    const mealTypeMap = {
+        '1': 'breakfast',
+        '2': 'lunch',
+        '3': 'dinner',
+        '4': 'snack'
+    };
+
+    const mealType = mealTypeMap[mealTypeInput.trim()];
+    if (!mealType) {
+        alert('Invalid meal type. Please enter 1, 2, 3, or 4.');
+        return;
+    }
+
+    // Calculate nutrition for the specified serving size
+    const finalNutrition = {
+        calories: Math.round(nutritionPerServing.calories * servingSize),
+        protein: Math.round(nutritionPerServing.protein * servingSize * 10) / 10,
+        carbs: Math.round(nutritionPerServing.carbs * servingSize * 10) / 10,
+        fats: Math.round(nutritionPerServing.fats * servingSize * 10) / 10,
+        fiber: Math.round(nutritionPerServing.fiber * servingSize * 10) / 10,
+        sugar: Math.round(nutritionPerServing.sugar * servingSize * 10) / 10
+    };
+
+    // Get current date
+    const today = new Date().toISOString().split('T')[0];
+
+    // Create meal object
+    const meal = {
+        type: mealType,
+        name: recipe.title || recipe.name,
+        date: today,
+        quantity: servingSize,
+        quantityType: 'servings',
+        calories: finalNutrition.calories,
+        protein: finalNutrition.protein,
+        carbs: finalNutrition.carbs,
+        fats: finalNutrition.fats,
+        fiber: finalNutrition.fiber,
+        sugar: finalNutrition.sugar
+    };
+
+    try {
+        // Check if user is in demo mode
+        const isDemoUser = currentUserId && currentUserId.startsWith('demo-');
+        
+        if (isDemoUser) {
+            // Save to localStorage for demo users
+            const savedMeal = {
+                ...meal,
+                id: 'meal-' + Date.now(),
+                _id: 'meal-' + Date.now()
+            };
+            meals.push(savedMeal);
+            localStorage.setItem('meals', JSON.stringify(meals));
+            
+            displayMeals();
+            updateOverview();
+            updateProgressPage();
+            
+            alert(`Meal added successfully!\n\n${meal.name}\n${servingSize} serving(s)\n${finalNutrition.calories} calories`);
+            // Navigate to progress page
+            showPage('progress');
+        } else {
+            // Save to API for real users
+            const savedMeal = await createMeal(meal);
+            savedMeal.id = savedMeal._id;
+            meals.push(savedMeal);
+            localStorage.setItem('meals', JSON.stringify(meals));
+            
+            displayMeals();
+            updateOverview();
+            updateProgressPage();
+            
+            alert(`Meal added successfully!\n\n${meal.name}\n${servingSize} serving(s)\n${finalNutrition.calories} calories`);
+            // Navigate to progress page
+            showPage('progress');
+        }
+
+        // Close the modal
+        const modal = document.getElementById('recipeModal');
+        if (modal) {
+            modal.classList.remove('show');
+        }
+    } catch (error) {
+        console.error('Error adding meal to log:', error);
+        alert('Failed to add meal to log. Please try again.');
+    }
+}
+
 // Theme Toggle Functions
 function toggleTheme() {
     const body = document.body;
@@ -2475,6 +2745,59 @@ function toggleTheme() {
     
     // Update icon
     updateThemeIcon();
+}
+
+// Subscription Toggle Functions
+function toggleSubscription() {
+    if (!userProfile) {
+        // Initialize userProfile if it doesn't exist
+        userProfile = {
+            subscriptionStatus: 'free'
+        };
+    }
+    
+    // Toggle between free and pro
+    const currentStatus = userProfile.subscriptionStatus || 'free';
+    const newStatus = currentStatus === 'free' ? 'pro' : 'free';
+    
+    // Update userProfile
+    userProfile.subscriptionStatus = newStatus;
+    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+    
+    // Update badge display
+    updateSubscriptionBadge();
+    
+    // Try to update on backend if user is logged in
+    const currentUserId = localStorage.getItem('currentUserId');
+    if (currentUserId && !currentUserId.startsWith('demo-')) {
+        // Update backend
+        updateUserProfile({ subscriptionStatus: newStatus }).catch(err => {
+            console.error('Failed to update subscription status on backend:', err);
+            // Continue anyway, it's saved locally
+        });
+    }
+    
+    // Show confirmation
+    const statusText = newStatus === 'pro' ? 'Pro' : 'Free';
+    console.log(`Subscription switched to ${statusText}`);
+}
+
+// Update Subscription Badge Display
+function updateSubscriptionBadge() {
+    const badge = document.getElementById('subscriptionBadge');
+    if (!badge) return;
+    
+    // Get current subscription status
+    const status = (userProfile && userProfile.subscriptionStatus) || 'free';
+    const isPro = status === 'pro';
+    
+    // Update text and styling
+    badge.textContent = isPro ? 'Pro' : 'Free';
+    badge.className = 'subscription-badge';
+    badge.classList.add(isPro ? 'subscription-pro' : 'subscription-free');
+    
+    // Update tooltip
+    badge.title = `Current: ${status.toUpperCase()} - Click to switch to ${isPro ? 'Free' : 'Pro'}`;
 }
 
 function updateThemeIcon() {

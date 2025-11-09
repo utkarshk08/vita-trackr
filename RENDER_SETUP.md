@@ -9,7 +9,7 @@ When deploying to Render, you need to add environment variables in the Render da
 1. **GEMINI_API_KEY** (Required)
    - Your Google Gemini API key
    - Get it from: https://makersuite.google.com/app/apikey
-   - Example: `AIzaSyDbiO1jC3-Ij9Rgf8bBZthd-BsaP_n634w`
+   - Example: `your_actual_api_key_here`
 
 2. **MODEL** (Optional)
    - Gemini model to use
@@ -25,7 +25,7 @@ When deploying to Render, you need to add environment variables in the Render da
 5. Click **"Add Environment Variable"**
 6. Add each variable:
    - **Key**: `GEMINI_API_KEY`
-   - **Value**: Your actual API key (e.g., `AIzaSyDbiO1jC3-Ij9Rgf8bBZthd-BsaP_n634w`)
+   - **Value**: Your actual API key (e.g., `your_actual_api_key_here`)
 7. Click **"Save Changes"**
 8. Render will automatically redeploy your service
 
@@ -40,7 +40,7 @@ If you want to use a different model:
 - Render will automatically restart your service
 - Wait for the deployment to complete
 - Check the logs to verify the API key is loaded correctly
-- You should see: `[Gemini] Initializing with API key: AIzaSyDbiO...`
+- You should see: `[Gemini] Initializing with API key: your_act...`
 
 ### Troubleshooting
 

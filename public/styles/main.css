@@ -267,12 +267,45 @@ body.light-mode .theme-toggle {
 }
 
 .nav-subscription .subscription-badge {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
     padding: 6px 16px;
     border-radius: 20px;
     font-size: 13px;
     font-weight: bold;
     white-space: nowrap;
+    transition: all 0.3s ease;
+    user-select: none;
+}
+
+/* Pro subscription styling */
+.subscription-badge.subscription-pro {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.4);
+}
+
+.subscription-badge.subscription-pro:hover {
+    background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.6);
+    transform: translateY(-1px);
+}
+
+/* Free subscription styling */
+.subscription-badge.subscription-free {
+    background: linear-gradient(135deg, #50c878 0%, #3a9b5a 100%);
+    color: white;
+    box-shadow: 0 2px 8px rgba(80, 200, 120, 0.4);
+}
+
+.subscription-badge.subscription-free:hover {
+    background: linear-gradient(135deg, #3a9b5a 0%, #50c878 100%);
+    box-shadow: 0 4px 12px rgba(80, 200, 120, 0.6);
+    transform: translateY(-1px);
+}
+
+/* Active/clicked state */
+.subscription-badge:active {
+    transform: translateY(0);
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
 }
 
 /* Main Content */
@@ -280,6 +313,16 @@ body.light-mode .theme-toggle {
     flex: 1;
     padding: 30px;
     background: rgba(0, 0, 0, 0.2);
+}
+
+/* White/transparent background for home and overview pages */
+.main-content.white-background {
+    background: transparent;
+}
+
+/* Ensure home and overview pages don't have grey overlay */
+body.light-mode .main-content.white-background {
+    background: transparent;
 }
 
 .page {
@@ -1126,6 +1169,19 @@ body.light-mode .theme-toggle {
     font-size: 12px;
     text-transform: uppercase;
     letter-spacing: 1px;
+}
+
+.btn-add-to-meal-log {
+    transition: all 0.3s ease;
+}
+
+.btn-add-to-meal-log:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 20px rgba(74, 144, 226, 0.4);
+}
+
+.btn-add-to-meal-log:active {
+    transform: translateY(0);
 }
 
 @media (max-width: 768px) {
