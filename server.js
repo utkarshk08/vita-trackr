@@ -29,6 +29,7 @@ app.use('/api/weights', require('./routes/weightRoutes'));
 app.use('/api/recipes', require('./routes/recipeRoutes'));
 app.use('/api/gemini', require('./routes/geminiRoutes'));
 app.use('/api/nutrition', require('./routes/nutritionRoutes'));
+app.use('/api/chatbot', require('./routes/chatbotRoutes'));
 
 // Serve index.html for all non-API routes (for SPA)
 app.get('*', (req, res) => {

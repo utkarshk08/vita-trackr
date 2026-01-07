@@ -37,9 +37,9 @@ const getFoodNutrition = async (req, res) => {
         else if (process.env.CUSTOM_NUTRITION_API_URL && process.env.CUSTOM_NUTRITION_API_KEY) {
             nutritionData = await getNutritionFromCustomAPI(foodName, quantity);
         }
-        // Option 5: Use Gemini AI as fallback
-        else if (process.env.GEMINI_API_KEY) {
-            nutritionData = await getNutritionFromGemini(foodName, quantity);
+        // Option 5: Use ChatGPT AI as fallback
+        else if (process.env.OPENAI_API_KEY) {
+            nutritionData = await getNutritionFromChatGPT(foodName, quantity);
         }
 
         if (!nutritionData) {
@@ -215,17 +215,17 @@ async function getNutritionFromCustomAPI(foodName, quantity) {
     return null;
 }
 
-// Gemini AI fallback for nutrition estimation
-async function getNutritionFromGemini(foodName, quantity) {
-    const { GoogleGenerativeAI } = require('@google/generative-ai');
+// ChatGPT AI fallback for nutrition estimation
+async function getNutritionFromChatGPT(foodName, quantity) {
+    const OpenAI = require('openai');
     
     // Validate API key
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     if (!apiKey || apiKey.trim() === '') {
-        throw new Error('Gemini API key not configured');
+        throw new Error('OpenAI API key not configured');
     }
     
-    const genAI = new GoogleGenerativeAI(apiKey);
+    const openai = new OpenAI({ apiKey });
 
     const prompt = `Estimate the nutritional information for ${quantity}g of ${foodName}. 
 
@@ -241,12 +241,18 @@ Return ONLY a JSON object in this exact format:
 
 Make realistic estimates based on common nutritional values. Return ONLY the JSON, no markdown formatting.`;
 
-    // Use gemini-2.5-flash for nutrition estimation (current supported model)
-    const modelName = process.env.MODEL || "gemini-2.5-flash";
-    const model = genAI.getGenerativeModel({ model: modelName });
-    const result = await model.generateContent(prompt);
-    const response = await result.response;
-    let nutritionText = response.text().trim();
+    const modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+    const completion = await openai.chat.completions.create({
+        model: modelName,
+        messages: [
+            { role: 'system', content: 'You are a nutrition estimation AI. Always respond with valid JSON only.' },
+            { role: 'user', content: prompt }
+        ],
+        temperature: 0.3,
+        max_tokens: 500
+    });
+
+    let nutritionText = completion.choices[0].message.content.trim();
 
     // Clean up response
     if (nutritionText.startsWith('```json')) {

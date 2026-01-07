@@ -70,6 +70,9 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Initialize support chatbot (always visible)
+    initializeSupportChatbot();
+    
     // Login form submission
     document.getElementById('loginForm').addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -236,10 +239,25 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 });
 
-// Load AI activity recommendations
-async function loadActivityRecommendations() {
+// Load AI activity recommendations (with caching)
+async function loadActivityRecommendations(forceRegenerate = false) {
     const recommendationBox = document.getElementById('activityRecommendationContent');
     if (!recommendationBox || !currentUserId) return;
+    
+    // Check cache first (unless forcing regeneration)
+    if (!forceRegenerate) {
+        const today = new Date().toISOString().split('T')[0];
+        const cachedRecs = localStorage.getItem(`activityRecs_${currentUserId}_${today}`);
+        if (cachedRecs) {
+            try {
+                const recommendations = JSON.parse(cachedRecs);
+                displayActivityRecommendations(recommendations);
+                return;
+            } catch (e) {
+                console.error('Error parsing cached activity recommendations:', e);
+            }
+        }
+    }
     
     // Show loading state
     recommendationBox.innerHTML = '<p style="margin: 0;"><i class="fas fa-spinner fa-spin"></i> 🤖 AI is analyzing your activity history and meal logs...</p>';
@@ -268,49 +286,11 @@ async function loadActivityRecommendations() {
         );
         
         if (recommendations && recommendations.length > 0) {
-            // Display recommendations
-            let html = '<div style="display: flex; flex-direction: column; gap: 15px;">';
-            recommendations.forEach((rec, index) => {
-                const activityIcons = {
-                    running: 'fa-running',
-                    cycling: 'fa-bicycle',
-                    swimming: 'fa-swimmer',
-                    walking: 'fa-walking',
-                    gym: 'fa-dumbbell',
-                    yoga: 'fa-spa'
-                };
-                const icon = activityIcons[rec.type] || 'fa-running';
-                const intensityColors = {
-                    light: '#50c878',
-                    moderate: '#ffa500',
-                    vigorous: '#ff4444'
-                };
-                const intensityColor = intensityColors[rec.intensity] || '#50c878';
-                
-                html += `
-                    <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; border-left: 4px solid ${intensityColor};">
-                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                            <i class="fas ${icon}" style="font-size: 1.2em; color: var(--accent-color);"></i>
-                            <strong style="color: var(--text-primary); text-transform: capitalize;">${rec.type}</strong>
-                            <span style="margin-left: auto; font-size: 0.9em; color: ${intensityColor};">
-                                ${rec.intensity.charAt(0).toUpperCase() + rec.intensity.slice(1)}
-                            </span>
-                        </div>
-                        <div style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 8px;">
-                            <i class="fas fa-clock"></i> ${rec.duration} minutes
-                        </div>
-                        <div style="font-size: 0.85em; color: var(--text-secondary); font-style: italic;">
-                            ${rec.reason}
-                        </div>
-                        <button onclick="useActivityRecommendation('${rec.type}', ${rec.duration}, '${rec.intensity}')" 
-                                style="margin-top: 10px; padding: 8px 15px; background: var(--accent-color); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em;">
-                            <i class="fas fa-check"></i> Use This Recommendation
-                        </button>
-                    </div>
-                `;
-            });
-            html += '</div>';
-            recommendationBox.innerHTML = html;
+            // Cache for today
+            const today = new Date().toISOString().split('T')[0];
+            localStorage.setItem(`activityRecs_${currentUserId}_${today}`, JSON.stringify(recommendations));
+            
+            displayActivityRecommendations(recommendations);
         } else {
             recommendationBox.innerHTML = '<p style="margin: 0; color: var(--text-secondary);">No specific recommendations at this time. Keep up your regular activity routine!</p>';
         }
@@ -320,10 +300,75 @@ async function loadActivityRecommendations() {
     }
 }
 
+// Display activity recommendations
+function displayActivityRecommendations(recommendations) {
+    const recommendationBox = document.getElementById('activityRecommendationContent');
+    if (!recommendationBox) return;
+    
+    let html = '<div style="display: flex; flex-direction: column; gap: 15px;">';
+    recommendations.forEach((rec, index) => {
+        const activityIcons = {
+            running: 'fa-running',
+            cycling: 'fa-bicycle',
+            swimming: 'fa-swimmer',
+            walking: 'fa-walking',
+            gym: 'fa-dumbbell',
+            yoga: 'fa-spa'
+        };
+        const icon = activityIcons[rec.type] || 'fa-running';
+        const intensityColors = {
+            light: '#50c878',
+            moderate: '#ffa500',
+            vigorous: '#ff4444'
+        };
+        const intensityColor = intensityColors[rec.intensity] || '#50c878';
+        
+        html += `
+            <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; border-left: 4px solid ${intensityColor};">
+                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                    <i class="fas ${icon}" style="font-size: 1.2em; color: var(--accent-color);"></i>
+                    <strong style="color: var(--text-primary); text-transform: capitalize;">${rec.type}</strong>
+                    <span style="margin-left: auto; font-size: 0.9em; color: ${intensityColor};">
+                        ${rec.intensity.charAt(0).toUpperCase() + rec.intensity.slice(1)}
+                    </span>
+                </div>
+                <div style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 8px;">
+                    <i class="fas fa-clock"></i> ${rec.duration} minutes
+                </div>
+                <div style="font-size: 0.85em; color: var(--text-secondary); font-style: italic;">
+                    ${rec.reason}
+                </div>
+                <button onclick="useActivityRecommendation('${rec.type}', ${rec.duration}, '${rec.intensity}')" 
+                        style="margin-top: 10px; padding: 8px 15px; background: var(--accent-color); color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 0.9em;">
+                    <i class="fas fa-check"></i> Use This Recommendation
+                </button>
+            </div>
+        `;
+    });
+    html += '</div>';
+    recommendationBox.innerHTML = html;
+}
+
+
 // Load AI daily plan for overview dashboard
-async function loadDailyPlan() {
+async function loadDailyPlan(forceRegenerate = false) {
     const dailyPlanDiv = document.getElementById('dailyPlanContent');
     if (!dailyPlanDiv || !currentUserId) return;
+    
+    // Check cache first (unless forcing regeneration)
+    if (!forceRegenerate) {
+        const today = new Date().toISOString().split('T')[0];
+        const cachedPlan = localStorage.getItem(`dailyPlan_${currentUserId}_${today}`);
+        if (cachedPlan) {
+            try {
+                const dailyPlan = JSON.parse(cachedPlan);
+                displayDailyPlanHTML(dailyPlan);
+                return;
+            } catch (e) {
+                console.error('Error parsing cached daily plan:', e);
+            }
+        }
+    }
     
     // Show loading state
     dailyPlanDiv.innerHTML = '<p style="margin: 0;"><i class="fas fa-spinner fa-spin"></i> 🤖 AI is creating your personalized daily plan...</p>';
@@ -352,7 +397,25 @@ async function loadDailyPlan() {
         );
         
         if (dailyPlan) {
-            // Display daily plan
+            // Cache the plan for today
+            const today = new Date().toISOString().split('T')[0];
+            localStorage.setItem(`dailyPlan_${currentUserId}_${today}`, JSON.stringify(dailyPlan));
+            
+            displayDailyPlanHTML(dailyPlan);
+        } else {
+            dailyPlanDiv.innerHTML = '<p style="margin: 0; color: var(--text-secondary);">Unable to generate daily plan at this time. Please try again later.</p>';
+        }
+    } catch (error) {
+        console.error('Error loading daily plan:', error);
+        dailyPlanDiv.innerHTML = `<p style="margin: 0; color: var(--accent-color);"><i class="fas fa-exclamation-triangle"></i> Unable to load daily plan: ${error.message || 'Unknown error'}</p>`;
+    }
+}
+
+// Display daily plan HTML
+function displayDailyPlanHTML(dailyPlan) {
+    const dailyPlanDiv = document.getElementById('dailyPlanContent');
+    if (!dailyPlanDiv) return;
+    
             let html = '';
             
             // Summary
@@ -368,7 +431,7 @@ async function loadDailyPlan() {
                     <h4 style="color: var(--accent-color); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
                         <i class="fas fa-running"></i> Recommended Activities
                     </h4>`;
-                dailyPlan.activities.forEach(act => {
+        dailyPlan.activities.forEach((act, index) => {
                     const activityIcons = {
                         running: 'fa-running',
                         cycling: 'fa-bicycle',
@@ -385,20 +448,24 @@ async function loadDailyPlan() {
                     };
                     const intensityColor = intensityColors[act.intensity] || '#50c878';
                     
-                    html += `<div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid ${intensityColor};">
+            html += `<div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid ${intensityColor}; display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                <div style="flex: 1;">
                         <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
                             <i class="fas ${icon}" style="color: var(--accent-color);"></i>
                             <strong style="color: var(--text-primary); text-transform: capitalize;">${act.type}</strong>
-                            <span style="margin-left: auto; font-size: 0.85em; color: ${intensityColor};">
+                        <span style="font-size: 0.85em; color: ${intensityColor};">
                                 ${act.intensity.charAt(0).toUpperCase() + act.intensity.slice(1)}
                             </span>
                         </div>
-                        <div style="font-size: 0.9em; color: var(--text-secondary); margin-bottom: 5px;">
-                            <i class="fas fa-clock"></i> ${act.duration} minutes | <i class="fas fa-calendar"></i> ${act.time}
+                    <div style="font-size: 0.9em; color: var(--text-secondary);">
+                        <i class="fas fa-clock"></i> ${act.duration} minutes | <i class="fas fa-calendar"></i> ${act.time || 'Anytime'}
                         </div>
-                        <div style="font-size: 0.85em; color: var(--text-secondary); font-style: italic;">
-                            ${act.reason}
                         </div>
+                <button onclick="logActivityFromPlan('${act.type}', ${act.duration}, '${act.intensity}')" 
+                        style="padding: 8px 12px; font-size: 0.85em; background: var(--accent-color); color: white; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap; transition: opacity 0.2s;"
+                        onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                    <i class="fas fa-plus"></i> Log Activity
+                </button>
                     </div>`;
                 });
                 html += `</div>`;
@@ -415,19 +482,24 @@ async function loadDailyPlan() {
                 mealTypes.forEach(mealType => {
                     if (dailyPlan.meals[mealType]) {
                         const meal = dailyPlan.meals[mealType];
-                        html += `<div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--secondary-color);">
+                const mealName = meal.suggestion || meal;
+                html += `<div style="background: rgba(255, 255, 255, 0.05); padding: 12px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--secondary-color); display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                    <div style="flex: 1;">
                             <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
                                 <strong style="color: var(--text-primary); text-transform: capitalize;">${mealType}</strong>
-                                <span style="margin-left: auto; font-size: 0.85em; color: var(--text-secondary);">
-                                    ${meal.calories} cal | P:${meal.protein}g
+                            <span style="font-size: 0.85em; color: var(--text-secondary);">
+                                ${meal.calories || ''} ${meal.calories ? 'cal' : ''} ${meal.protein ? '| P:' + meal.protein + 'g' : ''}
                                 </span>
                             </div>
-                            <div style="font-size: 0.95em; color: var(--text-primary); margin-bottom: 5px; font-weight: 500;">
-                                ${meal.suggestion}
+                        <div style="font-size: 0.95em; color: var(--text-primary); font-weight: 500;">
+                            ${mealName}
                             </div>
-                            <div style="font-size: 0.85em; color: var(--text-secondary); font-style: italic;">
-                                ${meal.reason}
                             </div>
+                    <button onclick="viewRecipeFromPlan('${mealName.replace(/'/g, "\\'")}')" 
+                            style="padding: 8px 12px; font-size: 0.85em; background: var(--secondary-color); color: white; border: none; border-radius: 6px; cursor: pointer; white-space: nowrap; transition: opacity 0.2s;"
+                            onmouseover="this.style.opacity='0.8'" onmouseout="this.style.opacity='1'">
+                        <i class="fas fa-utensils"></i> View Recipe
+                    </button>
                         </div>`;
                     }
                 });
@@ -446,43 +518,70 @@ async function loadDailyPlan() {
             // Water intake
             if (dailyPlan.waterIntake) {
                 html += `<div style="background: rgba(74, 144, 226, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 20px; border-left: 3px solid var(--accent-color);">
-                    <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 5px;">
+            <div style="display: flex; align-items: center; gap: 10px;">
                         <i class="fas fa-tint" style="color: var(--accent-color);"></i>
                         <strong style="color: var(--text-primary);">Water Intake:</strong>
                         <span style="margin-left: auto; font-size: 1.1em; color: var(--accent-color); font-weight: bold;">
                             ${dailyPlan.waterIntake.liters}L
                         </span>
                     </div>
-                    <div style="font-size: 0.85em; color: var(--text-secondary); font-style: italic;">
-                        ${dailyPlan.waterIntake.reason}
-                    </div>
                 </div>`;
             }
             
-            // Health tips
-            if (dailyPlan.healthTips && dailyPlan.healthTips.length > 0) {
-                html += `<div style="margin-bottom: 10px;">
-                    <h4 style="color: var(--primary-color); margin-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                        <i class="fas fa-lightbulb"></i> Health Tips
-                    </h4>`;
-                dailyPlan.healthTips.forEach(tip => {
-                    html += `<div style="background: rgba(255, 255, 255, 0.05); padding: 10px; border-radius: 8px; margin-bottom: 8px; border-left: 3px solid var(--primary-color);">
-                        <div style="font-size: 0.9em; color: var(--text-secondary);">
-                            <i class="fas fa-check-circle" style="color: var(--primary-color); margin-right: 8px;"></i>${tip}
-                        </div>
-                    </div>`;
-                });
-                html += `</div>`;
-            }
-            
-            dailyPlanDiv.innerHTML = html;
-        } else {
-            dailyPlanDiv.innerHTML = '<p style="margin: 0; color: var(--text-secondary);">Unable to generate daily plan at this time. Please try again later.</p>';
-        }
-    } catch (error) {
-        console.error('Error loading daily plan:', error);
-        dailyPlanDiv.innerHTML = `<p style="margin: 0; color: var(--accent-color);"><i class="fas fa-exclamation-triangle"></i> Unable to load daily plan: ${error.message || 'Unknown error'}</p>`;
+    dailyPlanDiv.innerHTML = html;
+}
+
+// Regenerate daily plan
+async function regenerateDailyPlan() {
+    // Clear cache for today
+    const today = new Date().toISOString().split('T')[0];
+    if (currentUserId) {
+        localStorage.removeItem(`dailyPlan_${currentUserId}_${today}`);
     }
+    // Reload with force regeneration
+    await loadDailyPlan(true);
+}
+
+// View recipe from daily plan
+function viewRecipeFromPlan(recipeName) {
+    // Navigate to recipe page
+    showPage('recipe');
+    // Set the recipe name in search and generate
+    setTimeout(() => {
+        const recipeSearchInput = document.getElementById('recipeSearch');
+        if (recipeSearchInput) {
+            recipeSearchInput.value = recipeName;
+            // Trigger generate
+            const generateBtn = document.querySelector('#recipeSection button[onclick="generateRecipe()"]');
+            if (generateBtn) {
+                generateBtn.click();
+        } else {
+                generateRecipe();
+            }
+        }
+    }, 300);
+}
+
+// Log activity from daily plan
+function logActivityFromPlan(type, duration, intensity) {
+    // Navigate to tracker page
+    showPage('tracker');
+    // Fill the form
+    setTimeout(() => {
+        const activityTypeSelect = document.getElementById('activityType');
+        const durationInput = document.getElementById('duration');
+        const intensitySelect = document.getElementById('intensity');
+        
+        if (activityTypeSelect) activityTypeSelect.value = type;
+        if (durationInput) durationInput.value = duration;
+        if (intensitySelect) intensitySelect.value = intensity;
+        
+        // Scroll to form
+        const form = document.querySelector('#tracker form');
+        if (form) {
+            form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+    }, 300);
 }
 
 // Use activity recommendation (fill form with recommended values)
@@ -549,6 +648,8 @@ function showPage(pageName) {
         loadActivityRecommendations(); // Load AI activity recommendations
     } else if (pageName === 'recipe') {
         loadRecipeSuggestions(); // Load AI recipe suggestions
+    } else if (pageName === 'chatbot') {
+        initializeChatbot(); // Initialize chatbot
     }
 }
 
@@ -663,8 +764,6 @@ async function saveProfile() {
     }
     
     // Optional fields
-    const bodyFat = document.getElementById('bodyFat').value;
-    const waistHipRatio = document.getElementById('waistHipRatio').value;
     const diseases = document.getElementById('diseases').value;
     const allergies = document.getElementById('allergies').value;
     const medications = document.getElementById('medications').value;
@@ -753,8 +852,6 @@ async function saveProfile() {
         weight: parseFloat(weight),
         height: parseFloat(height),
         bmi: parseFloat(bmi),
-        bodyFat: bodyFat ? parseFloat(bodyFat) : null,
-        waistHipRatio: waistHipRatio ? parseFloat(waistHipRatio) : null,
         
         // Health Information
         diseases: diseasesList,
@@ -882,8 +979,6 @@ function loadProfileData() {
     if (document.getElementById('gender')) document.getElementById('gender').value = userProfile.gender || '';
     if (document.getElementById('weight')) document.getElementById('weight').value = userProfile.weight || '';
     if (document.getElementById('height')) document.getElementById('height').value = userProfile.height || '';
-    if (document.getElementById('bodyFat')) document.getElementById('bodyFat').value = userProfile.bodyFat || '';
-    if (document.getElementById('waistHipRatio')) document.getElementById('waistHipRatio').value = userProfile.waistHipRatio || '';
     if (document.getElementById('diseases')) document.getElementById('diseases').value = userProfile.diseases ? userProfile.diseases.join(', ') : '';
     if (document.getElementById('allergies')) document.getElementById('allergies').value = userProfile.allergies ? userProfile.allergies.join(', ') : '';
     if (document.getElementById('dietaryPreferenceProfile')) document.getElementById('dietaryPreferenceProfile').value = userProfile.dietaryPreference || 'omnivore';
@@ -950,7 +1045,7 @@ function findRecipesWithAllIngredients(userIngredients, allRecipes) {
     return matchingRecipes.slice(0, 3);
 }
 
-// Load and display AI recipe suggestions (using Gemini AI)
+// Load and display AI recipe suggestions (using ChatGPT AI)
 async function loadRecipeSuggestions() {
     const suggestionsDiv = document.getElementById('recipeSuggestions');
     const ingredientsInput = document.getElementById('ingredients') ? document.getElementById('ingredients').value.trim() : '';
@@ -992,7 +1087,7 @@ async function loadRecipeSuggestions() {
         // Show helpful error message
         let errorMessage = 'Unable to load AI suggestions';
         if (error.message && error.message.includes('API key')) {
-            errorMessage = '<i class="fas fa-exclamation-triangle"></i> Please configure Gemini API key in .env file';
+            errorMessage = '<i class="fas fa-exclamation-triangle"></i> Please configure OpenAI API key in .env file';
         } else if (error.message) {
             errorMessage = `Unable to load: ${error.message}`;
         }
@@ -1062,11 +1157,11 @@ async function selectSuggestedRecipe(recipeName) {
     
     try {
         // Generate full recipe using AI with the recipe name (and ingredients if available)
-        const geminiRecipe = await generateRecipeWithGemini(ingredients, decodedName, userProfile);
+        const chatGPTRecipe = await generateRecipeWithGemini(ingredients, decodedName, userProfile);
         
-        if (geminiRecipe) {
+        if (chatGPTRecipe) {
             // Display the generated recipe
-            displayRecipes([geminiRecipe]);
+            displayRecipes([chatGPTRecipe]);
         } else {
             resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);">Failed to generate recipe. Please try again.</p>';
         }
@@ -1076,7 +1171,7 @@ async function selectSuggestedRecipe(recipeName) {
     }
 }
 
-// Recipe Generator with Gemini AI
+// Recipe Generator with ChatGPT AI
 async function generateRecipe() {
     const recipeSearchInput = document.getElementById('recipeSearch') ? document.getElementById('recipeSearch').value.trim() : '';
     const ingredientsInput = document.getElementById('ingredients').value.trim();
@@ -1098,15 +1193,15 @@ async function generateRecipe() {
     try {
         let recipes = [];
         
-        // If recipe name is provided, search database first, then use Gemini if not found
+        // If recipe name is provided, search database first, then use ChatGPT if not found
         if (recipeSearchInput) {
             const dbRecipes = await searchRecipeByName(recipeSearchInput);
             if (dbRecipes.length > 0) {
                 recipes = dbRecipes;
             } else {
-                // Use Gemini to generate recipe by name
-                const geminiRecipe = await generateRecipeWithGemini(null, recipeSearchInput, userProfile);
-                recipes = [geminiRecipe];
+                // Use ChatGPT to generate recipe by name
+                const chatGPTRecipe = await generateRecipeWithGemini(null, recipeSearchInput, userProfile);
+                recipes = [chatGPTRecipe];
             }
         } else {
             // Search database for recipes that contain ALL listed ingredients
@@ -1389,8 +1484,8 @@ function generateMultipleRecipes(ingredients) {
     return recipes.slice(0, 3);
 }
 
-// Dish Suggestions with automatic recommendations
-function getSuggestions() {
+// Dish Suggestions with AI-powered recommendations (with caching)
+async function getSuggestions(forceRegenerate = false) {
     const resultDiv = document.getElementById('suggestionsResult');
     
     if (!userProfile || !userProfile.isSetupComplete) {
@@ -1398,68 +1493,63 @@ function getSuggestions() {
         return;
     }
     
-    // Show loading state
-    resultDiv.innerHTML = '<p style="text-align: center; color: var(--secondary-color);"><i class="fas fa-spinner fa-spin"></i> Finding the perfect recipes for you...</p>';
-    
-    // Determine automatic recommendation based on profile
-    const autoRecommendation = determineAutoRecommendation();
-    
-    // Display automatic recommendation
-    displayAutoRecommendation(autoRecommendation);
-    
-    // Use smart recommendation system
-    if (typeof generateSmartDishSuggestions === 'function') {
-        generateSmartDishSuggestions(userProfile).then(dishSuggestions => {
-            if (dishSuggestions.length === 0) {
-                resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);">No recommendations found. Please update your profile preferences.</p>';
+    // Check cache first (unless forcing regeneration)
+    if (!forceRegenerate) {
+        const today = new Date().toISOString().split('T')[0];
+        const cachedSuggestions = localStorage.getItem(`dishSuggestions_${today}`);
+        if (cachedSuggestions) {
+            try {
+                const dishSuggestions = JSON.parse(cachedSuggestions);
+                window.currentSuggestions = dishSuggestions;
+                displayAIAutoRecommendation(dishSuggestions);
+                displayDishSuggestions(dishSuggestions);
                 return;
+            } catch (e) {
+                console.error('Error parsing cached suggestions:', e);
             }
-            
-            // Store suggestions in global scope for click handling
-            window.currentSuggestions = dishSuggestions;
-            
-            let recommendationsHTML = '';
-            dishSuggestions.forEach((dish, index) => {
-                const cuisineBadge = dish.cuisine ? `<span class="cuisine-badge">${dish.cuisine}</span>` : '';
-                const tagsHTML = dish.tags ? dish.tags.slice(0, 3).map(tag => 
-                    `<span class="tag-badge">${tag}</span>`
-                ).join('') : '';
-                
-                recommendationsHTML += `
-                    <div class="suggestion-card" onclick="showRecipeDetails(${index})" style="cursor: pointer;">
-                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
-                            <h4><i class="fas fa-heart" style="color: var(--secondary-color);"></i> ${dish.name}</h4>
-                            ${cuisineBadge}
-                        </div>
-                        <p style="margin-bottom: 10px;">${dish.description}</p>
-                        ${tagsHTML ? `<div style="margin-bottom: 10px;">${tagsHTML}</div>` : ''}
-                        <div class="nutrition-info" style="margin-top: 15px;">
-                            ${Object.entries(dish.nutrition).map(([key, value]) => `
-                                <div class="nutrition-item">
-                                    <strong>${value}</strong>
-                                    <span>${key}</span>
-                                </div>
-                            `).join('')}
-                        </div>
-                        ${dish.prepTime ? `<div style="margin-top: 10px; font-size: 12px; color: var(--text-secondary);">
-                            <i class="fas fa-clock"></i> ${dish.prepTime} prep | ${dish.cookTime} cooking
-                        </div>` : ''}
-                        <div style="margin-top: 15px; text-align: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-                            <button style="background: var(--primary-color); border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
-                                <i class="fas fa-book-open"></i> View Full Recipe
-                            </button>
-                        </div>
-                    </div>
-                `;
-            });
-            
-            resultDiv.innerHTML = recommendationsHTML;
-        }).catch(error => {
-            console.error('Error generating suggestions:', error);
-            resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);">Error loading suggestions. Please try again.</p>';
-        });
-    } else {
+        }
+    }
+    
+    // Show loading state
+    resultDiv.innerHTML = '<p style="text-align: center; color: var(--secondary-color);"><i class="fas fa-spinner fa-spin"></i> 🤖 AI is analyzing your profile, goals, and activity patterns...</p>';
+    
+    try {
+        // Get recent activities and meals for context
+        const endDate = new Date().toISOString().split('T')[0];
+        const startDate = new Date();
+        startDate.setDate(startDate.getDate() - 7);
+        const startDateStr = startDate.toISOString().split('T')[0];
+        
+        const [recentActivities, recentMeals] = await Promise.all([
+            getActivitiesByRange(startDateStr, endDate).catch(() => []),
+            getMealsByRange(startDateStr, endDate).catch(() => [])
+        ]);
+        
+        // Get AI-powered dish suggestions
+        const dishSuggestions = await getDishSuggestions(userProfile, recentActivities, recentMeals);
+        
+        if (!dishSuggestions || dishSuggestions.length === 0) {
+            resultDiv.innerHTML = '<p style="text-align: center; color: var(--accent-color);">No recommendations found. Please try again or update your profile.</p>';
+            return;
+        }
+        
+        // Store suggestions in global scope for click handling
+        window.currentSuggestions = dishSuggestions;
+        
+        // Cache suggestions for today
+        const today = new Date().toISOString().split('T')[0];
+        localStorage.setItem(`dishSuggestions_${today}`, JSON.stringify(dishSuggestions));
+        
+        // Display automatic recommendation summary based on AI suggestions
+        displayAIAutoRecommendation(dishSuggestions);
+        
+        // Display AI suggestions
+        displayDishSuggestions(dishSuggestions);
+    } catch (error) {
+        console.error('Error generating AI suggestions:', error);
         // Fallback to old system
+        const autoRecommendation = determineAutoRecommendation();
+        displayAutoRecommendation(autoRecommendation);
         const dishSuggestions = generateDishSuggestions(autoRecommendation);
         
         let recommendationsHTML = '';
@@ -1480,8 +1570,63 @@ function getSuggestions() {
             `;
         });
         
-        resultDiv.innerHTML = recommendationsHTML;
+        resultDiv.innerHTML = recommendationsHTML || '<p style="text-align: center; color: var(--accent-color);">Error loading suggestions. Please try again.</p>';
     }
+}
+
+// Display dish suggestions HTML
+function displayDishSuggestions(dishSuggestions) {
+    const resultDiv = document.getElementById('suggestionsResult');
+    if (!resultDiv) return;
+    
+    let recommendationsHTML = '';
+    dishSuggestions.forEach((dish, index) => {
+        const cuisineBadge = dish.cuisine ? `<span class="cuisine-badge">${dish.cuisine}</span>` : '';
+        const tagsHTML = dish.tags ? dish.tags.slice(0, 3).map(tag => 
+            `<span class="tag-badge">${tag}</span>`
+        ).join('') : '';
+        
+        recommendationsHTML += `
+            <div class="suggestion-card" onclick="showRecipeDetails(${index})" style="cursor: pointer;">
+                <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 10px;">
+                    <h4><i class="fas fa-heart" style="color: var(--secondary-color);"></i> ${dish.name}</h4>
+                    ${cuisineBadge}
+                </div>
+                <p style="margin-bottom: 10px;">${dish.description || dish.reason || ''}</p>
+                ${tagsHTML ? `<div style="margin-bottom: 10px;">${tagsHTML}</div>` : ''}
+                ${dish.reason ? `<div style="margin-bottom: 10px; font-size: 0.9em; color: var(--accent-color); font-style: italic;">
+                    <i class="fas fa-info-circle"></i> ${dish.reason}
+                </div>` : ''}
+                <div class="nutrition-info" style="margin-top: 15px;">
+                    ${Object.entries(dish.nutrition || {}).map(([key, value]) => `
+                        <div class="nutrition-item">
+                            <strong>${value}</strong>
+                            <span>${key}</span>
+                        </div>
+                    `).join('')}
+                </div>
+                ${dish.prepTime ? `<div style="margin-top: 10px; font-size: 12px; color: var(--text-secondary);">
+                    <i class="fas fa-clock"></i> ${dish.prepTime} prep | ${dish.cookTime || 'N/A'} cooking
+                </div>` : ''}
+                <div style="margin-top: 15px; text-align: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <button style="background: var(--primary-color); border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                        <i class="fas fa-book-open"></i> View Full Recipe
+                    </button>
+                </div>
+            </div>
+        `;
+    });
+    
+    resultDiv.innerHTML = recommendationsHTML;
+}
+
+// Regenerate dish suggestions
+async function regenerateDishSuggestions() {
+    // Clear cache for today
+    const today = new Date().toISOString().split('T')[0];
+    localStorage.removeItem(`dishSuggestions_${today}`);
+    // Reload with force regeneration
+    await getSuggestions(true);
 }
 
 function determineAutoRecommendation() {
@@ -1534,8 +1679,53 @@ function determineAutoRecommendation() {
     };
 }
 
+// Display AI-based automatic recommendation
+function displayAIAutoRecommendation(dishSuggestions) {
+    const infoDiv = document.getElementById('recommendationInfo');
+    if (!infoDiv || !dishSuggestions || dishSuggestions.length === 0) {
+        const autoRecommendation = determineAutoRecommendation();
+        displayAutoRecommendation(autoRecommendation);
+        return;
+    }
+    
+    // Extract common tags and reasons from AI suggestions
+    const allTags = [];
+    const allReasons = [];
+    dishSuggestions.forEach(dish => {
+        if (dish.tags && Array.isArray(dish.tags)) {
+            allTags.push(...dish.tags);
+        }
+        if (dish.reason) {
+            allReasons.push(dish.reason);
+        }
+    });
+    
+    // Get unique tags
+    const uniqueTags = [...new Set(allTags)].slice(0, 5);
+    
+    // Build recommendation text based on AI suggestions
+    let recommendationText = `Based on your health profile, goals, and activity patterns, our AI recommends these personalized dishes. `;
+    if (uniqueTags.length > 0) {
+        recommendationText += `Focus areas: <strong>${uniqueTags.join(', ')}</strong>.`;
+    }
+    
+    const tagsHTML = uniqueTags.map(tag => 
+        `<span class="recommendation-tag">${tag}</span>`
+    ).join('');
+    
+    infoDiv.innerHTML = `
+        <p style="margin-bottom: 15px;">${recommendationText}</p>
+        ${tagsHTML ? `<div>
+            <strong>Diet Focus:</strong><br>
+            ${tagsHTML}
+        </div>` : ''}
+    `;
+}
+
+// Fallback function for old recommendation system
 function displayAutoRecommendation(recommendation) {
     const infoDiv = document.getElementById('recommendationInfo');
+    if (!infoDiv) return;
     
     let recommendationText = '';
     
@@ -2323,8 +2513,8 @@ function updateOverview() {
         </div>
     `).join('');
     
-    // Display daily plan
-    displayDailyPlan();
+    // Display daily plan (using cached version if available)
+    loadDailyPlan();
 }
 
 // Modal Functions
@@ -3923,4 +4113,1054 @@ function generateDailyPlan() {
         activityRecommendation,
         nutritionRecommendation
     };
+}
+
+// ==================== CHATBOT FUNCTIONS ====================
+
+// Report Analysis Chatbot state
+let conversationHistory = [];
+let currentReportAnalysis = null;
+
+// Customer Support Chatbot state
+let supportConversationHistory = [];
+let supportChatOpen = false;
+
+// Get storage key for current user's chat
+function getChatStorageKey() {
+    const currentUserId = localStorage.getItem('currentUserId');
+    return currentUserId ? `reportChat_${currentUserId}` : null;
+}
+
+// Save chat to localStorage
+function saveChatToStorage() {
+    const storageKey = getChatStorageKey();
+    if (!storageKey) return;
+    
+    const chatData = {
+        conversationHistory: conversationHistory,
+        currentReportAnalysis: currentReportAnalysis,
+        chatMessagesHTML: document.getElementById('chatMessages')?.innerHTML || ''
+    };
+    
+    try {
+        localStorage.setItem(storageKey, JSON.stringify(chatData));
+    } catch (e) {
+        console.error('Error saving chat to storage:', e);
+    }
+}
+
+// Load chat from localStorage
+function loadChatFromStorage() {
+    const storageKey = getChatStorageKey();
+    if (!storageKey) return false;
+    
+    try {
+        const savedData = localStorage.getItem(storageKey);
+        if (savedData) {
+            const chatData = JSON.parse(savedData);
+            conversationHistory = chatData.conversationHistory || [];
+            currentReportAnalysis = chatData.currentReportAnalysis || null;
+            
+            const chatMessages = document.getElementById('chatMessages');
+            if (chatMessages && chatData.chatMessagesHTML) {
+                chatMessages.innerHTML = chatData.chatMessagesHTML;
+                scrollChatToBottom();
+                return true;
+            }
+        }
+    } catch (e) {
+        console.error('Error loading chat from storage:', e);
+    }
+    
+    return false;
+}
+
+// Initialize chatbot when page loads
+function initializeChatbot() {
+    // Try to load saved chat first
+    const chatLoaded = loadChatFromStorage();
+    
+    // If no saved chat, initialize empty
+    if (!chatLoaded) {
+        conversationHistory = [];
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages && chatMessages.children.length === 0) {
+            chatMessages.innerHTML = `
+                <div class="chat-message bot-message">
+                    <div class="message-avatar">
+                        <i class="fas fa-microscope"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>Hello! Upload your report to get started, or ask me anything about your health and nutrition.</p>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    const chatInput = document.getElementById('chatInput');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+    }
+    scrollChatToBottom();
+}
+
+// Send message to report analysis chatbot
+async function sendMessage() {
+    const chatInput = document.getElementById('chatInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const message = chatInput.value.trim();
+    
+    if (!message) return;
+    
+    // Disable input while processing
+    chatInput.disabled = true;
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    // Add user message to chat
+    addMessageToChat('user', message);
+    chatInput.value = '';
+    
+    // Add to conversation history
+    conversationHistory.push({ role: 'user', content: message });
+    
+    // Save chat after user message
+    saveChatToStorage();
+    
+    try {
+        // Get user data for context
+        const currentUserId = localStorage.getItem('currentUserId');
+        const userProfile = window.userProfile || JSON.parse(localStorage.getItem('userProfile') || 'null');
+        const activities = window.activities || [];
+        const meals = window.meals || [];
+        
+        // Show typing indicator
+        const typingId = addTypingIndicator();
+        
+        // Call chatbot API
+        const response = await chatWithBot(message, conversationHistory, userProfile, activities, meals);
+        
+        // Remove typing indicator
+        removeTypingIndicator(typingId);
+        
+        // Add bot response to chat
+        addMessageToChat('bot', response.response);
+        
+        // Add to conversation history
+        conversationHistory.push({ role: 'assistant', content: response.response });
+        
+        // Save chat after bot response
+        saveChatToStorage();
+        
+    } catch (error) {
+        console.error('Chatbot error:', error);
+        addMessageToChat('bot', `Sorry, I encountered an error: ${error.message}. Please try again.`);
+        // Save chat even on error
+        saveChatToStorage();
+    } finally {
+        // Re-enable input
+        chatInput.disabled = false;
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        chatInput.focus();
+    }
+}
+
+// Send message to customer support chatbot
+async function sendSupportMessage() {
+    const chatInput = document.getElementById('supportChatInput');
+    const sendBtn = document.getElementById('supportSendBtn');
+    const message = chatInput.value.trim();
+    
+    if (!message) return;
+    
+    // Disable input while processing
+    chatInput.disabled = true;
+    sendBtn.disabled = true;
+    sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+    
+    // Add user message to chat
+    addSupportMessageToChat('user', message);
+    chatInput.value = '';
+    
+    // Add to conversation history
+    supportConversationHistory.push({ role: 'user', content: message });
+    
+    try {
+        // Show typing indicator
+        const typingId = addSupportTypingIndicator();
+        
+        // Call support chat API
+        const response = await supportChat(message, supportConversationHistory);
+        
+        // Remove typing indicator
+        removeSupportTypingIndicator(typingId);
+        
+        // Add bot response to chat
+        addSupportMessageToChat('bot', response.response);
+        
+        // Add to conversation history
+        supportConversationHistory.push({ role: 'assistant', content: response.response });
+        
+        // Hide badge if visible
+        const badge = document.getElementById('supportBadge');
+        if (badge) badge.style.display = 'none';
+        
+    } catch (error) {
+        console.error('Support chat error:', error);
+        addSupportMessageToChat('bot', `Sorry, I encountered an error: ${error.message}. Please try again.`);
+    } finally {
+        // Re-enable input
+        chatInput.disabled = false;
+        sendBtn.disabled = false;
+        sendBtn.innerHTML = '<i class="fas fa-paper-plane"></i>';
+        chatInput.focus();
+    }
+}
+
+// Add message to chat UI
+function addMessageToChat(role, content) {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${role}-message`;
+    
+    const avatar = role === 'user' 
+        ? '<i class="fas fa-user"></i>' 
+        : '<i class="fas fa-robot"></i>';
+    
+    messageDiv.innerHTML = `
+        <div class="message-avatar">
+            ${avatar}
+        </div>
+        <div class="message-content">
+            ${formatMessageContent(content)}
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    scrollChatToBottom();
+}
+
+// Format message content (handle markdown, links, etc.)
+function formatMessageContent(content) {
+    // Convert newlines to <br>
+    content = content.replace(/\n/g, '<br>');
+    
+    // Convert URLs to links
+    content = content.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+    
+    // Convert **bold** to <strong>
+    content = content.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+    
+    // Convert *italic* to <em>
+    content = content.replace(/\*(.*?)\*/g, '<em>$1</em>');
+    
+    return content;
+}
+
+// Add typing indicator
+function addTypingIndicator() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (!chatMessages) return null;
+    
+    const typingId = 'typing-' + Date.now();
+    const typingDiv = document.createElement('div');
+    typingDiv.id = typingId;
+    typingDiv.className = 'chat-message bot-message typing-indicator';
+    typingDiv.innerHTML = `
+        <div class="message-avatar">
+            <i class="fas fa-robot"></i>
+        </div>
+        <div class="message-content">
+            <span class="typing-dots">
+                <span>.</span><span>.</span><span>.</span>
+            </span>
+        </div>
+    `;
+    
+    chatMessages.appendChild(typingDiv);
+    scrollChatToBottom();
+    return typingId;
+}
+
+// Remove typing indicator
+function removeTypingIndicator(typingId) {
+    if (typingId) {
+        const indicator = document.getElementById(typingId);
+        if (indicator) indicator.remove();
+    }
+}
+
+// Scroll chat to bottom
+function scrollChatToBottom() {
+    const chatMessages = document.getElementById('chatMessages');
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// Show FAQ modal
+async function showFAQ() {
+    const modal = document.getElementById('faqModal');
+    const faqContent = document.getElementById('faqContent');
+    
+    if (!modal || !faqContent) return;
+    
+    try {
+        faqContent.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Loading FAQs...</p>';
+        modal.classList.add('show');
+        
+        const faqs = await getFAQ();
+        
+        faqContent.innerHTML = faqs.map((faq, index) => `
+            <div class="faq-item" style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                <h4 style="color: var(--primary-color); margin-bottom: 10px;">
+                    <i class="fas fa-question-circle"></i> ${faq.question}
+                </h4>
+                <p style="color: var(--text-secondary); line-height: 1.6;">${faq.answer}</p>
+            </div>
+        `).join('');
+    } catch (error) {
+        faqContent.innerHTML = `<p style="color: var(--accent-color);">Error loading FAQs: ${error.message}</p>`;
+    }
+}
+
+// Close FAQ modal
+function closeFAQ() {
+    const modal = document.getElementById('faqModal');
+    if (modal) modal.classList.remove('show');
+}
+
+// Show report upload modal
+function showReportUpload() {
+    const modal = document.getElementById('reportModal');
+    if (modal) {
+        modal.classList.add('show');
+        document.getElementById('reportText').value = '';
+        document.getElementById('reportFile').value = '';
+        document.getElementById('reportAnalysisResult').innerHTML = '';
+    }
+}
+
+// Close report upload modal
+function closeReportUpload() {
+    const modal = document.getElementById('reportModal');
+    if (modal) modal.classList.remove('show');
+}
+
+// Handle file selection
+function handleFileSelect(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            document.getElementById('reportText').value = e.target.result;
+        };
+        reader.readAsText(file);
+    }
+}
+
+// Analyze report
+async function analyzeReport() {
+    const reportText = document.getElementById('reportText').value.trim();
+    const reportFile = document.getElementById('reportFile').files[0];
+    const resultDiv = document.getElementById('reportAnalysisResult');
+    
+    if (!reportText && !reportFile) {
+        alert('Please provide report text or upload a file');
+        return;
+    }
+    
+    resultDiv.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Analyzing report...</p>';
+    
+    try {
+        let analysis;
+        
+        if (reportFile) {
+            // Upload file
+            const userProfile = window.userProfile || JSON.parse(localStorage.getItem('userProfile') || 'null');
+            const activities = window.activities || [];
+            const meals = window.meals || [];
+            
+            analysis = await uploadReportFile(reportFile, userProfile, activities, meals);
+        } else {
+            // Use text input
+            const userProfile = window.userProfile || JSON.parse(localStorage.getItem('userProfile') || 'null');
+            const activities = window.activities || [];
+            const meals = window.meals || [];
+            
+            // Call analyzeReport API directly
+            const response = await fetch('/api/chatbot/analyze-report', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reportText, userProfile, activities, meals })
+            });
+            const apiData = await response.json();
+            if (!apiData.success) throw new Error(apiData.error);
+            analysis = apiData.data;
+        }
+        
+        // Store analysis for diet plan generation
+        currentReportAnalysis = analysis;
+        
+        // Display results
+        displayReportAnalysis(analysis);
+        
+        // Add message to chat
+        addMessageToChat('bot', `I've analyzed your report. Here's a summary:\n\n${analysis.summary}\n\nWould you like me to generate a detailed diet plan based on this analysis?`);
+        conversationHistory.push({ 
+            role: 'assistant', 
+            content: `Report analyzed. Summary: ${analysis.summary}` 
+        });
+        
+        // Save chat after report analysis
+        saveChatToStorage();
+        
+    } catch (error) {
+        console.error('Report analysis error:', error);
+        resultDiv.innerHTML = `<p style="color: var(--accent-color);">Error analyzing report: ${error.message}</p>`;
+    }
+}
+
+// This function is no longer needed - using direct API calls
+
+// Display report analysis
+function displayReportAnalysis(analysis) {
+    const resultDiv = document.getElementById('reportAnalysisResult');
+    
+    resultDiv.innerHTML = `
+        <div style="background: rgba(80, 200, 120, 0.1); padding: 20px; border-radius: 10px; border: 2px solid var(--secondary-color);">
+            <h3 style="color: var(--secondary-color); margin-top: 0;">
+                <i class="fas fa-check-circle"></i> Analysis Complete
+            </h3>
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: var(--primary-color);">Summary:</h4>
+                <p style="color: var(--text-secondary); line-height: 1.8;">${analysis.summary}</p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: var(--primary-color);">Beneficial Foods:</h4>
+                <ul style="color: var(--text-secondary);">
+                    ${analysis.dietPlan.beneficialFoods.map(f => `<li><strong>${f.food}</strong>: ${f.reason}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: var(--primary-color);">Foods to Avoid/Limit:</h4>
+                <ul style="color: var(--text-secondary);">
+                    ${analysis.dietPlan.foodsToAvoid.map(f => `<li><strong>${f.food}</strong>: ${f.reason}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: var(--primary-color);">Recommended Supplements:</h4>
+                <ul style="color: var(--text-secondary);">
+                    ${analysis.dietPlan.supplements.map(s => `<li><strong>${s.supplement}</strong> (${s.dosage}): ${s.reason}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <div>
+                <h4 style="color: var(--primary-color);">Further Tests Recommended:</h4>
+                <ul style="color: var(--text-secondary);">
+                    ${analysis.dietPlan.furtherTests.map(t => `<li><strong>${t.test}</strong>: ${t.reason}</li>`).join('')}
+                </ul>
+            </div>
+            
+            <button onclick="generateDietPlanFromAnalysis()" class="btn-primary" style="width: 100%; margin-top: 20px;">
+                <i class="fas fa-utensils"></i> Generate Detailed Diet Plan
+            </button>
+        </div>
+    `;
+}
+
+// Generate diet plan
+async function generateDietPlan() {
+    const modal = document.getElementById('dietPlanModal');
+    const contentDiv = document.getElementById('dietPlanContent');
+    
+    if (!modal || !contentDiv) return;
+    
+    modal.classList.add('show');
+    contentDiv.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Generating personalized diet plan...</p>';
+    
+    try {
+        const userProfile = window.userProfile || JSON.parse(localStorage.getItem('userProfile') || 'null');
+        const activities = window.activities || [];
+        const meals = window.meals || [];
+        
+        // Call diet plan API directly
+        const response = await fetch('/api/chatbot/diet-plan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                reportAnalysis: currentReportAnalysis, 
+                userProfile, 
+                activities, 
+                meals 
+            })
+        });
+        const apiData = await response.json();
+        if (!apiData.success) throw new Error(apiData.error);
+        const dietPlan = apiData.data;
+        
+        displayDietPlan(dietPlan);
+        
+    } catch (error) {
+        console.error('Diet plan error:', error);
+        contentDiv.innerHTML = `<p style="color: var(--accent-color);">Error generating diet plan: ${error.message}</p>`;
+    }
+}
+
+// Generate diet plan from analysis (called from report analysis)
+async function generateDietPlanFromAnalysis() {
+    closeReportUpload();
+    await generateDietPlan();
+}
+
+// Generate diet plan API wrapper (calls API function from api.js)
+async function generateDietPlanAPI(reportAnalysis, userProfile, activities, meals) {
+    // Use the API function - it's available globally from api.js
+    if (typeof window.generateDietPlanAPI !== 'undefined') {
+        return await window.generateDietPlanAPI(reportAnalysis, userProfile, activities, meals);
+    }
+    // Fallback: direct API call
+    const response = await fetch('/api/chatbot/diet-plan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportAnalysis, userProfile, activities, meals })
+    });
+    const data = await response.json();
+    if (!data.success) throw new Error(data.error);
+    return data.data;
+}
+
+// Display diet plan
+function displayDietPlan(plan) {
+    const contentDiv = document.getElementById('dietPlanContent');
+    
+    contentDiv.innerHTML = `
+        <div style="background: rgba(74, 144, 226, 0.1); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+            <h3 style="color: var(--primary-color); margin-top: 0;">
+                <i class="fas fa-info-circle"></i> ${plan.summary}
+            </h3>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div style="background: rgba(80, 200, 120, 0.1); padding: 15px; border-radius: 10px; border: 2px solid var(--secondary-color);">
+                <h4 style="color: var(--secondary-color); margin-top: 0;">
+                    <i class="fas fa-check-circle"></i> Beneficial Foods
+                </h4>
+                ${Array.isArray(plan.beneficialFoods) ? plan.beneficialFoods.map(categoryGroup => `
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: var(--text-primary);">${categoryGroup.category || 'General'}:</strong>
+                        <ul style="margin: 5px 0; padding-left: 20px; color: var(--text-secondary);">
+                            ${(categoryGroup.items || []).map(item => `
+                                <li>
+                                    <strong>${item.name || item.food || item}</strong>${item.serving ? ` (${item.serving})` : ''}${item.benefits ? `<br><small>${item.benefits}</small>` : ''}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `).join('') : Object.entries(plan.beneficialFoods || {}).map(([category, items]) => `
+                    <div style="margin-bottom: 15px;">
+                        <strong style="color: var(--text-primary);">${category}:</strong>
+                        <ul style="margin: 5px 0; padding-left: 20px; color: var(--text-secondary);">
+                            ${(Array.isArray(items) ? items : []).map(item => `
+                                <li>
+                                    <strong>${item.name || item.food || item}</strong>${item.serving ? ` (${item.serving})` : ''}${item.benefits ? `<br><small>${item.benefits}</small>` : ''}
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `).join('')}
+            </div>
+            
+            <div style="background: rgba(255, 107, 107, 0.1); padding: 15px; border-radius: 10px; border: 2px solid var(--accent-color);">
+                <h4 style="color: var(--accent-color); margin-top: 0;">
+                    <i class="fas fa-times-circle"></i> Foods to Avoid/Limit
+                </h4>
+                <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary);">
+                    ${plan.foodsToAvoid.map(f => `
+                        <li style="margin-bottom: 10px;">
+                            <strong>${f.food}</strong><br>
+                            <small>Reason: ${f.reason}</small><br>
+                            ${f.alternative ? `<small style="color: var(--secondary-color);">Alternative: ${f.alternative}</small>` : ''}
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        </div>
+        
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px;">
+            <div style="background: rgba(255, 215, 0, 0.1); padding: 15px; border-radius: 10px; border: 2px solid var(--warning-color);">
+                <h4 style="color: var(--warning-color); margin-top: 0;">
+                    <i class="fas fa-pills"></i> Supplements
+                </h4>
+                <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary);">
+                    ${plan.supplements.map(s => `
+                        <li style="margin-bottom: 10px;">
+                            <strong>${s.name}</strong> - ${s.dosage}<br>
+                            <small>Timing: ${s.timing}</small><br>
+                            <small>Reason: ${s.reason}</small>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+            
+            <div style="background: rgba(74, 144, 226, 0.1); padding: 15px; border-radius: 10px; border: 2px solid var(--primary-color);">
+                <h4 style="color: var(--primary-color); margin-top: 0;">
+                    <i class="fas fa-flask"></i> Further Tests
+                </h4>
+                <ul style="margin: 0; padding-left: 20px; color: var(--text-secondary);">
+                    ${plan.furtherTests.map(t => `
+                        <li style="margin-bottom: 10px;">
+                            <strong>${t.test}</strong><br>
+                            <small>Frequency: ${t.frequency}</small><br>
+                            <small>Reason: ${t.reason}</small>
+                        </li>
+                    `).join('')}
+                </ul>
+            </div>
+        </div>
+        
+        <div style="background: rgba(80, 200, 120, 0.1); padding: 15px; border-radius: 10px; border: 2px solid var(--secondary-color); margin-bottom: 20px;">
+            <h4 style="color: var(--secondary-color); margin-top: 0;">
+                <i class="fas fa-calendar-alt"></i> Meal Suggestions
+            </h4>
+            ${Object.entries(plan.mealSuggestions).map(([mealType, suggestions]) => `
+                <div style="margin-bottom: 15px;">
+                    <strong style="color: var(--text-primary); text-transform: capitalize;">${mealType}:</strong>
+                    <ul style="margin: 5px 0; padding-left: 20px; color: var(--text-secondary);">
+                        ${suggestions.map(s => `<li>${s}</li>`).join('')}
+                    </ul>
+                </div>
+            `).join('')}
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+            <button onclick="saveDietPlanToChat()" class="btn-primary" style="flex: 1; min-width: 150px;">
+                <i class="fas fa-save"></i> Save to Chat
+            </button>
+            <button onclick="editDietPlan()" class="btn-primary" style="flex: 1; min-width: 150px; background: var(--secondary-color);">
+                <i class="fas fa-edit"></i> Edit Plan
+            </button>
+            <button onclick="generate7DayPlan()" class="btn-primary" style="flex: 1; min-width: 150px; background: var(--accent-color);">
+                <i class="fas fa-calendar-week"></i> Generate 7-Day Plan
+            </button>
+        </div>
+    `;
+    
+    // Store current diet plan globally for editing
+    window.currentDietPlan = plan;
+}
+
+// Close diet plan modal
+function closeDietPlan() {
+    const modal = document.getElementById('dietPlanModal');
+    if (modal) modal.classList.remove('show');
+}
+
+// Save diet plan to chat
+function saveDietPlanToChat() {
+    if (!window.currentDietPlan) {
+        alert('No diet plan to save. Please generate a diet plan first.');
+        return;
+    }
+    
+    const plan = window.currentDietPlan;
+    
+    // Format the diet plan as a message
+    let planText = `📋 **Diet Plan Generated**\n\n`;
+    planText += `**Summary:** ${plan.summary}\n\n`;
+    
+    planText += `**Beneficial Foods:**\n`;
+    if (Array.isArray(plan.beneficialFoods)) {
+        plan.beneficialFoods.forEach(categoryGroup => {
+            planText += `\n*${categoryGroup.category || 'General'}:*\n`;
+            (categoryGroup.items || []).forEach(item => {
+                planText += `- ${item.name || item.food || item}${item.serving ? ` (${item.serving})` : ''}${item.benefits ? ` - ${item.benefits}` : ''}\n`;
+            });
+        });
+    } else {
+        Object.entries(plan.beneficialFoods || {}).forEach(([category, items]) => {
+            planText += `\n*${category}:*\n`;
+            (Array.isArray(items) ? items : []).forEach(item => {
+                planText += `- ${item.name || item.food || item}${item.serving ? ` (${item.serving})` : ''}${item.benefits ? ` - ${item.benefits}` : ''}\n`;
+            });
+        });
+    }
+    
+    planText += `\n**Foods to Avoid/Limit:**\n`;
+    plan.foodsToAvoid.forEach(f => {
+        planText += `- ${f.food} - ${f.reason}${f.alternative ? ` (Alternative: ${f.alternative})` : ''}\n`;
+    });
+    
+    planText += `\n**Supplements:**\n`;
+    plan.supplements.forEach(s => {
+        planText += `- ${s.name} (${s.dosage}) - ${s.reason}${s.timing ? ` - Take: ${s.timing}` : ''}\n`;
+    });
+    
+    planText += `\n**Further Tests:**\n`;
+    plan.furtherTests.forEach(t => {
+        planText += `- ${t.test} (${t.frequency}) - ${t.reason}\n`;
+    });
+    
+    planText += `\n**Meal Suggestions:**\n`;
+    Object.entries(plan.mealSuggestions).forEach(([mealType, suggestions]) => {
+        planText += `\n*${mealType.charAt(0).toUpperCase() + mealType.slice(1)}:*\n`;
+        suggestions.forEach(s => planText += `- ${s}\n`);
+    });
+    
+    // Add to chat
+    addMessageToChat('bot', planText);
+    conversationHistory.push({ role: 'assistant', content: planText });
+    
+    // Save chat after diet plan is added
+    saveChatToStorage();
+    
+    // Close modal and show success
+    closeDietPlan();
+    alert('Diet plan saved to chat!');
+}
+
+// Edit diet plan
+function editDietPlan() {
+    if (!window.currentDietPlan) {
+        alert('No diet plan to edit. Please generate a diet plan first.');
+        return;
+    }
+    
+    const plan = window.currentDietPlan;
+    const editText = prompt('Edit your diet plan. You can modify the summary or any section:', plan.summary);
+    
+    if (editText && editText.trim()) {
+        // Update the summary
+        plan.summary = editText.trim();
+        
+        // Re-display the plan
+        displayDietPlan(plan);
+        
+        alert('Diet plan updated! Click "Save to Chat" to save the edited version.');
+    }
+}
+
+// Generate 7-day diet plan
+async function generate7DayPlan() {
+    // Check if we have diet plan or user profile (required for 7-day plan)
+    const userProfile = window.userProfile || JSON.parse(localStorage.getItem('userProfile') || 'null');
+    
+    if (!window.currentDietPlan && (!userProfile || !userProfile.isSetupComplete)) {
+        alert('Please generate a diet plan first or complete your profile setup to generate a 7-day plan. The 7-day plan is based on your diet plan and profile overview.');
+        return;
+    }
+    
+    // If no current diet plan, try to get it from report analysis if available
+    if (!window.currentDietPlan && currentReportAnalysis && currentReportAnalysis.dietPlan) {
+        window.currentDietPlan = currentReportAnalysis.dietPlan;
+    }
+    
+    const modal = document.getElementById('dietPlanModal');
+    const contentDiv = document.getElementById('dietPlanContent');
+    
+    if (!modal || !contentDiv) return;
+    
+    contentDiv.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Generating your 7-day personalized diet plan...</p>';
+    
+    try {
+        const activities = window.activities || [];
+        const meals = window.meals || [];
+        
+        // Call API to generate 7-day plan
+        // Prioritize diet plan and overview (user profile/context) over report
+        const response = await fetch('/api/chatbot/7day-plan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+                reportAnalysis: currentReportAnalysis, // Optional - only if available
+                baseDietPlan: window.currentDietPlan, // Primary source
+                userProfile, // Overview/context - primary source
+                activities, 
+                meals 
+            })
+        });
+        
+        const apiData = await response.json();
+        if (!apiData.success) throw new Error(apiData.error);
+        const sevenDayPlan = apiData.data;
+        
+        // Display 7-day plan
+        display7DayPlan(sevenDayPlan);
+        
+    } catch (error) {
+        console.error('7-day plan error:', error);
+        contentDiv.innerHTML = `<p style="color: var(--accent-color);">Error generating 7-day plan: ${error.message}</p>`;
+    }
+}
+
+// Display 7-day diet plan
+function display7DayPlan(plan) {
+    const contentDiv = document.getElementById('dietPlanContent');
+    
+    let html = `
+        <div style="background: rgba(74, 144, 226, 0.1); padding: 20px; border-radius: 10px; margin-bottom: 20px;">
+            <h3 style="color: var(--primary-color); margin-top: 0;">
+                <i class="fas fa-calendar-week"></i> 7-Day Personalized Diet Plan
+            </h3>
+            <p style="color: var(--text-secondary);">${plan.summary || 'Your comprehensive 7-day diet plan based on your health profile and report analysis.'}</p>
+        </div>
+    `;
+    
+    // Display each day
+    if (plan.days && Array.isArray(plan.days)) {
+        plan.days.forEach((day, index) => {
+            html += `
+                <div style="background: rgba(255, 255, 255, 0.05); padding: 15px; border-radius: 10px; margin-bottom: 15px; border-left: 4px solid var(--accent-color);">
+                    <h4 style="color: var(--accent-color); margin-top: 0;">
+                        <i class="fas fa-calendar-day"></i> Day ${index + 1}${day.date ? ` - ${day.date}` : ''}
+                    </h4>
+                    ${day.meals ? `
+                        <div style="margin-top: 10px;">
+                            ${Object.entries(day.meals).map(([mealType, meal]) => `
+                                <div style="margin-bottom: 8px;">
+                                    <strong style="color: var(--text-primary); text-transform: capitalize;">${mealType}:</strong>
+                                    <span style="color: var(--text-secondary);"> ${typeof meal === 'string' ? meal : meal.name || meal.suggestion || ''}</span>
+                                    ${typeof meal === 'object' && meal.calories ? ` <span style="font-size: 0.9em; color: var(--accent-color);">(${meal.calories} cal)</span>` : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                    ` : ''}
+                    ${day.notes ? `<p style="margin-top: 10px; font-size: 0.9em; color: var(--text-secondary); font-style: italic;">${day.notes}</p>` : ''}
+                </div>
+            `;
+        });
+    }
+    
+    html += `
+        <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+            <button onclick="save7DayPlanToChat()" class="btn-primary" style="flex: 1; min-width: 150px;">
+                <i class="fas fa-save"></i> Save to Chat
+            </button>
+        </div>
+    `;
+    
+    contentDiv.innerHTML = html;
+    
+    // Store 7-day plan globally
+    window.current7DayPlan = plan;
+}
+
+// Save 7-day plan to chat
+function save7DayPlanToChat() {
+    if (!window.current7DayPlan) {
+        alert('No 7-day plan to save.');
+        return;
+    }
+    
+    const plan = window.current7DayPlan;
+    
+    let planText = `📅 **7-Day Diet Plan Generated**\n\n`;
+    planText += `${plan.summary || 'Your comprehensive 7-day personalized diet plan.'}\n\n`;
+    
+    if (plan.days && Array.isArray(plan.days)) {
+        plan.days.forEach((day, index) => {
+            planText += `**Day ${index + 1}${day.date ? ` - ${day.date}` : ''}**\n`;
+            if (day.meals) {
+                Object.entries(day.meals).forEach(([mealType, meal]) => {
+                    planText += `- *${mealType}:* ${typeof meal === 'string' ? meal : meal.name || meal.suggestion || ''}${typeof meal === 'object' && meal.calories ? ` (${meal.calories} cal)` : ''}\n`;
+                });
+            }
+            if (day.notes) {
+                planText += `  _${day.notes}_\n`;
+            }
+            planText += `\n`;
+        });
+    }
+    
+    // Add to chat
+    addMessageToChat('bot', planText);
+    conversationHistory.push({ role: 'assistant', content: planText });
+    
+    // Save chat after 7-day plan is added
+    saveChatToStorage();
+    
+    // Close modal and show success
+    closeDietPlan();
+    alert('7-day plan saved to chat!');
+}
+
+// Clear chat
+function clearChat() {
+    if (confirm('Are you sure you want to clear the chat history?')) {
+        conversationHistory = [];
+        currentReportAnalysis = null;
+        const chatMessages = document.getElementById('chatMessages');
+        if (chatMessages) {
+            chatMessages.innerHTML = `
+                <div class="chat-message bot-message">
+                    <div class="message-avatar">
+                        <i class="fas fa-microscope"></i>
+                    </div>
+                    <div class="message-content">
+                        <p>Chat cleared. Upload your report to get started!</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Clear from localStorage
+        const storageKey = getChatStorageKey();
+        if (storageKey) {
+            localStorage.removeItem(storageKey);
+        }
+    }
+}
+
+// ==================== CUSTOMER SUPPORT CHATBOT FUNCTIONS ====================
+
+// Toggle support chat window
+function toggleSupportChat() {
+    const widget = document.getElementById('supportChatbotWidget');
+    const window = document.getElementById('supportChatWindow');
+    
+    if (!widget || !window) return;
+    
+    supportChatOpen = !supportChatOpen;
+    
+    if (supportChatOpen) {
+        window.classList.add('open');
+        const input = document.getElementById('supportChatInput');
+        if (input) {
+            setTimeout(() => input.focus(), 100);
+        }
+        // Hide badge
+        const badge = document.getElementById('supportBadge');
+        if (badge) badge.style.display = 'none';
+    } else {
+        window.classList.remove('open');
+    }
+}
+
+// Add message to support chat
+function addSupportMessageToChat(role, content) {
+    const chatMessages = document.getElementById('supportChatMessages');
+    if (!chatMessages) return;
+    
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `support-chat-message ${role}-message`;
+    
+    const avatar = role === 'user' 
+        ? '<i class="fas fa-user"></i>' 
+        : '<i class="fas fa-headset"></i>';
+    
+    messageDiv.innerHTML = `
+        <div class="support-message-avatar">
+            ${avatar}
+        </div>
+        <div class="support-message-content">
+            ${formatMessageContent(content)}
+        </div>
+    `;
+    
+    chatMessages.appendChild(messageDiv);
+    scrollSupportChatToBottom();
+}
+
+// Add typing indicator to support chat
+function addSupportTypingIndicator() {
+    const chatMessages = document.getElementById('supportChatMessages');
+    if (!chatMessages) return null;
+    
+    const typingId = 'support-typing-' + Date.now();
+    const typingDiv = document.createElement('div');
+    typingDiv.id = typingId;
+    typingDiv.className = 'support-chat-message bot-message typing-indicator';
+    typingDiv.innerHTML = `
+        <div class="support-message-avatar">
+            <i class="fas fa-headset"></i>
+        </div>
+        <div class="support-message-content">
+            <span class="typing-dots">
+                <span>.</span><span>.</span><span>.</span>
+            </span>
+        </div>
+    `;
+    
+    chatMessages.appendChild(typingDiv);
+    scrollSupportChatToBottom();
+    return typingId;
+}
+
+// Remove typing indicator from support chat
+function removeSupportTypingIndicator(typingId) {
+    if (typingId) {
+        const indicator = document.getElementById(typingId);
+        if (indicator) indicator.remove();
+    }
+}
+
+// Scroll support chat to bottom
+function scrollSupportChatToBottom() {
+    const chatMessages = document.getElementById('supportChatMessages');
+    if (chatMessages) {
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+}
+
+// Show support FAQ
+async function showSupportFAQ() {
+    const modal = document.getElementById('supportFAQModal');
+    const faqContent = document.getElementById('supportFAQContent');
+    
+    if (!modal || !faqContent) return;
+    
+    try {
+        faqContent.innerHTML = '<p><i class="fas fa-spinner fa-spin"></i> Loading FAQs...</p>';
+        modal.classList.add('show');
+        
+        const faqs = await getFAQ();
+        
+        faqContent.innerHTML = faqs.map((faq, index) => `
+            <div class="faq-item" style="margin-bottom: 20px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 10px;">
+                <h4 style="color: var(--primary-color); margin-bottom: 10px;">
+                    <i class="fas fa-question-circle"></i> ${faq.question}
+                </h4>
+                <p style="color: var(--text-secondary); line-height: 1.6;">${faq.answer}</p>
+            </div>
+        `).join('');
+    } catch (error) {
+        faqContent.innerHTML = `<p style="color: var(--accent-color);">Error loading FAQs: ${error.message}</p>`;
+    }
+}
+
+// Close support FAQ
+function closeSupportFAQ() {
+    const modal = document.getElementById('supportFAQModal');
+    if (modal) modal.classList.remove('show');
+}
+
+// Initialize support chatbot
+function initializeSupportChatbot() {
+    const chatInput = document.getElementById('supportChatInput');
+    if (chatInput) {
+        chatInput.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendSupportMessage();
+            }
+        });
+    }
+    
+    // Show badge on page load
+    const badge = document.getElementById('supportBadge');
+    if (badge) {
+        badge.style.display = 'flex';
+    }
 }

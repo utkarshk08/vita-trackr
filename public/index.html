@@ -100,6 +100,9 @@
                 <a href="#" class="nav-link" data-page="profile">
                     <i class="fas fa-user-circle"></i> Profile
                 </a>
+                <a href="#" class="nav-link" data-page="chatbot">
+                    <i class="fas fa-comments"></i> AI Chat
+                </a>
             </div>
             <div style="display: flex; align-items: center; gap: 12px;">
                 <button onclick="toggleTheme()" class="theme-toggle" title="Toggle Dark/Light Mode">
@@ -155,16 +158,6 @@
                             <div class="input-section">
                                 <label>BMI (Auto-calculated)</label>
                                 <input type="text" id="bmi" placeholder="-" readonly style="background: rgba(255,255,255,0.05);">
-                            </div>
-                        </div>
-                        <div class="input-row">
-                            <div class="input-section">
-                                <label for="bodyFat">Body Fat % (Optional)</label>
-                                <input type="number" id="bodyFat" placeholder="15" step="0.1" min="0" max="100">
-                            </div>
-                            <div class="input-section">
-                                <label for="waistHipRatio">Waist-Hip Ratio (Optional)</label>
-                                <input type="number" id="waistHipRatio" placeholder="0.85" step="0.01" min="0" max="2">
                             </div>
                         </div>
                     </div>
@@ -389,15 +382,35 @@
 
             <!-- Dish Suggestions Page -->
             <section id="suggestions" class="page">
-                <h2><i class="fas fa-lightbulb"></i> Dish Suggestions</h2>
+                <h2 style="display:flex; align-items:center; justify-content:space-between; gap:15px;">
+                    <span><i class="fas fa-lightbulb"></i> Dish Suggestions</span>
+                  
+                    <button
+                      onclick="regenerateDishSuggestions()"
+                      class="btn-primary"
+                      title="Resuggest"
+                      style="
+                        padding:6px 30px;
+                        font-size:20px;
+                        line-height:1;
+                        min-width:unset;
+                        width:auto;
+                        height:auto;
+                        display:inline-flex;
+                        align-items:center;
+                        justify-content:center;
+                        white-space:nowrap;
+                      "
+                    >
+                      <i class="fas fa-sync-alt"></i>
+                    </button>
+                  </h2>
+                  
                 <div class="content-card">
                     <div id="autoRecommendation" class="auto-recommendation-box">
                         <h3><i class="fas fa-brain"></i> Automatic Recommendation</h3>
                         <div id="recommendationInfo" class="recommendation-info"></div>
                     </div>
-                    <button onclick="getSuggestions()" class="btn-primary" style="margin-top: 20px;">
-                        <i class="fas fa-sync"></i> Refresh Suggestions
-                    </button>
                     <div id="suggestionsResult" class="suggestions-result"></div>
                 </div>
             </section>
@@ -408,10 +421,10 @@
                 <div class="content-card">
                     <div id="activityRecommendationBox" style="background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(80, 200, 120, 0.1) 100%); padding: 20px; border-radius: 15px; margin-bottom: 25px; border: 2px solid var(--accent-color);">
                         <h3 style="margin-top: 0; color: var(--accent-color); display: flex; align-items: center; gap: 10px;">
-                            <i class="fas fa-lightbulb"></i> Today's Activity Recommendation
+                            <i class="fas fa-lightbulb"></i> Activity Recommendations
                         </h3>
                         <div id="activityRecommendationContent" style="color: var(--text-secondary); line-height: 1.6;">
-                            <p style="margin: 0;">Loading your personalized recommendation...</p>
+                            <p style="margin: 0;"><i class="fas fa-spinner fa-spin"></i> Loading recommendations...</p>
                         </div>
                     </div>
                     <div class="input-section">
@@ -575,8 +588,13 @@
                     </div>
                 </div>
                 <div class="content-card" style="background: linear-gradient(135deg, rgba(255, 255, 255, 0.08) 0%, rgba(74, 144, 226, 0.1) 100%); border: 2px solid var(--accent-color);">
-                    <h3 style="margin-top: 0; color: var(--accent-color); display: flex; align-items: center; gap: 10px;">
-                        <i class="fas fa-tasks"></i> Your Personalized Daily Plan
+                    <h3 style="margin-top: 0; color: var(--accent-color); display: flex; align-items: center; justify-content: space-between; gap: 10px;">
+                        <span style="display: flex; align-items: center; gap: 10px;">
+                            <i class="fas fa-tasks"></i> Your Personalized Daily Plan
+                        </span>
+                        <button onclick="regenerateDailyPlan()" class="btn-generate-again" style="padding: 6px 12px; font-size: 0.85em; background: var(--accent-color); color: white; border: none; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 6px; transition: opacity 0.2s;">
+                            <i class="fas fa-sync-alt"></i> Generate Again
+                        </button>
                     </h3>
                     <div id="dailyPlanContent" style="color: var(--text-secondary); line-height: 1.8;">
                         <p style="margin: 0;">Analyzing your data to create your personalized daily plan...</p>
@@ -593,6 +611,87 @@
                 <div class="content-card">
                     <h3>Nutrition Insights</h3>
                     <div id="nutritionInsights" class="insights-grid"></div>
+                </div>
+            </section>
+
+            <!-- AI Report Analysis Chatbot Page -->
+            <section id="chatbot" class="page">
+                <h2><i class="fas fa-file-medical"></i> Report Analysis & Diet Plan</h2>
+                
+                <div class="content-card">
+                    <div class="chatbot-container">
+                        <!-- Chat Messages Area -->
+                        <div id="chatMessages" class="chat-messages">
+                            <div class="chat-message bot-message">
+                                <div class="message-avatar">
+                                    <i class="fas fa-microscope"></i>
+                                </div>
+                                <div class="message-content">
+                                    <p>Hello! I'm your VitaTrackr Report Analysis Assistant. I specialize in:</p>
+                                    <ul style="margin: 10px 0; padding-left: 20px;">
+                                        <li>Analyzing medical and health reports</li>
+                                        <li>Creating personalized diet plans</li>
+                                        <li>Recommending beneficial foods</li>
+                                        <li>Suggesting supplements and tests</li>
+                                    </ul>
+                                    <p>Upload your report to get started!</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Chat Input Area -->
+                        <div class="chat-input-area">
+                            <div class="chat-actions">
+                                <button onclick="showReportUpload()" class="btn-chat-action" title="Upload Report" style="background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);">
+                                    <i class="fas fa-file-upload"></i> Upload Report
+                                </button>
+                                <button onclick="generateDietPlan()" class="btn-chat-action" title="Generate Diet Plan" style="background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);">
+                                    <i class="fas fa-utensils"></i> Generate Diet Plan
+                                </button>
+                                <button onclick="clearChat()" class="btn-chat-action" title="Clear Chat">
+                                    <i class="fas fa-trash"></i> Clear
+                                </button>
+                            </div>
+                            <div class="chat-input-wrapper">
+                                <textarea id="chatInput" placeholder="Ask questions about your report analysis..." rows="2"></textarea>
+                                <button onclick="sendMessage()" class="btn-send" id="sendBtn">
+                                    <i class="fas fa-paper-plane"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Report Upload Modal -->
+                <div id="reportModal" class="modal">
+                    <div class="modal-content" style="max-width: 700px;">
+                        <span class="modal-close" onclick="closeReportUpload()">&times;</span>
+                        <h2><i class="fas fa-file-medical"></i> Upload & Analyze Report</h2>
+                        <div class="report-upload-section">
+                            <div class="input-section">
+                                <label>Upload Report File (Text, PDF, or Image)</label>
+                                <input type="file" id="reportFile" accept=".txt,.pdf,.jpg,.jpeg,.png,.csv" onchange="handleFileSelect(event)">
+                                <small style="color: var(--text-secondary);">Max file size: 5MB</small>
+                            </div>
+                            <div class="input-section" style="margin-top: 20px;">
+                                <label>Or Paste Report Text Here</label>
+                                <textarea id="reportText" rows="10" placeholder="Paste your blood test results, medical report, or health document text here..."></textarea>
+                            </div>
+                            <button onclick="analyzeReport()" class="btn-primary" style="width: 100%; margin-top: 15px;">
+                                <i class="fas fa-microscope"></i> Analyze Report
+                            </button>
+                        </div>
+                        <div id="reportAnalysisResult" style="margin-top: 20px;"></div>
+                    </div>
+                </div>
+
+                <!-- Diet Plan Modal -->
+                <div id="dietPlanModal" class="modal">
+                    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                        <span class="modal-close" onclick="closeDietPlan()">&times;</span>
+                        <h2><i class="fas fa-utensils"></i> Personalized Diet Plan</h2>
+                        <div id="dietPlanContent"></div>
+                    </div>
                 </div>
             </section>
 
@@ -650,6 +749,64 @@
         <div class="modal-content">
             <span class="modal-close">&times;</span>
             <div id="modalContent"></div>
+        </div>
+    </div>
+
+    <!-- Floating Customer Support Chatbot -->
+    <div id="supportChatbotWidget" class="support-chatbot-widget">
+        <div id="supportChatToggle" class="support-chat-toggle" onclick="toggleSupportChat()">
+            <i class="fas fa-headset"></i>
+            <span class="support-badge" id="supportBadge">1</span>
+        </div>
+        <div id="supportChatWindow" class="support-chat-window">
+            <div class="support-chat-header">
+                <div class="support-chat-header-content">
+                    <i class="fas fa-headset"></i>
+                    <span>Customer Support</span>
+                </div>
+                <button onclick="toggleSupportChat()" class="support-chat-close">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="supportChatMessages" class="support-chat-messages">
+                <div class="support-chat-message bot-message">
+                    <div class="support-message-avatar">
+                        <i class="fas fa-headset"></i>
+                    </div>
+                    <div class="support-message-content">
+                        <p>Hello! I'm your VitaTrackr Customer Support Assistant. I can help you with:</p>
+                        <ul style="margin: 10px 0; padding-left: 20px; font-size: 0.9em;">
+                            <li>Questions about using the website</li>
+                            <li>Feature explanations</li>
+                            <li>Navigation help</li>
+                            <li>General inquiries</li>
+                        </ul>
+                        <p style="margin-top: 10px;">How can I assist you today?</p>
+                    </div>
+                </div>
+            </div>
+            <div class="support-chat-input-area">
+                <div class="support-chat-actions">
+                    <button onclick="showSupportFAQ()" class="btn-support-action" title="View FAQs">
+                        <i class="fas fa-question-circle"></i> FAQ
+                    </button>
+                </div>
+                <div class="support-chat-input-wrapper">
+                    <textarea id="supportChatInput" placeholder="Ask me anything about VitaTrackr..." rows="1"></textarea>
+                    <button onclick="sendSupportMessage()" class="btn-support-send" id="supportSendBtn">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Support FAQ Modal -->
+    <div id="supportFAQModal" class="modal">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="modal-close" onclick="closeSupportFAQ()">&times;</span>
+            <h2><i class="fas fa-question-circle"></i> Frequently Asked Questions</h2>
+            <div id="supportFAQContent" class="faq-content"></div>
         </div>
     </div>
 

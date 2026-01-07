@@ -257,7 +257,7 @@ async function searchRecipes(query) {
     return data.data;
 }
 
-// ==================== GEMINI AI API ====================
+// ==================== CHATGPT AI API ====================
 
 async function generateRecipeWithGemini(ingredients, recipeName, userProfile = null) {
     const data = await apiCall('/gemini/generate-recipe', {
@@ -285,7 +285,7 @@ async function suggestRecipeNames(ingredients = []) {
     } catch (error) {
         // Re-throw with more context
         if (error.message && error.message.includes('API key')) {
-            throw new Error('Gemini API key not configured. Please add GEMINI_API_KEY to your .env file');
+            throw new Error('OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file');
         }
         throw error;
     }
@@ -316,6 +316,76 @@ async function getDailyPlan(userId, previousActivities, previousMeals, userProfi
         method: 'POST',
         body: JSON.stringify({ userId, previousActivities, previousMeals, userProfile })
     });
+    return data.data;
+}
+
+async function getDishSuggestions(userProfile, activities = [], meals = []) {
+    const data = await apiCall('/gemini/dish-suggestions', {
+        method: 'POST',
+        body: JSON.stringify({ userProfile, activities, meals })
+    });
+    return data.data;
+}
+
+// ==================== CHATBOT API ====================
+
+async function chatWithBot(message, conversationHistory = [], userProfile = null, activities = [], meals = []) {
+    const data = await apiCall('/chatbot/chat', {
+        method: 'POST',
+        body: JSON.stringify({ message, conversationHistory, userProfile, activities, meals })
+    });
+    return data.data;
+}
+
+async function supportChat(message, conversationHistory = []) {
+    const data = await apiCall('/chatbot/support-chat', {
+        method: 'POST',
+        body: JSON.stringify({ message, conversationHistory })
+    });
+    return data.data;
+}
+
+async function getFAQ() {
+    const data = await apiCall('/chatbot/faq', {
+        method: 'GET'
+    });
+    return data.data;
+}
+
+async function analyzeReport(reportText, userProfile = null, activities = [], meals = []) {
+    const data = await apiCall('/chatbot/analyze-report', {
+        method: 'POST',
+        body: JSON.stringify({ reportText, userProfile, activities, meals })
+    });
+    return data.data;
+}
+
+async function generateDietPlan(reportAnalysis = null, userProfile = null, activities = [], meals = []) {
+    const data = await apiCall('/chatbot/diet-plan', {
+        method: 'POST',
+        body: JSON.stringify({ reportAnalysis, userProfile, activities, meals })
+    });
+    return data.data;
+}
+
+async function uploadReportFile(file, userProfile = null, activities = [], meals = []) {
+    const formData = new FormData();
+    formData.append('report', file);
+    if (userProfile) formData.append('userProfile', JSON.stringify(userProfile));
+    if (activities) formData.append('activities', JSON.stringify(activities));
+    if (meals) formData.append('meals', JSON.stringify(meals));
+
+    const response = await fetch(`${API_BASE_URL}/chatbot/upload-report`, {
+        method: 'POST',
+        body: formData
+    });
+
+    if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to upload report');
+    }
+
+    const data = await response.json();
     return data.data;
 }
 
@@ -355,7 +425,14 @@ if (typeof module !== 'undefined' && module.exports) {
         searchRecipes,
         // Gemini AI
         generateRecipeWithGemini,
-        generateMultipleRecipesWithGemini
+        generateMultipleRecipesWithGemini,
+        // Chatbot
+        chatWithBot,
+        supportChat,
+        getFAQ,
+        analyzeReport,
+        generateDietPlan,
+        uploadReportFile
     };
 }
 

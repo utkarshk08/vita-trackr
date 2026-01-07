@@ -1,6 +1,6 @@
-// Gemini AI Controller for Recipe Generation
+// ChatGPT AI Controller for Recipe Generation and Activity Recommendations
 // Ensure dotenv is loaded (in case controller is used standalone)
-if (!process.env.GEMINI_API_KEY) {
+if (!process.env.OPENAI_API_KEY) {
     try {
         require('dotenv').config();
     } catch (e) {
@@ -8,73 +8,67 @@ if (!process.env.GEMINI_API_KEY) {
     }
 }
 
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const OpenAI = require('openai');
 
 // Helper function to get environment-aware error message
 const getApiKeyErrorMessage = () => {
     const isProduction = process.env.NODE_ENV === 'production' || process.env.RENDER;
     if (isProduction) {
-        return 'Gemini API key not configured. Please add GEMINI_API_KEY as an environment variable in your Render dashboard (Settings > Environment Variables).';
+        return 'OpenAI API key not configured. Please add OPENAI_API_KEY as an environment variable in your Render dashboard (Settings > Environment Variables).';
     } else {
-        return 'Gemini API key not configured. Please add GEMINI_API_KEY to your .env file and restart the server.';
+        return 'OpenAI API key not configured. Please add OPENAI_API_KEY to your .env file and restart the server.';
     }
 };
 
-// Initialize Gemini with API key from environment
-// Cache the genAI instance for efficiency
-let cachedGenAI = null;
+// Initialize OpenAI client
+// Cache the OpenAI instance for efficiency
+let cachedOpenAI = null;
 
-const getGenAI = () => {
+const getOpenAI = () => {
     // Return cached instance if available
-    if (cachedGenAI) {
-        return cachedGenAI;
+    if (cachedOpenAI) {
+        return cachedOpenAI;
     }
     
-    const apiKey = process.env.GEMINI_API_KEY;
+    const apiKey = process.env.OPENAI_API_KEY;
     
         // Detailed validation and logging
         if (!apiKey) {
-            console.error('[Gemini] API key not found in process.env.GEMINI_API_KEY');
+        console.error('[ChatGPT] API key not found in process.env.OPENAI_API_KEY');
             throw new Error(getApiKeyErrorMessage());
         }
         
-        if (apiKey === 'your_gemini_api_key_here' || apiKey.trim() === '') {
-            console.error('[Gemini] API key is placeholder or empty');
+    if (apiKey === 'your_openai_api_key_here' || apiKey.trim() === '') {
+        console.error('[ChatGPT] API key is placeholder or empty');
             throw new Error(getApiKeyErrorMessage());
         }
     
     // Log API key status (first few characters only for security)
-    console.log(`[Gemini] Initializing with API key: ${apiKey.substring(0, 10)}...`);
+    console.log(`[ChatGPT] Initializing with API key: ${apiKey.substring(0, 10)}...`);
     
     // Create and cache the instance
     try {
-        cachedGenAI = new GoogleGenerativeAI(apiKey);
-        console.log('[Gemini] GoogleGenerativeAI instance created successfully');
-        return cachedGenAI;
+        cachedOpenAI = new OpenAI({ apiKey });
+        console.log('[ChatGPT] OpenAI client created successfully');
+        return cachedOpenAI;
     } catch (error) {
-        console.error('[Gemini] Failed to create GoogleGenerativeAI instance:', error.message);
-        throw new Error(`Failed to initialize Gemini AI: ${error.message}`);
+        console.error('[ChatGPT] Failed to create OpenAI client:', error.message);
+        throw new Error(`Failed to initialize OpenAI: ${error.message}`);
     }
 };
 
-// Helper function to get model - explicitly sets model name
-// Use newer 2.x model names that are supported in current API
-const getModelWithFallback = (genAI, preferredModel = null) => {
-    // Get model from environment variable or use default
-    // Current supported models: gemini-2.5-flash (fast, recommended) or gemini-2.5-pro (more advanced)
-    // Note: 1.5 models are deprecated, use 2.0/2.5 models
-    const modelName = process.env.MODEL || preferredModel || "gemini-2.5-flash";
-    
-    // Explicitly create model with model name
-    const model = genAI.getGenerativeModel({ 
-        model: modelName
-    });
-    
-    console.log(`[Gemini] Using model: ${modelName}`);
-    return { model, modelName };
+// Helper function to clean and parse JSON response
+const cleanAndParseJSON = (text) => {
+    let cleaned = text.trim();
+    if (cleaned.startsWith('```json')) {
+        cleaned = cleaned.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
+    } else if (cleaned.startsWith('```')) {
+        cleaned = cleaned.replace(/```\n?/g, '');
+    }
+    return JSON.parse(cleaned);
 };
 
-// @desc    Generate recipe using Gemini AI
+// @desc    Generate recipe using ChatGPT AI
 // @route   POST /api/gemini/generate-recipe
 // @access  Public
 const generateRecipeWithGemini = async (req, res) => {
@@ -82,8 +76,9 @@ const generateRecipeWithGemini = async (req, res) => {
         const { ingredients, recipeName, userProfile } = req.body;
 
         // Check if API key is configured (will throw error if not)
+        let openai;
         try {
-            getGenAI(); // This will validate the API key
+            openai = getOpenAI(); // This will validate the API key
         } catch (error) {
             return res.status(500).json({
                 success: false,
@@ -145,46 +140,43 @@ IMPORTANT CONSTRAINTS:
 
 Ensure all nutrition values are realistic and the recipe is practical to cook. Return ONLY the JSON, no markdown formatting.`;
 
-        // Get the generative model - explicitly set model name
-        const genAI = getGenAI();
-        const { model, modelName } = getModelWithFallback(genAI);
+        const modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+        console.log(`[ChatGPT] Generating recipe with model: ${modelName}`);
+        
+        const completion = await openai.chat.completions.create({
+            model: modelName,
+            messages: [
+                { role: 'system', content: 'You are a recipe generation AI. Always respond with valid JSON only.' },
+                { role: 'user', content: prompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 2000
+        });
 
-        // Explicitly call generateContent with the model
-        console.log(`[Gemini] Generating recipe with model: ${modelName}`);
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let recipeText = response.text();
-        console.log(`[Gemini] Recipe generated successfully`);
+        const recipeText = completion.choices[0].message.content;
+        console.log(`[ChatGPT] Recipe generated successfully`);
 
-        // Clean up the response (remove markdown code blocks if present)
-        recipeText = recipeText.trim();
-        if (recipeText.startsWith('```json')) {
-            recipeText = recipeText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
-        } else if (recipeText.startsWith('```')) {
-            recipeText = recipeText.replace(/```\n?/g, '');
-        }
-
-        // Parse the JSON response
-        const recipe = JSON.parse(recipeText);
+        // Clean up and parse the response
+        const recipe = cleanAndParseJSON(recipeText);
 
         res.json({
             success: true,
             data: recipe
         });
     } catch (error) {
-        console.error('[Gemini API Error]', {
+        console.error('[ChatGPT API Error]', {
             message: error.message,
             stack: error.stack,
-            apiKeySet: !!process.env.GEMINI_API_KEY,
-            apiKeyLength: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0
+            apiKeySet: !!process.env.OPENAI_API_KEY,
+            apiKeyLength: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0
         });
         
         // Provide more detailed error messages
-        let errorMessage = 'Failed to generate recipe with Gemini AI';
+        let errorMessage = 'Failed to generate recipe with ChatGPT AI';
         if (error.message.includes('API key')) {
-            errorMessage = 'Gemini API key not configured or invalid';
+            errorMessage = 'OpenAI API key not configured or invalid';
         } else if (error.message.includes('model')) {
-            errorMessage = 'Gemini model not available. Please check API permissions.';
+            errorMessage = 'OpenAI model not available. Please check API permissions.';
         } else if (error.message.includes('quota') || error.message.includes('rate')) {
             errorMessage = 'API quota exceeded. Please try again later.';
         } else {
@@ -213,8 +205,9 @@ const generateMultipleRecipesWithGemini = async (req, res) => {
         }
 
         // Check if API key is configured (will throw error if not)
+        let openai;
         try {
-            getGenAI(); // This will validate the API key
+            openai = getOpenAI(); // This will validate the API key
         } catch (error) {
             return res.status(500).json({
                 success: false,
@@ -256,45 +249,43 @@ Please provide each recipe in the following JSON array format:
 
 Ensure all recipes are different and creative. Return ONLY the JSON array, no markdown formatting.`;
 
-        // Get the generative model - explicitly set model name
-        const genAI = getGenAI();
-        const { model, modelName } = getModelWithFallback(genAI);
+        const modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+        console.log(`[ChatGPT] Generating ${count} recipes with model: ${modelName}`);
         
-        console.log(`[Gemini] Generating ${count} recipes with model: ${modelName}`);
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let recipesText = response.text();
+        const completion = await openai.chat.completions.create({
+            model: modelName,
+            messages: [
+                { role: 'system', content: 'You are a recipe generation AI. Always respond with valid JSON only.' },
+                { role: 'user', content: prompt }
+            ],
+            temperature: 0.8,
+            max_tokens: 3000
+        });
 
-        // Clean up the response
-        recipesText = recipesText.trim();
-        if (recipesText.startsWith('```json')) {
-            recipesText = recipesText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
-        } else if (recipesText.startsWith('```')) {
-            recipesText = recipesText.replace(/```\n?/g, '');
-        }
+        const recipesText = completion.choices[0].message.content;
 
-        // Parse the JSON response
-        const recipes = JSON.parse(recipesText);
+        // Clean up and parse the response
+        const recipes = cleanAndParseJSON(recipesText);
 
-        console.log(`[Gemini] Generated ${Array.isArray(recipes) ? recipes.length : 1} recipe(s) successfully`);
+        console.log(`[ChatGPT] Generated ${Array.isArray(recipes) ? recipes.length : 1} recipe(s) successfully`);
         res.json({
             success: true,
             data: Array.isArray(recipes) ? recipes : [recipes]
         });
     } catch (error) {
-        console.error('[Gemini API Error - Multiple Recipes]', {
+        console.error('[ChatGPT API Error - Multiple Recipes]', {
             message: error.message,
             stack: error.stack,
-            apiKeySet: !!process.env.GEMINI_API_KEY,
-            apiKeyLength: process.env.GEMINI_API_KEY ? process.env.GEMINI_API_KEY.length : 0,
+            apiKeySet: !!process.env.OPENAI_API_KEY,
+            apiKeyLength: process.env.OPENAI_API_KEY ? process.env.OPENAI_API_KEY.length : 0,
             ingredients: req.body.ingredients
         });
         
-        let errorMessage = 'Failed to generate recipes with Gemini AI';
+        let errorMessage = 'Failed to generate recipes with ChatGPT AI';
         if (error.message.includes('API key')) {
             errorMessage = getApiKeyErrorMessage();
         } else if (error.message.includes('model')) {
-            errorMessage = 'Gemini model not available. Please check that Generative Language API is enabled in Google Cloud Console.';
+            errorMessage = 'OpenAI model not available. Please check API permissions.';
         } else if (error.message.includes('quota') || error.message.includes('rate')) {
             errorMessage = 'API quota exceeded. Please try again later.';
         } else {
@@ -316,8 +307,9 @@ const suggestRecipeNames = async (req, res) => {
         const { ingredients } = req.body;
 
         // Check if API key is configured (will throw error if not)
+        let openai;
         try {
-            getGenAI(); // This will validate the API key
+            openai = getOpenAI(); // This will validate the API key
         } catch (error) {
             return res.status(500).json({
                 success: false,
@@ -350,26 +342,23 @@ Return ONLY a JSON array of recipe names (strings), like this:
 Keep names simple and straightforward. Return ONLY the JSON array, no markdown formatting, no additional text.`;
         }
 
-        // Get the generative model - explicitly set model name
-        const genAI = getGenAI();
-        const { model, modelName } = getModelWithFallback(genAI);
+        const modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+        console.log(`[ChatGPT] Generating suggestions with model: ${modelName}, ingredients: ${ingredients && ingredients.length > 0 ? ingredients.join(', ') : 'none'}`);
+        
+        const completion = await openai.chat.completions.create({
+            model: modelName,
+            messages: [
+                { role: 'system', content: 'You are a recipe suggestion AI. Always respond with valid JSON only.' },
+                { role: 'user', content: prompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 500
+        });
 
-        console.log(`[Gemini] Generating suggestions with model: ${modelName}, ingredients: ${ingredients.length > 0 ? ingredients.join(', ') : 'none'}`);
-        // Explicitly call generateContent with the model
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let suggestionsText = response.text();
+        const suggestionsText = completion.choices[0].message.content;
 
-        // Clean up the response
-        suggestionsText = suggestionsText.trim();
-        if (suggestionsText.startsWith('```json')) {
-            suggestionsText = suggestionsText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
-        } else if (suggestionsText.startsWith('```')) {
-            suggestionsText = suggestionsText.replace(/```\n?/g, '');
-        }
-
-        // Parse the JSON response
-        const suggestions = JSON.parse(suggestionsText);
+        // Clean up and parse the response
+        const suggestions = cleanAndParseJSON(suggestionsText);
 
         // Ensure we only return 2-3 recipes (or empty array if no suitable recipes)
         let limitedSuggestions = [];
@@ -380,18 +369,17 @@ Keep names simple and straightforward. Return ONLY the JSON array, no markdown f
             // If it's a single string, wrap it in array
             limitedSuggestions = [suggestions].slice(0, 3);
         }
-        // If empty array or no valid suggestions, return empty array
 
-        console.log(`[Gemini] Generated ${limitedSuggestions.length} recipe suggestions`);
+        console.log(`[ChatGPT] Generated ${limitedSuggestions.length} recipe suggestions`);
         res.json({
             success: true,
             data: limitedSuggestions
         });
     } catch (error) {
-        console.error('[Gemini API Error - Suggestions]', {
+        console.error('[ChatGPT API Error - Suggestions]', {
             message: error.message,
             stack: error.stack,
-            apiKeySet: !!process.env.GEMINI_API_KEY,
+            apiKeySet: !!process.env.OPENAI_API_KEY,
             ingredients: req.body.ingredients
         });
         
@@ -399,7 +387,7 @@ Keep names simple and straightforward. Return ONLY the JSON array, no markdown f
         if (error.message.includes('API key')) {
             errorMessage = getApiKeyErrorMessage();
         } else if (error.message.includes('model')) {
-            errorMessage = 'Gemini model not available. Please check that Generative Language API is enabled in Google Cloud Console.';
+            errorMessage = 'OpenAI model not available. Please check API permissions.';
         } else if (error.message.includes('quota') || error.message.includes('rate')) {
             errorMessage = 'API quota exceeded. Please try again later.';
         } else {
@@ -421,8 +409,9 @@ const recommendActivities = async (req, res) => {
         const { userId, previousActivities, previousMeals, userProfile } = req.body;
 
         // Check if API key is configured (will throw error if not)
+        let openai;
         try {
-            getGenAI(); // This will validate the API key
+            openai = getOpenAI(); // This will validate the API key
         } catch (error) {
             return res.status(500).json({
                 success: false,
@@ -526,25 +515,23 @@ Return ONLY a JSON array of activity recommendations, like this:
 
 Return ONLY the JSON array, no markdown formatting, no additional text.`;
 
-        // Get the generative model
-        const genAI = getGenAI();
-        const { model, modelName } = getModelWithFallback(genAI);
+        const modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+        console.log(`[ChatGPT] Generating activity recommendations with model: ${modelName}`);
+        
+        const completion = await openai.chat.completions.create({
+            model: modelName,
+            messages: [
+                { role: 'system', content: 'You are a fitness AI assistant. Always respond with valid JSON only.' },
+                { role: 'user', content: prompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 1000
+        });
 
-        console.log(`[Gemini] Generating activity recommendations with model: ${modelName}`);
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let recommendationsText = response.text();
+        const recommendationsText = completion.choices[0].message.content;
 
-        // Clean up the response
-        recommendationsText = recommendationsText.trim();
-        if (recommendationsText.startsWith('```json')) {
-            recommendationsText = recommendationsText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
-        } else if (recommendationsText.startsWith('```')) {
-            recommendationsText = recommendationsText.replace(/```\n?/g, '');
-        }
-
-        // Parse the JSON response
-        const recommendations = JSON.parse(recommendationsText);
+        // Clean up and parse the response
+        const recommendations = cleanAndParseJSON(recommendationsText);
 
         // Validate and filter recommendations to only include available activity types
         const validRecommendations = Array.isArray(recommendations)
@@ -559,16 +546,16 @@ Return ONLY the JSON array, no markdown formatting, no additional text.`;
                 .slice(0, 3) // Limit to 3 recommendations
             : [];
 
-        console.log(`[Gemini] Generated ${validRecommendations.length} activity recommendations`);
+        console.log(`[ChatGPT] Generated ${validRecommendations.length} activity recommendations`);
         res.json({
             success: true,
             data: validRecommendations
         });
     } catch (error) {
-        console.error('[Gemini API Error - Activity Recommendations]', {
+        console.error('[ChatGPT API Error - Activity Recommendations]', {
             message: error.message,
             stack: error.stack,
-            apiKeySet: !!process.env.GEMINI_API_KEY,
+            apiKeySet: !!process.env.OPENAI_API_KEY,
             userId: req.body.userId
         });
         
@@ -576,7 +563,7 @@ Return ONLY the JSON array, no markdown formatting, no additional text.`;
         if (error.message.includes('API key')) {
             errorMessage = getApiKeyErrorMessage();
         } else if (error.message.includes('model')) {
-            errorMessage = 'Gemini model not available. Please check that Generative Language API is enabled in Google Cloud Console.';
+            errorMessage = 'OpenAI model not available. Please check API permissions.';
         } else if (error.message.includes('quota') || error.message.includes('rate')) {
             errorMessage = 'API quota exceeded. Please try again later.';
         } else {
@@ -590,7 +577,7 @@ Return ONLY the JSON array, no markdown formatting, no additional text.`;
     }
 };
 
-// @desc    Generate personalized daily plan using Gemini AI
+// @desc    Generate personalized daily plan using ChatGPT AI
 // @route   POST /api/gemini/daily-plan
 // @access  Public
 const generateDailyPlan = async (req, res) => {
@@ -598,8 +585,9 @@ const generateDailyPlan = async (req, res) => {
         const { userId, previousActivities, previousMeals, userProfile } = req.body;
 
         // Check if API key is configured (will throw error if not)
+        let openai;
         try {
-            getGenAI(); // This will validate the API key
+            openai = getOpenAI(); // This will validate the API key
         } catch (error) {
             return res.status(500).json({
                 success: false,
@@ -684,9 +672,7 @@ IMPORTANT REQUIREMENTS:
 1. Create a personalized daily plan that includes:
    - Recommended activities for today (only from: ${availableActivityTypes.join(', ')})
    - Meal suggestions (breakfast, lunch, dinner, snacks)
-   - Health tips and reminders
    - Water intake recommendations
-   - Rest/recovery suggestions if needed
 
 2. Consider the user's health conditions - avoid activities or foods that could be harmful
 3. Consider their previous activity patterns - suggest variety to avoid overuse injuries
@@ -728,11 +714,6 @@ Return ONLY a JSON object with this structure:
         },
         "snacks": ["Snack idea 1", "Snack idea 2"]
     },
-    "healthTips": [
-        "Tip 1",
-        "Tip 2",
-        "Tip 3"
-    ],
     "waterIntake": {
         "liters": 2.5,
         "reason": "Brief explanation"
@@ -742,25 +723,23 @@ Return ONLY a JSON object with this structure:
 
 Return ONLY the JSON object, no markdown formatting, no additional text.`;
 
-        // Get the generative model
-        const genAI = getGenAI();
-        const { model, modelName } = getModelWithFallback(genAI);
+        const modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+        console.log(`[ChatGPT] Generating daily plan with model: ${modelName}`);
+        
+        const completion = await openai.chat.completions.create({
+            model: modelName,
+            messages: [
+                { role: 'system', content: 'You are a health and fitness AI assistant. Always respond with valid JSON only.' },
+                { role: 'user', content: prompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 2000
+        });
 
-        console.log(`[Gemini] Generating daily plan with model: ${modelName}`);
-        const result = await model.generateContent(prompt);
-        const response = await result.response;
-        let planText = response.text();
+        const planText = completion.choices[0].message.content;
 
-        // Clean up the response
-        planText = planText.trim();
-        if (planText.startsWith('```json')) {
-            planText = planText.replace(/```json\n?/g, '').replace(/```\n?$/g, '');
-        } else if (planText.startsWith('```')) {
-            planText = planText.replace(/```\n?/g, '');
-        }
-
-        // Parse the JSON response
-        const dailyPlan = JSON.parse(planText);
+        // Clean up and parse the response
+        const dailyPlan = cleanAndParseJSON(planText);
 
         // Validate activities to only include available activity types
         if (dailyPlan.activities && Array.isArray(dailyPlan.activities)) {
@@ -775,16 +754,16 @@ Return ONLY the JSON object, no markdown formatting, no additional text.`;
                 }));
         }
 
-        console.log(`[Gemini] Generated daily plan successfully`);
+        console.log(`[ChatGPT] Generated daily plan successfully`);
         res.json({
             success: true,
             data: dailyPlan
         });
     } catch (error) {
-        console.error('[Gemini API Error - Daily Plan]', {
+        console.error('[ChatGPT API Error - Daily Plan]', {
             message: error.message,
             stack: error.stack,
-            apiKeySet: !!process.env.GEMINI_API_KEY,
+            apiKeySet: !!process.env.OPENAI_API_KEY,
             userId: req.body.userId
         });
         
@@ -792,7 +771,198 @@ Return ONLY the JSON object, no markdown formatting, no additional text.`;
         if (error.message.includes('API key')) {
             errorMessage = getApiKeyErrorMessage();
         } else if (error.message.includes('model')) {
-            errorMessage = 'Gemini model not available. Please check that Generative Language API is enabled in Google Cloud Console.';
+            errorMessage = 'OpenAI model not available. Please check API permissions.';
+        } else if (error.message.includes('quota') || error.message.includes('rate')) {
+            errorMessage = 'API quota exceeded. Please try again later.';
+        } else {
+            errorMessage = error.message || errorMessage;
+        }
+        
+        res.status(500).json({
+            success: false,
+            error: errorMessage
+        });
+    }
+};
+
+// @desc    Get AI-powered dish suggestions based on health, goals, activities, and enhancements
+// @route   POST /api/gemini/dish-suggestions
+// @access  Public
+const getDishSuggestions = async (req, res) => {
+    try {
+        const { userProfile, activities = [], meals = [] } = req.body;
+
+        if (!userProfile) {
+            return res.status(400).json({
+                success: false,
+                error: 'User profile is required'
+            });
+        }
+
+        // Check if API key is configured
+        let openai;
+        try {
+            openai = getOpenAI();
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                error: error.message || getApiKeyErrorMessage()
+            });
+        }
+
+        // Build context from activities (last 7 days)
+        let activityContext = '';
+        if (activities && activities.length > 0) {
+            const recentActivities = activities.slice(-7);
+            const activityCounts = {};
+            let totalCalories = 0;
+            let totalDuration = 0;
+            
+            recentActivities.forEach(activity => {
+                activityCounts[activity.type] = (activityCounts[activity.type] || 0) + 1;
+                totalCalories += activity.calories || 0;
+                totalDuration += activity.duration || 0;
+            });
+
+            activityContext = `Recent Activity (last 7 days):\n`;
+            activityContext += `- Activities logged: ${recentActivities.length}\n`;
+            activityContext += `- Total calories burned: ${totalCalories} kcal\n`;
+            activityContext += `- Total duration: ${totalDuration} minutes\n`;
+            activityContext += `- Activity types: ${Object.entries(activityCounts).map(([type, count]) => `${type} (${count}x)`).join(', ')}\n`;
+            activityContext += `- Most frequent activity: ${Object.entries(activityCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || 'none'}\n`;
+        } else {
+            activityContext = 'No recent activities logged.\n';
+        }
+
+        // Build user profile context
+        let profileContext = 'User Profile:\n';
+        if (userProfile.age) profileContext += `- Age: ${userProfile.age}\n`;
+        if (userProfile.gender) profileContext += `- Gender: ${userProfile.gender}\n`;
+        if (userProfile.weight) profileContext += `- Weight: ${userProfile.weight} kg\n`;
+        if (userProfile.height) profileContext += `- Height: ${userProfile.height} cm\n`;
+        if (userProfile.bmi) profileContext += `- BMI: ${userProfile.bmi}\n`;
+        if (userProfile.goalType) profileContext += `- Goal: ${userProfile.goalType}\n`;
+        if (userProfile.diseases && userProfile.diseases.length > 0) {
+            profileContext += `- Health Conditions: ${userProfile.diseases.join(', ')}\n`;
+        }
+        if (userProfile.allergies && userProfile.allergies.length > 0) {
+            profileContext += `- Allergies: ${userProfile.allergies.join(', ')}\n`;
+        }
+        if (userProfile.dietaryPreference) {
+            profileContext += `- Dietary Preference: ${userProfile.dietaryPreference}\n`;
+        }
+        if (userProfile.exerciseFrequency) {
+            profileContext += `- Exercise Frequency: ${userProfile.exerciseFrequency} days/week\n`;
+        }
+        if (userProfile.occupation) {
+            profileContext += `- Activity Level: ${userProfile.occupation}\n`;
+        }
+        if (userProfile.caloricGoal) {
+            profileContext += `- Daily Caloric Goal: ${userProfile.caloricGoal} kcal\n`;
+        }
+        if (userProfile.macroSplit) {
+            profileContext += `- Macro Split: Carbs ${userProfile.macroSplit.carbs}%, Protein ${userProfile.macroSplit.protein}%, Fats ${userProfile.macroSplit.fats}%\n`;
+        }
+        
+        // Optional enhancements
+        if (userProfile.sleepHours) {
+            profileContext += `- Sleep Hours: ${userProfile.sleepHours} hours/day\n`;
+        }
+        if (userProfile.stressLevel) {
+            profileContext += `- Stress Level: ${userProfile.stressLevel}/10\n`;
+        }
+        if (userProfile.foodDislikes) {
+            profileContext += `- Food Dislikes: ${userProfile.foodDislikes}\n`;
+        }
+        if (userProfile.preferredCuisines) {
+            profileContext += `- Preferred Cuisines: ${userProfile.preferredCuisines}\n`;
+        }
+        if (userProfile.bloodReports) {
+            profileContext += `- Blood Reports Notes: ${userProfile.bloodReports}\n`;
+        }
+
+        // Build the prompt
+        const prompt = `You are a nutrition and health AI assistant. Suggest 5-6 personalized dish/meal recommendations based on the user's comprehensive profile.
+
+${profileContext}
+
+${activityContext}
+
+IMPORTANT REQUIREMENTS:
+1. Focus primarily on:
+   - Health information (diseases, conditions, allergies)
+   - Goal tracking (weight-loss, muscle-gain, maintain, etc.)
+   - Activity logs (what activities they do, how much they exercise)
+   - Optional enhancements (sleep, stress, preferences)
+
+2. Consider their activity patterns - if they do high-intensity activities, suggest protein-rich meals. If they're sedentary, suggest lighter options.
+
+3. Respect dietary preferences (vegetarian, vegan, etc.) and allergies - DO NOT suggest foods they're allergic to.
+
+4. Consider their health conditions - suggest appropriate foods (e.g., low sugar for diabetes, low sodium for hypertension).
+
+5. Consider their goals - if weight loss, suggest lower calorie options; if muscle gain, suggest high protein.
+
+6. Make suggestions practical and achievable.
+
+Return ONLY a JSON array of dish suggestions in this format:
+[
+    {
+        "name": "Dish Name",
+        "description": "Brief description of the dish and why it's recommended",
+        "cuisine": "Cuisine type (e.g., Indian, Mediterranean, Italian)",
+        "nutrition": {
+            "Calories": "XXX",
+            "Protein": "XXg",
+            "Carbs": "XXg",
+            "Fat": "XXg",
+            "Fiber": "XXg"
+        },
+        "prepTime": "XX min",
+        "cookTime": "XX min",
+        "tags": ["tag1", "tag2", "tag3"],
+        "reason": "Why this dish is recommended based on their profile"
+    },
+    ...
+]
+
+Return ONLY the JSON array, no markdown formatting, no additional text.`;
+
+        const modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+        console.log(`[ChatGPT] Generating dish suggestions with model: ${modelName}`);
+        
+        const completion = await openai.chat.completions.create({
+            model: modelName,
+            messages: [
+                { role: 'system', content: 'You are a nutrition AI assistant. Always respond with valid JSON only.' },
+                { role: 'user', content: prompt }
+            ],
+            temperature: 0.7,
+            max_tokens: 2000
+        });
+
+        const suggestionsText = completion.choices[0].message.content;
+
+        // Clean up and parse the response
+        const suggestions = cleanAndParseJSON(suggestionsText);
+
+        console.log(`[ChatGPT] Generated ${Array.isArray(suggestions) ? suggestions.length : 1} dish suggestion(s)`);
+        res.json({
+            success: true,
+            data: Array.isArray(suggestions) ? suggestions : [suggestions]
+        });
+    } catch (error) {
+        console.error('[ChatGPT API Error - Dish Suggestions]', {
+            message: error.message,
+            stack: error.stack,
+            apiKeySet: !!process.env.OPENAI_API_KEY
+        });
+        
+        let errorMessage = 'Failed to get dish suggestions';
+        if (error.message.includes('API key')) {
+            errorMessage = getApiKeyErrorMessage();
+        } else if (error.message.includes('model')) {
+            errorMessage = 'OpenAI model not available. Please check API permissions.';
         } else if (error.message.includes('quota') || error.message.includes('rate')) {
             errorMessage = 'API quota exceeded. Please try again later.';
         } else {
@@ -811,6 +981,6 @@ module.exports = {
     generateMultipleRecipesWithGemini,
     suggestRecipeNames,
     recommendActivities,
-    generateDailyPlan
+    generateDailyPlan,
+    getDishSuggestions
 };
-
