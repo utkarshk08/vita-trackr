@@ -5,7 +5,7 @@
 
 /**
  * Get nutrition information for a food item
- * Supports multiple API providers
+ * Uses GPT-4o-mini exclusively for estimation (no external nutrition APIs)
  */
 const getFoodNutrition = async (req, res) => {
     try {
@@ -17,35 +17,14 @@ const getFoodNutrition = async (req, res) => {
                 error: 'Please provide a food name'
             });
         }
-
-        // Try different API providers based on what's configured
-        let nutritionData = null;
-
-        // Option 1: Edamam Food Database API
-        if (process.env.EDAMAM_APP_ID && process.env.EDAMAM_APP_KEY) {
-            nutritionData = await getNutritionFromEdamam(foodName, quantity);
-        }
-        // Option 2: Spoonacular API
-        else if (process.env.SPOONACULAR_API_KEY) {
-            nutritionData = await getNutritionFromSpoonacular(foodName, quantity);
-        }
-        // Option 3: Nutritionix API
-        else if (process.env.NUTRITIONIX_APP_ID && process.env.NUTRITIONIX_API_KEY) {
-            nutritionData = await getNutritionFromNutritionix(foodName, quantity);
-        }
-        // Option 4: Custom API endpoint
-        else if (process.env.CUSTOM_NUTRITION_API_URL && process.env.CUSTOM_NUTRITION_API_KEY) {
-            nutritionData = await getNutritionFromCustomAPI(foodName, quantity);
-        }
-        // Option 5: Use ChatGPT AI as fallback
-        else if (process.env.OPENAI_API_KEY) {
-            nutritionData = await getNutritionFromChatGPT(foodName, quantity);
-        }
+        
+        // Always use GPT-4o-mini for nutrition estimation
+        let nutritionData = await getNutritionFromChatGPT(foodName, quantity);
 
         if (!nutritionData) {
             return res.status(404).json({
                 success: false,
-                error: 'Nutrition data not found. Please configure a nutrition API or add the food to your database.'
+                error: 'Nutrition data not found. Please configure OPENAI_API_KEY for GPT-based estimation.'
             });
         }
 
@@ -241,9 +220,8 @@ Return ONLY a JSON object in this exact format:
 
 Make realistic estimates based on common nutritional values. Return ONLY the JSON, no markdown formatting.`;
 
-    const modelName = process.env.OPENAI_MODEL || 'gpt-4o-mini';
     const completion = await openai.chat.completions.create({
-        model: modelName,
+        model: 'gpt-4o-mini',
         messages: [
             { role: 'system', content: 'You are a nutrition estimation AI. Always respond with valid JSON only.' },
             { role: 'user', content: prompt }
@@ -263,14 +241,38 @@ Make realistic estimates based on common nutritional values. Return ONLY the JSO
 
     const nutrition = JSON.parse(nutritionText);
 
+    // Validate and clamp nutrition values (sanity checks)
+    const validateNutrition = (value, min, max, defaultValue = 0) => {
+        if (typeof value !== 'number' || isNaN(value) || value < min || value > max) {
+            return defaultValue;
+        }
+        return value;
+    };
+
+    // For 100g of food, reasonable ranges:
+    // Calories: 0-900 (some foods like oils can be high, but cap at 900 per 100g)
+    // Protein/Carbs/Fats: 0-100g per 100g (100% is max)
+    // Fiber/Sugar: 0-100g per 100g
+    const validatedCalories = validateNutrition(nutrition.calories, 0, 900, 0);
+    const validatedProtein = validateNutrition(nutrition.protein, 0, 100, 0);
+    const validatedCarbs = validateNutrition(nutrition.carbs, 0, 100, 0);
+    const validatedFats = validateNutrition(nutrition.fats, 0, 100, 0);
+    const validatedFiber = validateNutrition(nutrition.fiber, 0, 100, 0);
+    const validatedSugar = validateNutrition(nutrition.sugar, 0, 100, 0);
+
+    // If all values are 0 or invalid, throw error
+    if (validatedCalories === 0 && validatedProtein === 0 && validatedCarbs === 0 && validatedFats === 0) {
+        throw new Error('AI returned invalid nutrition data. Please enter nutrition manually.');
+    }
+
     return {
         name: foodName,
-        calories: Math.round(nutrition.calories || 0),
-        protein: Math.round((nutrition.protein || 0) * 10) / 10,
-        carbs: Math.round((nutrition.carbs || 0) * 10) / 10,
-        fats: Math.round((nutrition.fats || 0) * 10) / 10,
-        fiber: nutrition.fiber ? Math.round(nutrition.fiber * 10) / 10 : 0,
-        sugar: nutrition.sugar ? Math.round(nutrition.sugar * 10) / 10 : 0,
+        calories: Math.round(validatedCalories),
+        protein: Math.round(validatedProtein * 10) / 10,
+        carbs: Math.round(validatedCarbs * 10) / 10,
+        fats: Math.round(validatedFats * 10) / 10,
+        fiber: Math.round(validatedFiber * 10) / 10,
+        sugar: Math.round(validatedSugar * 10) / 10,
         servingSize: quantity
     };
 }

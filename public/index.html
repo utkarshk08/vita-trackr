@@ -103,6 +103,9 @@
                 <a href="#" class="nav-link" data-page="chatbot">
                     <i class="fas fa-comments"></i> AI Chat
                 </a>
+                <a href="#" class="nav-link" data-page="weeklyPlan">
+                    <i class="fas fa-calendar-week"></i> 7-Day Plan
+                </a>
             </div>
             <div style="display: flex; align-items: center; gap: 12px;">
                 <button onclick="toggleTheme()" class="theme-toggle" title="Toggle Dark/Light Mode">
@@ -364,7 +367,7 @@
                         <label for="ingredients">Or Enter Your Ingredients (comma-separated)</label>
                         <textarea id="ingredients" placeholder="e.g., chicken, rice, tomatoes, olive oil, garlic..."></textarea>
                     </div>
-                    <button onclick="generateRecipe()" class="btn-primary">
+                    <button id="generateRecipeBtn" onclick="generateRecipe()" class="btn-primary">
                         <i class="fas fa-magic"></i> Generate Recipe
                     </button>
                     
@@ -471,6 +474,28 @@
             <section id="meals" class="page">
                 <h2><i class="fas fa-apple-alt"></i> Meal Logging</h2>
                 <div class="content-card">
+                    <!-- Recent Meals Quick-Fill -->
+                    <div id="recentMealsStrip" style="margin-bottom: 20px; padding: 12px; background: rgba(74, 144, 226, 0.05); border-radius: 10px; border: 1px solid rgba(74, 144, 226, 0.15);">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <i class="fas fa-history" style="color: var(--primary-color);"></i>
+                            <span style="font-weight: 600; color: var(--text-primary); font-size: 0.9em;">Quick Fill from Recent Meals:</span>
+                        </div>
+                        <div id="recentMealsChips" style="display: flex; flex-wrap: wrap; gap: 8px; min-height: 32px;">
+                            <span style="color: var(--text-secondary); font-size: 0.85em; font-style: italic;">No recent meals yet</span>
+                        </div>
+                    </div>
+
+                    <!-- Common Portions Shortcuts -->
+                    <div id="commonPortionsStrip" style="margin-bottom: 20px; padding: 12px; background: rgba(80, 200, 120, 0.05); border-radius: 10px; border: 1px solid rgba(80, 200, 120, 0.15);">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <i class="fas fa-bolt" style="color: var(--secondary-color);"></i>
+                            <span style="font-weight: 600; color: var(--text-primary); font-size: 0.9em;">Common Portions:</span>
+                        </div>
+                        <div id="commonPortionsButtons" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <!-- Will be populated by JavaScript -->
+                        </div>
+                    </div>
+
                     <div class="input-row">
                         <div class="input-section">
                             <label for="mealType">Meal Type</label>
@@ -490,30 +515,23 @@
                         <label for="mealName">Food Item</label>
                         <input type="text" id="mealName" placeholder="e.g., Paneer Tikka, Grilled Chicken..." onchange="lookupRecipeNutrition()">
                     </div>
-                    <div class="input-row">
-                        <div class="input-section">
-                            <label for="quantityType">Quantity Type</label>
-                            <select id="quantityType" onchange="handleQuantityTypeChange()">
-                                <option value="servings">By Servings</option>
-                                <option value="grams">By Weight (grams)</option>
-                            </select>
-                        </div>
-                        <div class="input-section">
-                            <label for="mealQuantity" id="quantityLabel">Quantity (servings)</label>
-                            <input type="number" id="mealQuantity" placeholder="1" step="0.5" min="0.25" value="1" onchange="updateNutritionFromQuantity()">
-                        </div>
-                    </div>
-                    <div id="servingWeightInfo" style="display: none; background: rgba(74, 144, 226, 0.1); padding: 10px; border-radius: 8px; margin-bottom: 10px; font-size: 14px; color: var(--text-secondary);">
-                        <i class="fas fa-info-circle"></i> Standard serving size: 100g (base for calculations)
+                    <div class="input-section">
+                        <label for="mealQuantity">Weight (grams)</label>
+                        <input type="number" id="mealQuantity" placeholder="100" step="10" min="10" value="100" onchange="updateNutritionFromQuantity()">
                     </div>
                     <div id="nutritionAutoFill" style="display: none; background: rgba(80, 200, 120, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--secondary-color);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-                            <span style="color: var(--secondary-color);"><i class="fas fa-check-circle"></i> Nutrition data found from database!</span>
+                            <span style="color: var(--secondary-color);"><i class="fas fa-check-circle"></i> Nutrition data loaded!</span>
                             <button onclick="clearAutoFill()" style="background: transparent; border: none; color: var(--accent-color); cursor: pointer;">
                                 <i class="fas fa-times"></i> Clear
                             </button>
                         </div>
-                        <p style="color: var(--text-secondary); font-size: 14px;">Nutrition values are automatically calculated. You can edit them below.</p>
+                        <p style="color: var(--text-secondary); font-size: 14px;">Nutrition values are automatically calculated by AI. You can edit them below.</p>
+                        <div style="margin-top: 8px; padding: 8px; background: rgba(255, 193, 7, 0.1); border-radius: 6px; border-left: 3px solid rgba(255, 193, 7, 0.5);">
+                            <p style="margin: 0; color: var(--text-secondary); font-size: 0.8em; line-height: 1.4;">
+                                <i class="fas fa-info-circle"></i> <strong>Note:</strong> These are AI estimates, not medical-grade data. Adjust values if you know exact nutrition information.
+                            </p>
+                        </div>
                     </div>
                     <div class="input-section">
                         <label for="mealCalories">Calories</label>
@@ -692,6 +710,67 @@
                         <h2><i class="fas fa-utensils"></i> Personalized Diet Plan</h2>
                         <div id="dietPlanContent"></div>
                     </div>
+                </div>
+            </section>
+
+            <!-- Saved 7-Day Plan Page -->
+            <section id="weeklyPlan" class="page">
+                <h2><i class="fas fa-calendar-week"></i> Your 7-Day Plan</h2>
+                <div class="content-card">
+                    <div style="display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap;">
+                        <div>
+                            <div style="color: var(--text-secondary);">Saved from AI Chat → “Generate 7-Day Plan” → “Save to Chat”.</div>
+                            <div id="weeklyPlanMeta" style="margin-top:6px; color: var(--text-secondary); font-size: 0.95em;"></div>
+                        </div>
+                        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                            <button onclick="logTodaysMealsFromPlan()" class="btn-primary" style="background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);">
+                                <i class="fas fa-bolt"></i> Log Today's Meals
+                            </button>
+                            <button onclick="loadWeeklyPlanPage(true)" class="btn-primary" style="background: var(--accent-color);">
+                                <i class="fas fa-sync-alt"></i> Refresh
+                            </button>
+                            <button onclick="showPage('chatbot')" class="btn-primary" style="background: var(--secondary-color);">
+                                <i class="fas fa-comments"></i> Go to Chat
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Confidence Markers Legend -->
+                    <div style="margin-top: 16px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 10px; border: 1px solid rgba(255,255,255,0.08);">
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <i class="fas fa-info-circle" style="color: var(--accent-color);"></i>
+                            <span style="font-weight: 600; color: var(--text-primary); font-size: 0.9em;">Color Guide:</span>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 16px; font-size: 0.85em;">
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 20px; height: 20px; background: rgba(232, 245, 233, 0.95); border: 1px solid rgba(56, 142, 60, 0.25); border-radius: 4px;"></div>
+                                <span style="color: var(--text-secondary);">Logged this exact meal</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 20px; height: 20px; background: rgba(255, 249, 196, 0.9); border: 1px solid rgba(251, 192, 45, 0.22); border-radius: 4px;"></div>
+                                <span style="color: var(--text-secondary);">Logged different meal for this slot</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 20px; height: 20px; background: rgba(255, 235, 238, 0.9); border: 1px solid rgba(244, 67, 54, 0.18); border-radius: 4px;"></div>
+                                <span style="color: var(--text-secondary);">Skipped this meal slot</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 6px;">
+                                <div style="width: 20px; height: 20px; background: #ffffff; border: 1px solid rgba(0,0,0,0.04); border-radius: 4px;"></div>
+                                <span style="color: var(--text-secondary);">Not logged yet</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Floating action bar / popover -->
+                    <div id="weeklyPlanActionBar"
+                         style="display:none; position: fixed; top: 0; left: 0; z-index: 999; pointer-events: auto;">
+                    </div>
+                    <div id="weeklyPlanIngredientPopover"
+                         style="display:none; position: fixed; top: 0; left: 0; z-index: 1000; pointer-events: auto;">
+                    </div>
+
+                    <div id="weeklyPlanTableWrap" style="margin-top: 18px; overflow-x:auto;"></div>
+                    <div id="weeklyPlanExpectedResults" style="margin-top: 18px;"></div>
                 </div>
             </section>
 

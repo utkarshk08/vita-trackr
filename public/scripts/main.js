@@ -650,7 +650,785 @@ function showPage(pageName) {
         loadRecipeSuggestions(); // Load AI recipe suggestions
     } else if (pageName === 'chatbot') {
         initializeChatbot(); // Initialize chatbot
+    } else if (pageName === 'weeklyPlan') {
+        loadWeeklyPlanPage();
+    } else if (pageName === 'meals') {
+        loadCommonPortions(); // Load common portions shortcuts
+        loadRecentMealsChips(); // Load recent meals chips
+        displayMeals(); // Display meals list
     }
+}
+
+// ==================== SAVED 7-DAY PLAN (TABULAR VIEW + POPOVER) ====================
+
+// Cache to avoid recomputing ingredient lists and URLs repeatedly
+let weeklyPlanIngredientCache = {};
+
+function getSaved7DayPlanFromStorage() {
+    try {
+        const raw = localStorage.getItem('saved7DayPlan');
+        if (!raw) return null;
+        return JSON.parse(raw);
+    } catch (e) {
+        console.error('Error reading saved 7-day plan:', e);
+        return null;
+    }
+}
+
+function save7DayPlanToStorage(plan) {
+    try {
+        const payload = {
+            savedAt: new Date().toISOString(),
+            plan
+        };
+        localStorage.setItem('saved7DayPlan', JSON.stringify(payload));
+    } catch (e) {
+        console.error('Error saving 7-day plan:', e);
+    }
+}
+
+function normalizeWeeklyPlanDayDate(plan, dayIndex) {
+    // Always use real calendar dates based on "today + index" (stored in ISO for comparisons)
+    const d = new Date();
+    d.setDate(d.getDate() + dayIndex);
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+}
+
+function formatWeeklyPlanDisplayDate(isoDateStr) {
+    if (!isoDateStr) return '';
+    const parts = isoDateStr.split('-');
+    if (parts.length !== 3) return isoDateStr;
+    const [yyyy, mm, dd] = parts;
+    const yy = yyyy.slice(-2);
+    return `${dd}-${mm}-${yy}`;
+}
+
+function extractMealName(meal) {
+    return typeof meal === 'string' ? meal : (meal?.name || meal?.suggestion || '');
+}
+
+function extractMealCalories(meal) {
+    if (typeof meal !== 'object' || !meal) return null;
+    const c = meal.calories;
+    if (c === undefined || c === null) return null;
+    const n = typeof c === 'number' ? c : parseFloat(String(c).replace(/[^\d.]/g, ''));
+    return Number.isFinite(n) ? n : null;
+}
+
+// Normalize any stored meal.date value to ISO (YYYY-MM-DD) for reliable comparisons
+function getMealDateISO(meal) {
+    if (!meal || !meal.date) return null;
+    try {
+        // If already in YYYY-MM-DD, return as is
+        if (/^\d{4}-\d{2}-\d{2}$/.test(meal.date)) return meal.date;
+        const d = new Date(meal.date);
+        if (Number.isNaN(d.getTime())) return null;
+        return d.toISOString().split('T')[0];
+    } catch (e) {
+        return null;
+    }
+}
+
+function weeklyPlanOpenRecipe(dayIndex, mealType) {
+    const saved = getSaved7DayPlanFromStorage();
+    const plan = saved?.plan;
+    const day = plan?.days?.[dayIndex];
+    const meal = day?.meals?.[mealType];
+    const name = extractMealName(meal);
+    if (!name) {
+        alert('Meal name not found for this slot.');
+        return;
+    }
+    redirectToRecipeGenerator(name);
+}
+
+function weeklyPlanPrefillMealLog(dayIndex, mealType) {
+    const saved = getSaved7DayPlanFromStorage();
+    const plan = saved?.plan;
+    const day = plan?.days?.[dayIndex];
+    const meal = day?.meals?.[mealType];
+    const name = extractMealName(meal);
+    if (!name) {
+        alert('Meal name not found for this slot.');
+        return;
+    }
+
+    const date = normalizeWeeklyPlanDayDate(plan, dayIndex);
+
+    showPage('meals');
+    setTimeout(() => {
+        const mealTypeEl = document.getElementById('mealType');
+        const mealDateEl = document.getElementById('mealDate');
+        const mealNameEl = document.getElementById('mealName');
+
+        if (mealTypeEl) mealTypeEl.value = String(mealType).toLowerCase();
+        if (mealDateEl) mealDateEl.value = date;
+        if (mealNameEl) {
+            mealNameEl.value = name;
+            mealNameEl.dispatchEvent(new Event('input', { bubbles: true }));
+            mealNameEl.dispatchEvent(new Event('change', { bubbles: true }));
+            mealNameEl.focus();
+        }
+
+        const form = document.querySelector('#meals .content-card');
+        if (form) form.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 250);
+}
+
+function weeklyPlanClearSelection() {
+    window.currentWeeklyPlanSelection = null;
+    const bar = document.getElementById('weeklyPlanActionBar');
+    if (bar) bar.style.display = 'none';
+    hideIngredientPopover();
+}
+
+function weeklyPlanSelectMeal(event, dayIndex, mealType) {
+    // When selecting a new meal, always hide any open ingredient list popover
+    hideIngredientPopover();
+
+    const saved = getSaved7DayPlanFromStorage();
+    const plan = saved?.plan;
+    const day = plan?.days?.[dayIndex];
+    const meal = day?.meals?.[mealType];
+    const name = extractMealName(meal);
+    if (!name) return;
+
+    window.currentWeeklyPlanSelection = { dayIndex, mealType, name };
+
+    const bar = document.getElementById('weeklyPlanActionBar');
+    if (!bar) return;
+
+    bar.innerHTML = `
+        <div style="
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.18) 0%, rgba(80, 200, 120, 0.14) 100%);
+            border: 1px solid rgba(255,255,255,0.14);
+            border-radius: 14px;
+            padding: 12px 12px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+        ">
+            <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap;">
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 0.9em;">Selected meal</div>
+                    <div style="font-weight: 900; color: var(--text-primary); margin-top: 2px;">
+                        <i class="fas fa-utensils"></i> ${name}
+                    </div>
+                </div>
+                <button onclick="weeklyPlanClearSelection()"
+                        style="background: transparent; border: none; color: var(--text-secondary); cursor:pointer; padding: 6px 8px;">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top: 10px;">
+                <button class="btn-primary" style="padding: 10px 14px; min-width: unset; background: var(--secondary-color);"
+                        onclick="weeklyPlanPrefillMealLog(${dayIndex}, '${mealType}')">
+                    <i class="fas fa-plus"></i> Add to Meal Log
+                </button>
+                <button class="btn-primary" style="padding: 10px 14px; min-width: unset; background: var(--primary-color);"
+                        onclick="weeklyPlanOpenRecipe(${dayIndex}, '${mealType}')">
+                    <i class="fas fa-magic"></i> Recipe Generator
+                </button>
+                <button class="btn-primary" style="padding: 10px 14px; min-width: unset; background: var(--accent-color);"
+                        onclick="weeklyPlanShowIngredients(event, ${dayIndex}, '${mealType}')">
+                    <i class="fas fa-list"></i> Ingredients List
+                </button>
+            </div>
+        </div>
+    `;
+    const rect = event?.currentTarget?.getBoundingClientRect();
+    const estHeight = 160;
+    if (rect) {
+        const preferredLeft = rect.left + rect.width / 2;
+        const preferredTopBelow = rect.top + rect.height + 10;
+        let top = preferredTopBelow;
+        if (preferredTopBelow + estHeight > window.innerHeight - 16) {
+            top = Math.max(12, rect.top - estHeight - 10);
+        }
+        const clampedLeft = Math.max(16, Math.min(preferredLeft, window.innerWidth - 16));
+        bar.style.left = `${clampedLeft}px`;
+        bar.style.top = `${Math.max(12, top)}px`;
+        bar.style.transform = 'translateX(-50%)';
+    }
+    bar.style.maxWidth = 'min(92vw, 520px)';
+    bar.style.display = 'block';
+}
+
+function getMealIngredients(meal) {
+    if (!meal) return [];
+    const normalizeIng = (ing) => {
+        if (typeof ing === 'string') return { name: ing, qty: null };
+        if (typeof ing === 'object') {
+            return {
+                name: ing.name || ing.label || ing.ingredient || ing.item || '',
+                qty: ing.quantity || ing.qty || ing.amount || ing.measure || ing.units || ing.quantityText || ing.portion || null
+            };
+        }
+        return { name: String(ing), qty: null };
+    };
+    if (Array.isArray(meal.ingredients)) {
+        return meal.ingredients.map(normalizeIng).filter(i => i.name);
+    }
+    if (typeof meal === 'string' && meal.includes(',')) {
+        return meal.split(',').map(s => s.trim()).filter(Boolean).map(n => ({ name: n, qty: null }));
+    }
+    const name = extractMealName(meal);
+    return name ? [{ name, qty: null }] : [];
+}
+
+function hideIngredientPopover() {
+    const pop = document.getElementById('weeklyPlanIngredientPopover');
+    if (pop) pop.style.display = 'none';
+}
+
+function weeklyPlanShowIngredients(event, dayIndex, mealType) {
+    const pop = document.getElementById('weeklyPlanIngredientPopover');
+    if (!pop) return;
+    const saved = getSaved7DayPlanFromStorage();
+    const meal = saved?.plan?.days?.[dayIndex]?.meals?.[mealType];
+    const name = extractMealName(meal);
+    const cacheKey = `${dayIndex}-${mealType}`;
+
+    if (!weeklyPlanIngredientCache[cacheKey]) {
+        weeklyPlanIngredientCache[cacheKey] = getMealIngredients(meal);
+    }
+    const ingredients = weeklyPlanIngredientCache[cacheKey];
+
+    if (!ingredients.length) {
+        pop.innerHTML = `
+            <div style="
+                background: #ffffff;
+                color: var(--text-primary);
+                border: 1px solid rgba(0,0,0,0.08);
+                border-radius: 14px;
+                padding: 14px;
+                max-width: 360px;
+                box-shadow: 0 14px 34px rgba(0,0,0,0.16);
+            ">
+                <div style="font-weight: 800; margin-bottom: 6px;">No ingredients found</div>
+                <div style="color: var(--text-secondary);">This plan item has no ingredient list.</div>
+            </div>
+        `;
+    } else {
+        const listHtml = ingredients.map(ing => {
+            const safeName = ing.name.replace(/"/g, '&quot;');
+            const url = `https://blinkit.com/s/?q=${encodeURIComponent(ing.name)}`;
+            const qty = ing.qty ? `<span style="color: var(--text-secondary); font-size: 0.9em;"> • ${ing.qty}</span>` : '';
+            return `
+                <li style="
+                    padding: 10px 10px;
+                    border-radius: 10px;
+                    background: rgba(0,0,0,0.02);
+                    border: 1px solid rgba(0,0,0,0.05);
+                    color: var(--text-primary);
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    gap: 10px;
+                    margin-bottom: 8px;
+                    transition: transform 140ms ease, box-shadow 140ms ease, background 140ms ease;
+                "
+                onmouseenter="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 10px 24px rgba(0,0,0,0.16)'; this.style.background='rgba(0,0,0,0.04)';"
+                onmouseleave="this.style.transform='none'; this.style.boxShadow='none'; this.style.background='rgba(0,0,0,0.02)';">
+                    <div style="font-weight: 800; display: flex; flex-direction: column; gap: 2px;">
+                        <span style="color: var(--text-primary);">${safeName}</span>
+                        ${qty}
+                    </div>
+                    <a href="${url}" target="_blank" rel="noopener noreferrer"
+                       style="
+                            display: inline-flex;
+                            align-items: center;
+                            gap: 6px;
+                            padding: 8px 10px;
+                            background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
+                            color: white;
+                            border-radius: 10px;
+                            font-weight: 800;
+                            text-decoration: none;
+                            font-size: 0.9em;
+                            box-shadow: 0 8px 18px rgba(39, 174, 96, 0.28);
+                       ">
+                        <span style="background: rgba(0,0,0,0.15); padding: 4px 6px; border-radius: 8px; font-size: 0.8em;">Blinkit</span>
+                        <i class="fas fa-external-link-alt"></i>
+                    </a>
+                </li>
+            `;
+        }).join('');
+
+        pop.innerHTML = `
+            <div style="
+                background: #ffffff;
+                color: var(--text-primary);
+                border: 1px solid rgba(0,0,0,0.08);
+                border-radius: 14px;
+                padding: 14px;
+                max-width: 380px;
+                box-shadow: 0 14px 34px rgba(0,0,0,0.18);
+                pointer-events: auto;
+            ">
+                <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom: 10px;">
+                    <div style="font-weight: 900;">Ingredients${name ? ` • ${name}` : ''}</div>
+                    <button onclick="hideIngredientPopover()" style="background: transparent; border: none; color: var(--text-secondary); cursor: pointer;">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <ul style="list-style: none; padding: 0; margin: 0;">
+                    ${listHtml}
+                </ul>
+            </div>
+        `;
+    }
+
+    const rect = event?.currentTarget?.getBoundingClientRect();
+    const estHeight = 280;
+    if (rect) {
+        const preferredLeft = rect.left + rect.width / 2;
+        const preferredTopBelow = rect.top + rect.height + 10;
+        let top = preferredTopBelow;
+        if (preferredTopBelow + estHeight > window.innerHeight - 12) {
+            top = Math.max(8, rect.top - estHeight - 10);
+        }
+        const clampedLeft = Math.max(12, Math.min(preferredLeft, window.innerWidth - 12));
+        pop.style.left = `${clampedLeft}px`;
+        pop.style.top = `${Math.max(8, top)}px`;
+        pop.style.transform = 'translateX(-50%)';
+    }
+    pop.style.display = 'block';
+}
+
+// Log all of today's meals from the 7-day plan
+async function logTodaysMealsFromPlan() {
+    const saved = getSaved7DayPlanFromStorage();
+    if (!saved?.plan) {
+        alert('No 7-day plan found. Please generate one first.');
+        return;
+    }
+    
+    const plan = saved.plan;
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Find today's day index in the plan
+    let todayIndex = -1;
+    for (let i = 0; i < plan.days.length; i++) {
+        const dayDate = normalizeWeeklyPlanDayDate(plan, i);
+        if (dayDate === today) {
+            todayIndex = i;
+            break;
+        }
+    }
+    
+    if (todayIndex === -1) {
+        alert('Today is not in the current 7-day plan range. Please generate a new plan.');
+        return;
+    }
+    
+    const todayDay = plan.days[todayIndex];
+    const mealColumns = ['breakfast', 'lunch', 'dinner', 'snack'];
+    const mealsToLog = [];
+    
+    mealColumns.forEach(mealType => {
+        const meal = todayDay?.meals?.[mealType];
+        const name = extractMealName(meal);
+        if (name) {
+            mealsToLog.push({
+                type: mealType,
+                name: name,
+                quantity: 100, // Default 100g
+                date: today
+            });
+        }
+    });
+    
+    if (mealsToLog.length === 0) {
+        alert('No meals planned for today in your 7-day plan.');
+        return;
+    }
+    
+    const confirmMsg = `Log ${mealsToLog.length} meal(s) for today?\n\n${mealsToLog.map(m => `• ${m.type}: ${m.name}`).join('\n')}\n\nNote: You can adjust quantities and nutrition after logging.`;
+    if (!confirm(confirmMsg)) {
+        return;
+    }
+    
+    // Navigate to meal log page
+    showPage('meals');
+    
+    // Set today's date
+    const mealDateEl = document.getElementById('mealDate');
+    if (mealDateEl) mealDateEl.value = today;
+    
+    // Log each meal sequentially with a small delay
+    let loggedCount = 0;
+    let failedCount = 0;
+    
+    for (const mealData of mealsToLog) {
+        try {
+            await new Promise(resolve => setTimeout(resolve, 500)); // Small delay between logs
+            
+            // Set meal type
+            const mealTypeEl = document.getElementById('mealType');
+            if (mealTypeEl) mealTypeEl.value = mealData.type;
+            
+            // Set meal name and trigger lookup
+            const mealNameEl = document.getElementById('mealName');
+            if (mealNameEl) {
+                mealNameEl.value = mealData.name;
+                mealNameEl.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            
+            // Set quantity
+            const mealQuantityEl = document.getElementById('mealQuantity');
+            if (mealQuantityEl) mealQuantityEl.value = mealData.quantity;
+            
+            // Wait for nutrition lookup
+            await new Promise(resolve => setTimeout(resolve, 1500));
+            
+            // Log the meal (don't await alerts, but catch errors)
+            try {
+                await logMeal();
+                loggedCount++;
+            } catch (err) {
+                console.error('Error logging meal:', err);
+                failedCount++;
+            }
+        } catch (err) {
+            console.error('Error processing meal:', err);
+            failedCount++;
+        }
+    }
+    
+    const resultMsg = failedCount > 0 
+        ? `Logged ${loggedCount} meal(s) successfully. ${failedCount} meal(s) failed - please log them manually.`
+        : `Successfully logged ${loggedCount} meal(s) for today!`;
+    alert(resultMsg);
+    
+    // Refresh plan view to show updated colors
+    setTimeout(() => {
+        loadWeeklyPlanPage(true);
+    }, 500);
+}
+
+function loadWeeklyPlanPage(forceRefresh = false) {
+    const metaEl = document.getElementById('weeklyPlanMeta');
+    const wrapEl = document.getElementById('weeklyPlanTableWrap');
+    const expectedEl = document.getElementById('weeklyPlanExpectedResults');
+
+    if (!wrapEl || !expectedEl) return;
+
+    // Ensure we use the latest logged meals (in case user logged after plan generation)
+    try {
+        const storedMeals = JSON.parse(localStorage.getItem('meals') || '[]');
+        if (Array.isArray(storedMeals) && storedMeals.length >= meals.length) {
+            meals = storedMeals;
+        }
+    } catch (e) {
+        // Ignore parse errors and keep in-memory meals
+    }
+
+    const saved = getSaved7DayPlanFromStorage();
+    if (!saved?.plan) {
+        if (metaEl) metaEl.textContent = '';
+        weeklyPlanClearSelection();
+        weeklyPlanIngredientCache = {};
+        wrapEl.innerHTML = `
+            <div style="text-align:center; color: var(--text-secondary); padding: 18px;">
+                No saved 7-day plan yet. Go to <strong>AI Chat</strong> → Generate 7-Day Plan → Save to Chat.
+            </div>
+        `;
+        expectedEl.innerHTML = '';
+        return;
+    }
+
+    if (metaEl) {
+        const when = saved.savedAt ? new Date(saved.savedAt).toLocaleString() : '';
+        metaEl.innerHTML = when ? `<i class="fas fa-save"></i> Last saved: <strong>${when}</strong>` : '';
+    }
+
+    const plan = saved.plan;
+    // Reset ingredient cache when a new plan is loaded
+    weeklyPlanIngredientCache = {};
+    const days = Array.isArray(plan.days) ? plan.days : [];
+    const mealColumns = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+    const headerHtml = `
+        <tr>
+            <th style="padding: 12px; text-align:left; position: sticky; left: 0; background: #ffffff; box-shadow: 4px 0 8px rgba(0,0,0,0.04);">Day</th>
+            ${mealColumns.map(m => `<th style="padding: 12px; text-align:left; text-transform:capitalize;">${m}</th>`).join('')}
+        </tr>
+    `;
+
+    const rowsHtml = days.map((day, dayIndex) => {
+        const isoDate = normalizeWeeklyPlanDayDate(plan, dayIndex);
+        const displayDate = formatWeeklyPlanDisplayDate(isoDate);
+        const dayLabel = `${displayDate || ''} • Day ${dayIndex + 1}`;
+
+        const cells = mealColumns.map(mealType => {
+            const meal = day?.meals?.[mealType];
+            const name = extractMealName(meal);
+            const cals = extractMealCalories(meal);
+            const calsHtml = cals !== null ? `<div style="margin-top:6px; color: var(--accent-color); font-size: 0.9em;"><i class="fas fa-fire"></i> ${Math.round(cals)} cal</div>` : '';
+
+            // Determine background color based on whether user logged this slot in Meal Log
+            let bgColor = '#ffffff';
+            let borderColor = 'rgba(0,0,0,0.04)';
+            if (isoDate) {
+                const sameDateMeals = meals
+                    .map(m => ({ meal: m, iso: getMealDateISO(m) }))
+                    .filter(x => x.iso === isoDate)
+                    .map(x => x.meal);
+                if (sameDateMeals.length > 0) {
+                    const sameTypeMeals = sameDateMeals.filter(m => m.type === mealType);
+                    const sameName = sameTypeMeals.some(m => m.name && name && m.name.toLowerCase() === name.toLowerCase());
+                    if (sameTypeMeals.length === 0) {
+                        // Other meals logged this day, but this meal-type slot skipped
+                        bgColor = 'rgba(255, 235, 238, 0.9)'; // very light red
+                        borderColor = 'rgba(244, 67, 54, 0.18)';
+                    } else if (sameName) {
+                        // Logged exactly this meal for this slot
+                        bgColor = 'rgba(232, 245, 233, 0.95)'; // very light green
+                        borderColor = 'rgba(56, 142, 60, 0.25)';
+                    } else {
+                        // Logged a different meal for this slot
+                        bgColor = 'rgba(255, 249, 196, 0.9)'; // very light yellow
+                        borderColor = 'rgba(251, 192, 45, 0.22)';
+                    }
+                }
+            }
+
+            if (!name) {
+                return `
+                    <td style="padding: 12px; vertical-align: top; min-width: 220px; background: ${bgColor}; border: 1px solid ${borderColor};">
+                        <div style="color: var(--text-secondary);">—</div>
+                    </td>
+                `;
+            }
+
+            return `
+                <td style="padding: 12px; vertical-align: top; min-width: 220px; background: ${bgColor}; border: 1px solid ${borderColor};">
+                    <div>
+                        <span
+                            onclick="weeklyPlanSelectMeal(event, ${dayIndex}, '${mealType}')"
+                            title="Click for actions"
+                            style="
+                                display:inline-block;
+                                font-weight: 900;
+                                color: var(--text-primary);
+                                cursor: pointer;
+                                padding: 6px 10px;
+                                border-radius: 12px;
+                                position: relative;
+                                transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
+                                background: rgba(255,255,255,0.03);
+                                border: 1px solid rgba(255,255,255,0.10);
+                                box-shadow: 0 0 0 rgba(0,0,0,0);
+                            "
+                            onmouseenter="this.style.transform='translateY(-1px) scale(1.01)'; this.style.background='linear-gradient(135deg, rgba(74,144,226,0.20), rgba(80,200,120,0.16))'; this.style.boxShadow='0 10px 25px rgba(0,0,0,0.22)';"
+                            onmouseleave="this.style.transform='none'; this.style.background='rgba(255,255,255,0.03)'; this.style.boxShadow='0 0 0 rgba(0,0,0,0)';"
+                        >
+                            ${name}
+                        </span>
+                    </div>
+                    ${calsHtml}
+                </td>
+            `;
+        }).join('');
+
+        return `
+            <tr>
+                <td style="
+                    padding: 12px;
+                    text-align:left;
+                    vertical-align: top;
+                    position: sticky;
+                    left: 0;
+                    min-width: 180px;
+                    background: #ffffff;
+                    box-shadow: 4px 0 8px rgba(0,0,0,0.04);
+                ">
+                    <div style="font-weight: 900; color: var(--text-primary);">${dayLabel}</div>
+                    ${day?.notes ? `<div style="margin-top:8px; color: var(--text-secondary); font-style: italic; font-size: 0.9em;">${day.notes}</div>` : ''}
+                </td>
+                ${cells}
+            </tr>
+        `;
+    }).join('');
+
+    wrapEl.innerHTML = `
+        <div style="margin-bottom: 12px; padding: 12px; border-radius: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap: 12px; flex-wrap: wrap;">
+                <div>
+                    <div style="font-weight: 800; color: var(--text-primary);"><i class="fas fa-calendar-week"></i> 7-Day Plan Table</div>
+                    <div style="color: var(--text-secondary); margin-top: 6px;">${plan.summary || 'Your saved 7-day plan.'}</div>
+                </div>
+                <div style="color: var(--text-secondary); font-size: 0.95em;">
+                    Tip: “Add to Meal Log” pre-fills the meal form (you can edit quantity/nutrition before logging).
+                </div>
+            </div>
+        </div>
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; overflow: hidden;">
+            <thead style="background: rgba(255,255,255,0.06);">
+                ${headerHtml}
+            </thead>
+            <tbody>
+                ${rowsHtml || `<tr><td style="padding: 14px; color: var(--text-secondary);">No days found in the saved plan.</td></tr>`}
+            </tbody>
+        </table>
+    `;
+
+    expectedEl.innerHTML = renderWeeklyPlanExpectedResults(plan);
+    
+    // Add streak-based nudges
+    renderStreakBasedNudges(plan);
+}
+
+// Render streak-based nudges based on plan adherence
+function renderStreakBasedNudges(plan) {
+    const expectedEl = document.getElementById('weeklyPlanExpectedResults');
+    if (!expectedEl) return;
+    
+    const days = Array.isArray(plan?.days) ? plan.days : [];
+    const mealColumns = ['breakfast', 'lunch', 'dinner', 'snack'];
+    
+    // Count red cells (skipped meal slots) in last 3 days
+    let redCellCount = 0;
+    const last3Days = days.slice(-3);
+    
+    last3Days.forEach((day, dayIndex) => {
+        const actualDayIndex = days.length - 3 + dayIndex;
+        const isoDate = normalizeWeeklyPlanDayDate(plan, actualDayIndex);
+        
+        mealColumns.forEach(mealType => {
+            const meal = day?.meals?.[mealType];
+            const name = extractMealName(meal);
+            if (!name) return;
+            
+            if (isoDate) {
+                const sameDateMeals = meals
+                    .map(m => ({ meal: m, iso: getMealDateISO(m) }))
+                    .filter(x => x.iso === isoDate)
+                    .map(x => x.meal);
+                
+                if (sameDateMeals.length > 0) {
+                    const sameTypeMeals = sameDateMeals.filter(m => m.type === mealType);
+                    if (sameTypeMeals.length === 0) {
+                        // This is a red cell (skipped slot)
+                        redCellCount++;
+                    }
+                }
+            }
+        });
+    });
+    
+    // Show nudge if 3+ red cells in last 3 days
+    if (redCellCount >= 3) {
+        const nudgeHtml = `
+            <div style="margin-top: 16px; padding: 14px; border-radius: 12px; border: 2px solid rgba(255, 193, 7, 0.4); background: linear-gradient(135deg, rgba(255, 193, 7, 0.1) 0%, rgba(255, 152, 0, 0.1) 100%);">
+                <div style="display: flex; align-items: flex-start; gap: 12px;">
+                    <i class="fas fa-lightbulb" style="color: #ffc107; font-size: 1.5em; margin-top: 2px;"></i>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 800; color: var(--text-primary); margin-bottom: 6px;">
+                            Plan Adherence Suggestion
+                        </div>
+                        <p style="color: var(--text-secondary); margin: 0; line-height: 1.6;">
+                            You've skipped ${redCellCount} meal slots in the last 3 days. Your plan adherence is lower than ideal. 
+                            Consider generating a <strong>gentler, more flexible plan</strong> that better fits your routine, or use the 
+                            <strong>"Log Today's Meals"</strong> button to quickly catch up!
+                        </p>
+                        <button 
+                            onclick="showPage('chatbot'); setTimeout(() => { const input = document.getElementById('chatInput'); if(input) input.value = 'Generate a more flexible 7-day plan that fits my routine better'; input.dispatchEvent(new KeyboardEvent('keydown', {key: 'Enter'})); }, 500);"
+                            style="margin-top: 10px; padding: 8px 16px; background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%); border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: 600; transition: transform 0.2s ease;"
+                            onmouseenter="this.style.transform='translateY(-1px)';"
+                            onmouseleave="this.style.transform='none';"
+                        >
+                            <i class="fas fa-magic"></i> Generate Gentler Plan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        `;
+        expectedEl.innerHTML += nudgeHtml;
+    }
+}
+
+function renderWeeklyPlanExpectedResults(plan) {
+    const profile = window.userProfile || JSON.parse(localStorage.getItem('userProfile') || 'null');
+    const days = Array.isArray(plan?.days) ? plan.days : [];
+    const mealColumns = ['breakfast', 'lunch', 'dinner', 'snack'];
+
+    let totalCals = 0;
+    let countedMeals = 0;
+    const dailyTotals = [];
+
+    days.forEach((day, i) => {
+        let dayCals = 0;
+        mealColumns.forEach(mt => {
+            const c = extractMealCalories(day?.meals?.[mt]);
+            if (c !== null) {
+                dayCals += c;
+                totalCals += c;
+                countedMeals += 1;
+            }
+        });
+        dailyTotals.push({ index: i, calories: dayCals || null });
+    });
+
+    const avgDailyCals = days.length > 0 && countedMeals > 0 ? Math.round(totalCals / days.length) : null;
+    const goal = profile?.caloricGoal ? Math.round(profile.caloricGoal) : null;
+    const tdee = profile?.tdee ? Math.round(profile.tdee) : null;
+    const goalType = profile?.goalType || null;
+
+    let deltaVsGoal = null;
+    if (avgDailyCals !== null && goal !== null) deltaVsGoal = avgDailyCals - goal;
+
+    let weightTrend = null;
+    if (avgDailyCals !== null && tdee !== null) {
+        const dailyDelta = avgDailyCals - tdee;
+        const weeklyKg = (dailyDelta * 7) / 7700;
+        weightTrend = weeklyKg;
+    }
+
+    const goalLine = goal !== null
+        ? `<div style="color: var(--text-secondary); margin-top: 6px;"><strong>Goal calories:</strong> ${goal} /day (${goalType || 'goal'})</div>`
+        : `<div style="color: var(--text-secondary); margin-top: 6px;">Set your profile goals to get more accurate predictions.</div>`;
+
+    const avgLine = avgDailyCals !== null
+        ? `<div style="margin-top: 6px;"><strong>Planned avg calories:</strong> ${avgDailyCals} /day</div>`
+        : `<div style="margin-top: 6px; color: var(--text-secondary);">Calories aren’t included in this plan’s meals, so results are estimated qualitatively.</div>`;
+
+    const deltaLine = (deltaVsGoal !== null)
+        ? `<div style="margin-top: 6px; color: ${deltaVsGoal <= 0 ? 'var(--secondary-color)' : 'var(--warning-color)'};">
+              <strong>Delta vs goal:</strong> ${deltaVsGoal > 0 ? '+' : ''}${deltaVsGoal} cal/day
+           </div>`
+        : '';
+
+    const trendLine = (weightTrend !== null)
+        ? `<div style="margin-top: 6px; color: var(--text-secondary);">
+              <strong>Expected weekly trend:</strong> ${weightTrend > 0 ? '+' : ''}${weightTrend.toFixed(2)} kg/week (based on your TDEE)
+           </div>`
+        : '';
+
+    const qualitative = `
+        <ul style="margin: 10px 0 0; padding-left: 20px; color: var(--text-secondary); line-height: 1.7;">
+            <li>Better consistency → easier calorie control and fewer impulsive meals.</li>
+            <li>More planned protein/fiber (if you follow the meals) → improved satiety and steadier energy.</li>
+            <li>Fewer “decision points” during the week → higher adherence to your goal.</li>
+        </ul>
+    `;
+
+    return `
+        <div style="padding: 14px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.04);">
+            <div style="font-weight: 900; color: var(--text-primary);"><i class="fas fa-chart-line"></i> Expected Results (if you implement this plan)</div>
+            ${avgLine}
+            ${goalLine}
+            ${deltaLine}
+            ${trendLine}
+            ${qualitative}
+            <div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9em;">
+                Note: This is an estimate. Actual results depend on portions, cooking oils, snacks, and activity.
+            </div>
+        </div>
+    `;
 }
 
 // BMI Calculation
@@ -1585,6 +2363,9 @@ function displayDishSuggestions(dishSuggestions) {
         const tagsHTML = dish.tags ? dish.tags.slice(0, 3).map(tag => 
             `<span class="tag-badge">${tag}</span>`
         ).join('') : '';
+        const escapedDishName = dish.name
+            ? dish.name.replace(/"/g, '&quot;').replace(/'/g, '&#39;')
+            : '';
         
         recommendationsHTML += `
             <div class="suggestion-card" onclick="showRecipeDetails(${index})" style="cursor: pointer;">
@@ -1609,7 +2390,10 @@ function displayDishSuggestions(dishSuggestions) {
                     <i class="fas fa-clock"></i> ${dish.prepTime} prep | ${dish.cookTime || 'N/A'} cooking
                 </div>` : ''}
                 <div style="margin-top: 15px; text-align: center; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1);">
-                    <button style="background: var(--primary-color); border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
+                    <button 
+                        class="view-full-recipe-btn"
+                        data-dish-name="${escapedDishName}"
+                        style="background: var(--primary-color); border: none; color: white; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold;">
                         <i class="fas fa-book-open"></i> View Full Recipe
                     </button>
                 </div>
@@ -1618,6 +2402,52 @@ function displayDishSuggestions(dishSuggestions) {
     });
     
     resultDiv.innerHTML = recommendationsHTML;
+    
+    // Wire "View Full Recipe" to recipe generator with auto-search and generation
+    resultDiv.querySelectorAll('.view-full-recipe-btn').forEach(btn => {
+        btn.addEventListener('click', (event) => {
+            event.stopPropagation(); // Prevent card click handler
+            const dishName = btn.getAttribute('data-dish-name');
+            redirectToRecipeGenerator(dishName);
+        });
+    });
+}
+
+// Navigate to recipe generator, prefill the dish name, and auto-generate
+function redirectToRecipeGenerator(recipeName) {
+    const decodedName = recipeName
+        ? recipeName.replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+        : '';
+    
+    showPage('recipe');
+    
+    // Wait briefly for page transition, then fill and trigger generation
+    setTimeout(() => {
+        const recipeSearchInput = document.getElementById('recipeSearch');
+        const ingredientsInput = document.getElementById('ingredients');
+        const generateButton = document.getElementById('generateRecipeBtn');
+        
+        if (recipeSearchInput) {
+            recipeSearchInput.value = decodedName;
+            // Fire input event so any suggestion listeners react
+            recipeSearchInput.dispatchEvent(new Event('input', { bubbles: true }));
+            recipeSearchInput.focus();
+        }
+        if (ingredientsInput) {
+            ingredientsInput.value = '';
+        }
+        
+        const recipeSection = document.getElementById('recipe');
+        if (recipeSection) {
+            recipeSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+        
+        if (generateButton) {
+            generateButton.click(); // Triggers existing onclick handler
+        } else {
+        generateRecipe();
+        }
+    }, 350);
 }
 
 // Regenerate dish suggestions
@@ -2031,7 +2861,44 @@ async function deleteActivityById(activityId) {
 // Global variable to store current recipe nutrition
 let currentRecipeNutrition = null;
 
-// Lookup recipe nutrition from database or nutrition API
+// Nutrition cache (localStorage-based, expires after 7 days)
+function getNutritionCacheKey(foodName, quantity) {
+    return `nutrition_cache_${foodName.toLowerCase().trim()}_${quantity}`;
+}
+
+function getCachedNutrition(foodName, quantity) {
+    try {
+        const key = getNutritionCacheKey(foodName, quantity);
+        const cached = localStorage.getItem(key);
+        if (!cached) return null;
+        
+        const data = JSON.parse(cached);
+        const expiry = new Date(data.expiry);
+        if (new Date() > expiry) {
+            localStorage.removeItem(key);
+            return null;
+        }
+        return data.nutrition;
+    } catch (e) {
+        return null;
+    }
+}
+
+function setCachedNutrition(foodName, quantity, nutrition) {
+    try {
+        const key = getNutritionCacheKey(foodName, quantity);
+        const expiry = new Date();
+        expiry.setDate(expiry.getDate() + 7); // Cache for 7 days
+        localStorage.setItem(key, JSON.stringify({
+            nutrition,
+            expiry: expiry.toISOString()
+        }));
+    } catch (e) {
+        // Ignore cache errors
+    }
+}
+
+// Lookup recipe nutrition from GPT-4o-mini (always uses AI, never database)
 async function lookupRecipeNutrition() {
     const mealName = document.getElementById('mealName').value.trim();
     if (!mealName) {
@@ -2040,32 +2907,40 @@ async function lookupRecipeNutrition() {
     }
     
     try {
-        // First, try to find in local database
-        const recipes = await getRecipesFromDB();
-        const searchLower = mealName.toLowerCase();
-        const matchedRecipe = recipes.find(recipe => {
-            const titleLower = recipe.title.toLowerCase();
-            return titleLower === searchLower || 
-                   titleLower.includes(searchLower) || 
-                   searchLower.includes(titleLower);
-        });
+        // Always use GPT-4o-mini API for nutrition data (never check database)
+        const quantity = parseFloat(document.getElementById('mealQuantity').value) || 100;
+        const quantityType = 'grams'; // Always use grams
         
-        if (matchedRecipe && matchedRecipe.nutrition) {
-            // Found in database
-            currentRecipeNutrition = matchedRecipe.nutrition;
+        // Check cache first
+        const cached = getCachedNutrition(mealName, quantity);
+        if (cached) {
+            currentRecipeNutrition = {
+                'Calories': cached.calories.toString(),
+                'Protein': cached.protein + 'g',
+                'Carbs': cached.carbs + 'g',
+                'Fat': cached.fats + 'g',
+                'Fiber': cached.fiber ? cached.fiber + 'g' : '0g',
+                'Sugar': cached.sugar ? cached.sugar + 'g' : '0g'
+            };
             updateNutritionFromQuantity();
-            document.getElementById('nutritionAutoFill').style.display = 'block';
+            const autoFillDiv = document.getElementById('nutritionAutoFill');
+            if (autoFillDiv) {
+                autoFillDiv.style.display = 'block';
+                const mainMsg = autoFillDiv.querySelector('span');
+                if (mainMsg) {
+                    mainMsg.innerHTML = '<i class="fas fa-robot"></i> Nutrition data from GPT-4o-mini AI! (Cached)';
+                }
+            }
             return;
         }
-        
-        // Not found in database, try nutrition API
-        const quantity = parseFloat(document.getElementById('mealQuantity').value) || 100;
-        const quantityType = document.getElementById('quantityType').value;
         
         try {
             const nutritionData = await getFoodNutrition(mealName, quantity, quantityType);
             
             if (nutritionData) {
+                // Cache the nutrition data
+                setCachedNutrition(mealName, quantity, nutritionData);
+                
                 // Convert API format to our format
                 currentRecipeNutrition = {
                     'Calories': nutritionData.calories.toString(),
@@ -2077,27 +2952,39 @@ async function lookupRecipeNutrition() {
                 };
                 
                 updateNutritionFromQuantity();
-                document.getElementById('nutritionAutoFill').style.display = 'block';
-                
-                // Show a message that data came from API
                 const autoFillDiv = document.getElementById('nutritionAutoFill');
                 if (autoFillDiv) {
-                    const infoMsg = autoFillDiv.querySelector('.api-source-info');
-                    if (!infoMsg) {
-                        const msg = document.createElement('p');
-                        msg.className = 'api-source-info';
-                        msg.style.cssText = 'font-size: 0.85em; color: var(--secondary-color); margin-top: 5px; font-style: italic;';
-                        msg.innerHTML = '<i class="fas fa-cloud"></i> Nutrition data from API';
-                        autoFillDiv.appendChild(msg);
+                    autoFillDiv.style.display = 'block';
+                    
+                    // Update the main message to indicate GPT AI source
+                    const mainMsg = autoFillDiv.querySelector('span');
+                    if (mainMsg) {
+                        mainMsg.innerHTML = '<i class="fas fa-robot"></i> Nutrition data from GPT-4o-mini AI!';
                     }
+                    
+                    // Remove any existing API source info (if any)
+                    const existingMsg = autoFillDiv.querySelector('.api-source-info');
+                    if (existingMsg) existingMsg.remove();
                 }
-        } else {
-            clearAutoFill();
-        }
+            } else {
+                clearAutoFill();
+            }
         } catch (apiError) {
-            console.error('Nutrition API error:', apiError);
-            // If API fails, just clear (database lookup already failed)
-            clearAutoFill();
+            console.error('GPT Nutrition API error:', apiError);
+            // Better error handling - show user-friendly message
+            const autoFillDiv = document.getElementById('nutritionAutoFill');
+            if (autoFillDiv) {
+                autoFillDiv.style.display = 'block';
+                autoFillDiv.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="color: var(--accent-color);"><i class="fas fa-exclamation-triangle"></i> AI lookup failed</span>
+                        <button onclick="clearAutoFill()" style="background: transparent; border: none; color: var(--accent-color); cursor: pointer;">
+                            <i class="fas fa-times"></i> Clear
+                        </button>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 14px;">Unable to get AI nutrition estimate. Please enter nutrition values manually below.</p>
+                `;
+            }
         }
     } catch (error) {
         console.error('Error looking up recipe:', error);
@@ -2105,57 +2992,29 @@ async function lookupRecipeNutrition() {
     }
 }
 
-// Handle quantity type change
+// Handle quantity type change (no longer needed - always grams, but kept for compatibility)
 function handleQuantityTypeChange() {
-    const quantityType = document.getElementById('quantityType').value;
-    const quantityLabel = document.getElementById('quantityLabel');
-    const mealQuantity = document.getElementById('mealQuantity');
-    const servingWeightInfo = document.getElementById('servingWeightInfo');
-    
-    if (quantityType === 'grams') {
-        quantityLabel.textContent = 'Weight (grams)';
-        mealQuantity.placeholder = '100';
-        mealQuantity.step = '10';
-        mealQuantity.min = '10';
-        mealQuantity.value = 100;
-        servingWeightInfo.style.display = 'block';
-    } else {
-        quantityLabel.textContent = 'Quantity (servings)';
-        mealQuantity.placeholder = '1';
-        mealQuantity.step = '0.5';
-        mealQuantity.min = '0.25';
-        mealQuantity.value = 1;
-        servingWeightInfo.style.display = 'none';
-    }
-    
-    // Recalculate if we have nutrition data
+    // Always use grams - this function is kept for compatibility but does nothing
     if (currentRecipeNutrition) {
         updateNutritionFromQuantity();
     }
 }
 
-// Update nutrition based on quantity
+// Update nutrition based on quantity (always in grams)
 function updateNutritionFromQuantity() {
     if (!currentRecipeNutrition) return;
     
-    const quantity = parseFloat(document.getElementById('mealQuantity').value) || 1;
-    const quantityType = document.getElementById('quantityType').value;
+    const quantity = parseFloat(document.getElementById('mealQuantity').value) || 100;
     
-    // Base serving size is 100g, so recipes in database are per 100g
+    // Base serving size is 100g, so nutrition data is per 100g
     const baseServingSizeGrams = 100;
     
-    // Calculate nutrition values based on quantity
+    // Calculate nutrition values based on quantity (always in grams)
     Object.entries(currentRecipeNutrition).forEach(([key, value]) => {
         const numericValue = parseFloat(value.replace(/[^\d.]/g, '')); // Extract number
         
-        let calculatedValue;
-        if (quantityType === 'grams') {
-            // If quantity in grams, calculate: (quantity / 100g) * base nutrition
-            calculatedValue = (numericValue / baseServingSizeGrams) * quantity;
-        } else {
-            // If quantity in servings, multiply directly
-            calculatedValue = numericValue * quantity;
-        }
+        // Calculate: (quantity / 100g) * base nutrition
+        const calculatedValue = (numericValue / baseServingSizeGrams) * quantity;
         
         // Store for specific nutrients
         if (key === 'Calories') {
@@ -2174,7 +3033,7 @@ function updateNutritionFromQuantity() {
 function clearAutoFill() {
     currentRecipeNutrition = null;
     document.getElementById('nutritionAutoFill').style.display = 'none';
-    document.getElementById('mealQuantity').value = 1;
+    document.getElementById('mealQuantity').value = 100; // Default to 100g
 }
 
 // Meal Logging
@@ -2193,14 +3052,12 @@ async function logMeal() {
         return;
     }
     
-    const quantityType = document.getElementById('quantityType').value;
-    
     const meal = {
         type: mealType,
         name: mealName,
         date: mealDate,
         quantity: quantity,
-        quantityType: quantityType,
+        quantityType: 'grams', // Always grams
         calories: calories,
         protein: protein,
         carbs: carbs,
@@ -2223,6 +3080,7 @@ async function logMeal() {
             localStorage.setItem('meals', JSON.stringify(meals));
             
             displayMeals();
+            loadRecentMealsChips(); // Update recent meals chips
             updateOverview();
             updateProgressPage();
             
@@ -2232,7 +3090,7 @@ async function logMeal() {
             document.getElementById('mealProtein').value = '';
             document.getElementById('mealCarbs').value = '';
             document.getElementById('mealFats').value = '';
-            document.getElementById('mealQuantity').value = 1;
+            document.getElementById('mealQuantity').value = 100;
             clearAutoFill();
             
             alert('Meal logged successfully! (Demo mode)');
@@ -2246,6 +3104,7 @@ async function logMeal() {
             localStorage.setItem('meals', JSON.stringify(meals));
             
             displayMeals();
+            loadRecentMealsChips(); // Update recent meals chips
             updateOverview();
             updateProgressPage();
             
@@ -2255,7 +3114,7 @@ async function logMeal() {
             document.getElementById('mealProtein').value = '';
             document.getElementById('mealCarbs').value = '';
             document.getElementById('mealFats').value = '';
-            document.getElementById('mealQuantity').value = 1;
+            document.getElementById('mealQuantity').value = 100;
             clearAutoFill();
             
             alert('Meal logged successfully!');
@@ -2286,11 +3145,128 @@ async function logMeal() {
         document.getElementById('mealProtein').value = '';
         document.getElementById('mealCarbs').value = '';
         document.getElementById('mealFats').value = '';
-        document.getElementById('mealQuantity').value = 1;
-        clearAutoFill();
-        
-        alert('Meal logged successfully! (Saved locally)');
+            document.getElementById('mealQuantity').value = 100;
+            clearAutoFill();
+            
+            alert('Meal logged successfully! (Saved locally)');
     }
+}
+
+// Common portions shortcuts (Indian food focused)
+const COMMON_PORTIONS = [
+    { label: '1 Roti', name: 'Roti', grams: 50 },
+    { label: '1 Cup Rice', name: 'Cooked Rice', grams: 150 },
+    { label: '1 Bowl Dal', name: 'Dal', grams: 200 },
+    { label: '1 Cup Sabzi', name: 'Vegetable Curry', grams: 150 },
+    { label: '1 Paratha', name: 'Paratha', grams: 80 },
+    { label: '1 Cup Pulao', name: 'Pulao', grams: 180 },
+    { label: '1 Bowl Sambar', name: 'Sambar', grams: 200 },
+    { label: '1 Cup Rasam', name: 'Rasam', grams: 150 },
+    { label: '1 Cup Curd', name: 'Curd/Yogurt', grams: 200 },
+    { label: '1 Cup Salad', name: 'Salad', grams: 100 },
+    { label: '1 Chapati', name: 'Chapati', grams: 40 },
+    { label: '1 Cup Soup', name: 'Soup', grams: 200 }
+];
+
+// Load common portions buttons
+function loadCommonPortions() {
+    const container = document.getElementById('commonPortionsButtons');
+    if (!container) return;
+    
+    container.innerHTML = COMMON_PORTIONS.map(portion => `
+        <button 
+            onclick="quickFillCommonPortion('${portion.name}', ${portion.grams})"
+            style="
+                padding: 8px 14px;
+                background: rgba(80, 200, 120, 0.1);
+                border: 1px solid rgba(80, 200, 120, 0.3);
+                border-radius: 20px;
+                color: var(--text-primary);
+                font-size: 0.85em;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                font-weight: 500;
+            "
+            onmouseenter="this.style.background='rgba(80, 200, 120, 0.2)'; this.style.transform='translateY(-1px)';"
+            onmouseleave="this.style.background='rgba(80, 200, 120, 0.1)'; this.style.transform='none';"
+        >
+            ${portion.label}
+        </button>
+    `).join('');
+}
+
+// Quick fill from common portion
+function quickFillCommonPortion(foodName, grams) {
+    document.getElementById('mealName').value = foodName;
+    document.getElementById('mealQuantity').value = grams;
+    document.getElementById('mealName').dispatchEvent(new Event('change', { bubbles: true }));
+    document.getElementById('mealQuantity').dispatchEvent(new Event('change', { bubbles: true }));
+}
+
+// Load recent meals for quick-fill
+function loadRecentMealsChips() {
+    const container = document.getElementById('recentMealsChips');
+    if (!container) return;
+    
+    if (!meals || meals.length === 0) {
+        container.innerHTML = '<span style="color: var(--text-secondary); font-size: 0.85em; font-style: italic;">No recent meals yet</span>';
+        return;
+    }
+    
+    // Get unique meal names from last 20 meals, limit to 8 most frequent
+    const recentMeals = [...meals]
+        .sort((a, b) => new Date(b.date) - new Date(a.date))
+        .slice(0, 20);
+    
+    const mealCounts = {};
+    recentMeals.forEach(meal => {
+        const key = meal.name.toLowerCase();
+        if (!mealCounts[key]) {
+            mealCounts[key] = { name: meal.name, quantity: meal.quantity || 100, count: 0 };
+        }
+        mealCounts[key].count++;
+    });
+    
+    const uniqueMeals = Object.values(mealCounts)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 8);
+    
+    if (uniqueMeals.length === 0) {
+        container.innerHTML = '<span style="color: var(--text-secondary); font-size: 0.85em; font-style: italic;">No recent meals yet</span>';
+        return;
+    }
+    
+    container.innerHTML = uniqueMeals.map(meal => `
+        <button 
+            onclick="quickFillRecentMeal('${meal.name.replace(/'/g, "\\'")}', ${meal.quantity})"
+            style="
+                padding: 6px 12px;
+                background: rgba(74, 144, 226, 0.1);
+                border: 1px solid rgba(74, 144, 226, 0.3);
+                border-radius: 16px;
+                color: var(--text-primary);
+                font-size: 0.85em;
+                cursor: pointer;
+                transition: all 0.2s ease;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            "
+            onmouseenter="this.style.background='rgba(74, 144, 226, 0.2)'; this.style.transform='translateY(-1px)';"
+            onmouseleave="this.style.background='rgba(74, 144, 226, 0.1)'; this.style.transform='none';"
+        >
+            <i class="fas fa-utensils" style="font-size: 0.75em;"></i>
+            ${meal.name} (${meal.quantity}g)
+        </button>
+    `).join('');
+}
+
+// Quick fill from recent meal
+function quickFillRecentMeal(foodName, grams) {
+    document.getElementById('mealName').value = foodName;
+    document.getElementById('mealQuantity').value = grams;
+    document.getElementById('mealName').dispatchEvent(new Event('change', { bubbles: true }));
+    document.getElementById('mealQuantity').dispatchEvent(new Event('change', { bubbles: true }));
 }
 
 function displayMeals() {
@@ -2299,6 +3275,7 @@ function displayMeals() {
     
     if (meals.length === 0) {
         mealsDiv.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">No meals logged yet. Start tracking your nutrition!</p>';
+        loadRecentMealsChips(); // Update recent meals even if empty
         return;
     }
     
@@ -2320,8 +3297,7 @@ function displayMeals() {
             day: 'numeric'
         });
         
-        const quantityDisplay = meal.quantity ? 
-        (meal.quantityType === 'grams' ? ` (${meal.quantity}g)` : ` x${meal.quantity}`) : '';
+        const quantityDisplay = meal.quantity ? ` (${meal.quantity}g)` : '';
         return `
             <div class="meal-item">
                 <div class="meal-info">
@@ -2428,8 +3404,7 @@ function updateOverview() {
                 month: 'short',
                 day: 'numeric'
             });
-            const quantityDisplay = meal.quantity ? 
-                (meal.quantityType === 'grams' ? ` (${meal.quantity}g)` : ` x${meal.quantity}`) : '';
+            const quantityDisplay = meal.quantity ? ` (${meal.quantity}g)` : '';
             return `
                 <div style="padding: 8px 12px; background: rgba(255,255,255,0.05); border-radius: 8px; border-left: 3px solid var(--secondary-color); flex: 0 0 calc(33.333% - 6px); min-width: 200px; font-size: 0.9em;">
                     <strong>🍽️ ${meal.name}${quantityDisplay}</strong>
@@ -2447,9 +3422,71 @@ function updateOverview() {
     // Load daily plan (async, won't block other updates)
     loadDailyPlan();
     
-    // Display nutrition insights
+    // Display macro balance indicator
     const nutritionDiv = document.getElementById('nutritionInsights');
+    let macroBalanceHtml = '';
     
+    if (weekMeals.length > 0) {
+        const totalWeekCalories = weekMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
+        const totalWeekProtein = weekMeals.reduce((sum, meal) => sum + (meal.protein || 0), 0);
+        const totalWeekCarbs = weekMeals.reduce((sum, meal) => sum + (meal.carbs || 0), 0);
+        const totalWeekFats = weekMeals.reduce((sum, meal) => sum + (meal.fats || 0), 0);
+        
+        // Calculate percentages (1g protein/carbs = 4 cal, 1g fat = 9 cal)
+        const proteinCals = totalWeekProtein * 4;
+        const carbsCals = totalWeekCarbs * 4;
+        const fatsCals = totalWeekFats * 9;
+        const totalMacroCals = proteinCals + carbsCals + fatsCals;
+        
+        if (totalMacroCals > 0) {
+            const proteinPct = Math.round((proteinCals / totalMacroCals) * 100);
+            const carbsPct = Math.round((carbsCals / totalMacroCals) * 100);
+            const fatsPct = Math.round((fatsCals / totalMacroCals) * 100);
+            
+            // Get user's target macros from profile (default: 45/25/30 carbs/protein/fats)
+            const profile = window.userProfile || JSON.parse(localStorage.getItem('userProfile') || 'null');
+            const targetCarbs = profile?.macroSplit?.carbs || 45;
+            const targetProtein = profile?.macroSplit?.protein || 25;
+            const targetFats = profile?.macroSplit?.fats || 30;
+            
+            macroBalanceHtml = `
+                <div class="insight-card" style="background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(80, 200, 120, 0.1) 100%); border: 2px solid rgba(74, 144, 226, 0.2);">
+                    <h4><i class="fas fa-chart-pie" style="color: var(--primary-color);"></i> Macro Balance (This Week)</h4>
+                    <div style="margin-top: 12px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-weight: 600;">Carbs:</span>
+                            <span style="color: ${Math.abs(carbsPct - targetCarbs) <= 5 ? 'var(--secondary-color)' : 'var(--accent-color)'};">
+                                ${carbsPct}% <small>(target: ${targetCarbs}%)</small>
+                            </span>
+                        </div>
+                        <div style="height: 8px; background: rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
+                            <div style="height: 100%; width: ${carbsPct}%; background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%); transition: width 0.5s ease;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-weight: 600;">Protein:</span>
+                            <span style="color: ${Math.abs(proteinPct - targetProtein) <= 5 ? 'var(--secondary-color)' : 'var(--accent-color)'};">
+                                ${proteinPct}% <small>(target: ${targetProtein}%)</small>
+                            </span>
+                        </div>
+                        <div style="height: 8px; background: rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
+                            <div style="height: 100%; width: ${proteinPct}%; background: linear-gradient(90deg, #4a90e2 0%, #6ba3e8 100%); transition: width 0.5s ease;"></div>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                            <span style="font-weight: 600;">Fats:</span>
+                            <span style="color: ${Math.abs(fatsPct - targetFats) <= 5 ? 'var(--secondary-color)' : 'var(--accent-color)'};">
+                                ${fatsPct}% <small>(target: ${targetFats}%)</small>
+                            </span>
+                        </div>
+                        <div style="height: 8px; background: rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden;">
+                            <div style="height: 100%; width: ${fatsPct}%; background: linear-gradient(90deg, #ff6b6b 0%, #ff8787 100%); transition: width 0.5s ease;"></div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+    }
+    
+    // Display nutrition insights
     // Calculate insights based on recent activities and meals
     const avgDailyActivityCalories = weekActivities.length > 0 
         ? weekActivities.reduce((sum, act) => sum + act.calories, 0) / 7 
@@ -2506,7 +3543,7 @@ function updateOverview() {
         description: 'Remember to drink water throughout your activities for optimal performance.'
     });
     
-    nutritionDiv.innerHTML = insights.map(insight => `
+    nutritionDiv.innerHTML = macroBalanceHtml + insights.map(insight => `
         <div class="insight-card">
             <h4><i class="fas fa-lightbulb" style="color: var(--secondary-color);"></i> ${insight.title}</h4>
             <p>${insight.description}</p>
@@ -2795,23 +3832,23 @@ async function addRecipeToMealLog() {
     // Show recipe servings info if available
     const servingsInfo = recipeServings > 1 ? ` (Recipe serves ${recipeServings})` : '';
 
-    // Prompt for serving size
-    const servingSizeInput = prompt(
-        `How many servings would you like to add?${servingsInfo}\n\n` +
+    // Prompt for weight in grams
+    const weightInput = prompt(
+        `How many grams would you like to add?${servingsInfo}\n\n` +
         `Recipe: ${recipe.title || recipe.name}\n` +
-        `Nutrition per serving: ${Math.round(nutritionPerServing.calories)} cal, ` +
+        `Nutrition per 100g: ${Math.round(nutritionPerServing.calories)} cal, ` +
         `${Math.round(nutritionPerServing.protein)}g protein\n\n` +
-        `Enter serving size:`,
-        '1'
+        `Enter weight in grams:`,
+        '100'
     );
 
-    if (servingSizeInput === null) {
+    if (weightInput === null) {
         return; // User cancelled
     }
 
-    const servingSize = parseFloat(servingSizeInput);
-    if (isNaN(servingSize) || servingSize <= 0) {
-        alert('Please enter a valid serving size (greater than 0).');
+    const weightGrams = parseFloat(weightInput);
+    if (isNaN(weightGrams) || weightGrams <= 0) {
+        alert('Please enter a valid weight in grams (greater than 0).');
         return;
     }
 
@@ -2843,14 +3880,15 @@ async function addRecipeToMealLog() {
         return;
     }
 
-    // Calculate nutrition for the specified serving size
+    // Calculate nutrition for the specified weight (nutritionPerServing is per 100g)
+    const multiplier = weightGrams / 100;
     const finalNutrition = {
-        calories: Math.round(nutritionPerServing.calories * servingSize),
-        protein: Math.round(nutritionPerServing.protein * servingSize * 10) / 10,
-        carbs: Math.round(nutritionPerServing.carbs * servingSize * 10) / 10,
-        fats: Math.round(nutritionPerServing.fats * servingSize * 10) / 10,
-        fiber: Math.round(nutritionPerServing.fiber * servingSize * 10) / 10,
-        sugar: Math.round(nutritionPerServing.sugar * servingSize * 10) / 10
+        calories: Math.round(nutritionPerServing.calories * multiplier),
+        protein: Math.round(nutritionPerServing.protein * multiplier * 10) / 10,
+        carbs: Math.round(nutritionPerServing.carbs * multiplier * 10) / 10,
+        fats: Math.round(nutritionPerServing.fats * multiplier * 10) / 10,
+        fiber: Math.round(nutritionPerServing.fiber * multiplier * 10) / 10,
+        sugar: Math.round(nutritionPerServing.sugar * multiplier * 10) / 10
     };
 
     // Get current date
@@ -2861,8 +3899,8 @@ async function addRecipeToMealLog() {
         type: mealType,
         name: recipe.title || recipe.name,
         date: today,
-        quantity: servingSize,
-        quantityType: 'servings',
+        quantity: weightGrams,
+        quantityType: 'grams',
         calories: finalNutrition.calories,
         protein: finalNutrition.protein,
         carbs: finalNutrition.carbs,
@@ -3529,8 +4567,8 @@ function updateNutritionChart() {
                 labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
                 datasets: [
                     {
-                        label: 'Calories',
-                        data: nutritionByDay.map(n => n.calories),
+                        label: 'Calories (×0.1)',
+                        data: nutritionByDay.map(n => n.calories / 10),
                         backgroundColor: 'rgba(255, 107, 107, 0.6)',
                         borderColor: '#ff6b6b',
                         borderWidth: 2
@@ -4987,13 +6025,19 @@ function save7DayPlanToChat() {
     // Add to chat
     addMessageToChat('bot', planText);
     conversationHistory.push({ role: 'assistant', content: planText });
+
+    // Also save a structured copy for the "7-Day Plan" tab
+    save7DayPlanToStorage(plan);
     
     // Save chat after 7-day plan is added
     saveChatToStorage();
     
     // Close modal and show success
     closeDietPlan();
-    alert('7-day plan saved to chat!');
+    alert('7-day plan saved to chat and to your 7-Day Plan tab!');
+
+    // Navigate user to the tab view for easier actioning
+    showPage('weeklyPlan');
 }
 
 // Clear chat
