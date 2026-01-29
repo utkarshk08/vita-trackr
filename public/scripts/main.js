@@ -544,7 +544,23 @@ async function regenerateDailyPlan() {
 
 // View recipe from daily plan
 function viewRecipeFromPlan(recipeName) {
-    // Navigate to recipe page
+    // Check cache first for instant display
+    const cachedRecipe = getCachedRecipe(recipeName);
+    if (cachedRecipe) {
+        // Display cached recipe directly
+        showPage('recipe');
+        setTimeout(() => {
+            const resultDiv = document.getElementById('recipeResult');
+            if (resultDiv) {
+                displayRecipes([cachedRecipe]);
+                resultDiv.classList.add('show');
+                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 300);
+        return;
+    }
+    
+    // If not cached, proceed with normal flow
     showPage('recipe');
     // Set the recipe name in search and generate
     setTimeout(() => {
@@ -607,6 +623,98 @@ function useActivityRecommendation(type, duration, intensity) {
 }
 
 // Show page function
+// Show custom styled notification
+function showNotification(message, type = 'success', duration = 3000) {
+    // Remove any existing notifications
+    const existing = document.querySelectorAll('.custom-notification');
+    existing.forEach(n => n.remove());
+    
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = 'custom-notification';
+    notification.setAttribute('data-type', type);
+    
+    // Set icon based on type
+    let icon = 'fa-check-circle';
+    if (type === 'error') icon = 'fa-exclamation-circle';
+    else if (type === 'warning') icon = 'fa-exclamation-triangle';
+    else if (type === 'info') icon = 'fa-info-circle';
+    
+    notification.innerHTML = `
+        <div class="notification-content">
+            <i class="fas ${icon}"></i>
+            <span class="notification-message">${message}</span>
+            <button class="notification-close" onclick="this.parentElement.parentElement.remove()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+    `;
+    
+    // Add to body
+    document.body.appendChild(notification);
+    
+    // Trigger animation
+    setTimeout(() => {
+        notification.classList.add('show');
+    }, 10);
+    
+    // Auto remove after duration
+    if (duration > 0) {
+        setTimeout(() => {
+            notification.classList.remove('show');
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 300);
+        }, duration);
+    }
+}
+
+// Navigate to home page and reset everything
+function navigateToHome() {
+    // Close all popovers and modals
+    const actionBar = document.getElementById('weeklyPlanActionBar');
+    if (actionBar) actionBar.style.display = 'none';
+    
+    const ingredientPopover = document.getElementById('weeklyPlanIngredientPopover');
+    if (ingredientPopover) ingredientPopover.style.display = 'none';
+    
+    // Clear any selections
+    window.currentWeeklyPlanSelection = null;
+    
+    // Close all navigation dropdowns
+    document.querySelectorAll('.nav-dropdown').forEach(dropdown => {
+        dropdown.classList.remove('active');
+        const menu = dropdown.querySelector('.nav-dropdown-menu');
+        if (menu) {
+            menu.style.opacity = '';
+            menu.style.visibility = '';
+            menu.style.transform = '';
+            menu.style.pointerEvents = '';
+            menu.style.display = '';
+            menu.style.zIndex = '';
+            menu.style.position = '';
+            menu.style.backgroundColor = '';
+            menu.style.backdropFilter = '';
+            menu.style.webkitBackdropFilter = '';
+        }
+    });
+    
+    // Close any open modals (meal selection dialog, etc.)
+    document.querySelectorAll('[style*="z-index: 10000"]').forEach(modal => {
+        if (modal.style.position === 'fixed' && modal.style.background.includes('rgba')) {
+            modal.remove();
+        }
+    });
+    
+    // Navigate to home page
+    showPage('home');
+    
+    // Scroll to top
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
 function showPage(pageName) {
     // Hide all pages
     document.querySelectorAll('.page').forEach(page => {
@@ -677,8 +785,13 @@ function getSaved7DayPlanFromStorage() {
 
 function save7DayPlanToStorage(plan) {
     try {
+        // Store the start date (today's date) when saving the plan
+        // This ensures dates remain constant regardless of when the plan is viewed
+        const startDate = new Date().toISOString().split('T')[0]; // YYYY-MM-DD format
+        
         const payload = {
             savedAt: new Date().toISOString(),
+            startDate: startDate, // Store the start date for Day 1
             plan
         };
         localStorage.setItem('saved7DayPlan', JSON.stringify(payload));
@@ -688,12 +801,28 @@ function save7DayPlanToStorage(plan) {
 }
 
 function normalizeWeeklyPlanDayDate(plan, dayIndex) {
-    // Always use real calendar dates based on "today + index" (stored in ISO for comparisons)
-    const d = new Date();
-    d.setDate(d.getDate() + dayIndex);
-    const yyyy = d.getFullYear();
-    const mm = String(d.getMonth() + 1).padStart(2, '0');
-    const dd = String(d.getDate()).padStart(2, '0');
+    // Use the saved start date instead of current date to keep dates constant
+    const saved = getSaved7DayPlanFromStorage();
+    let startDateStr = saved?.startDate;
+    
+    // If no start date is stored (for backward compatibility), use savedAt date
+    if (!startDateStr && saved?.savedAt) {
+        startDateStr = saved.savedAt.split('T')[0]; // Extract date from ISO string
+    }
+    
+    // If still no date available, use today (shouldn't happen, but safety fallback)
+    if (!startDateStr) {
+        const today = new Date();
+        startDateStr = today.toISOString().split('T')[0];
+    }
+    
+    // Calculate date based on saved start date + dayIndex
+    const startDate = new Date(startDateStr);
+    startDate.setDate(startDate.getDate() + dayIndex);
+    
+    const yyyy = startDate.getFullYear();
+    const mm = String(startDate.getMonth() + 1).padStart(2, '0');
+    const dd = String(startDate.getDate()).padStart(2, '0');
     return `${yyyy}-${mm}-${dd}`;
 }
 
@@ -708,6 +837,17 @@ function formatWeeklyPlanDisplayDate(isoDateStr) {
 
 function extractMealName(meal) {
     return typeof meal === 'string' ? meal : (meal?.name || meal?.suggestion || '');
+}
+
+// Helper function to get meal from day.meals, handling both 'snack' (singular) and 'snacks' (plural)
+function getMealFromDay(day, mealType) {
+    if (!day || !day.meals) return null;
+    let meal = day.meals[mealType];
+    // Handle both 'snack' (singular) and 'snacks' (plural) for backward compatibility
+    if (mealType === 'snack' && !meal && day.meals.snacks) {
+        meal = day.meals.snacks;
+    }
+    return meal;
 }
 
 function extractMealCalories(meal) {
@@ -736,23 +876,54 @@ function weeklyPlanOpenRecipe(dayIndex, mealType) {
     const saved = getSaved7DayPlanFromStorage();
     const plan = saved?.plan;
     const day = plan?.days?.[dayIndex];
-    const meal = day?.meals?.[mealType];
+    const meal = getMealFromDay(day, mealType);
     const name = extractMealName(meal);
     if (!name) {
-        alert('Meal name not found for this slot.');
+        showNotification('Meal name not found for this slot.', 'error');
         return;
     }
     redirectToRecipeGenerator(name);
+}
+
+function weeklyPlanOpenZomato(dayIndex, mealType) {
+    const saved = getSaved7DayPlanFromStorage();
+    const plan = saved?.plan;
+    const day = plan?.days?.[dayIndex];
+    const meal = getMealFromDay(day, mealType);
+    const name = extractMealName(meal);
+    if (!name) {
+        showNotification('Meal name not found for this slot.', 'error');
+        return;
+    }
+    // Open Zomato search optimized for dish/menu item search
+    // Zomato's search algorithm works better for dishes when the query is more specific
+    // We'll use the dish name directly and let Zomato's search handle it
+    // The search results page should show both restaurants and dishes, but dishes are usually shown
+    // in a separate section or as menu items within restaurant listings
+    
+    // Clean the dish name - remove common meal type prefixes if present
+    let dishName = name.trim();
+    // Remove meal type prefixes that might interfere with search
+    dishName = dishName.replace(/^(breakfast|lunch|dinner|snack):\s*/i, '');
+    
+    const searchQuery = encodeURIComponent(dishName);
+    
+    // Use Zomato's general search - it should show dish results in the search page
+    // Zomato typically shows dishes in a "Dishes" tab or section on the search results page
+    // Users can then click on the "Dishes" tab if available, or dishes appear in restaurant menus
+    const zomatoUrl = `https://www.zomato.com/search?q=${searchQuery}`;
+    
+    window.open(zomatoUrl, '_blank', 'noopener,noreferrer');
 }
 
 function weeklyPlanPrefillMealLog(dayIndex, mealType) {
     const saved = getSaved7DayPlanFromStorage();
     const plan = saved?.plan;
     const day = plan?.days?.[dayIndex];
-    const meal = day?.meals?.[mealType];
+    const meal = getMealFromDay(day, mealType);
     const name = extractMealName(meal);
     if (!name) {
-        alert('Meal name not found for this slot.');
+        showNotification('Meal name not found for this slot.', 'error');
         return;
     }
 
@@ -792,7 +963,7 @@ function weeklyPlanSelectMeal(event, dayIndex, mealType) {
     const saved = getSaved7DayPlanFromStorage();
     const plan = saved?.plan;
     const day = plan?.days?.[dayIndex];
-    const meal = day?.meals?.[mealType];
+    const meal = getMealFromDay(day, mealType);
     const name = extractMealName(meal);
     if (!name) return;
 
@@ -835,11 +1006,15 @@ function weeklyPlanSelectMeal(event, dayIndex, mealType) {
                         onclick="weeklyPlanShowIngredients(event, ${dayIndex}, '${mealType}')">
                     <i class="fas fa-list"></i> Ingredients List
                 </button>
+                <button class="btn-primary" style="padding: 10px 14px; min-width: unset; background: linear-gradient(135deg, #E23744 0%, #CB202D 100%);"
+                        onclick="weeklyPlanOpenZomato(${dayIndex}, '${mealType}')">
+                    <i class="fas fa-utensils"></i> Find on Zomato
+                </button>
             </div>
         </div>
     `;
     const rect = event?.currentTarget?.getBoundingClientRect();
-    const estHeight = 160;
+    const estHeight = 180; // Increased height to accommodate 4 buttons
     if (rect) {
         const preferredLeft = rect.left + rect.width / 2;
         const preferredTopBelow = rect.top + rect.height + 10;
@@ -854,6 +1029,26 @@ function weeklyPlanSelectMeal(event, dayIndex, mealType) {
     }
     bar.style.maxWidth = 'min(92vw, 520px)';
     bar.style.display = 'block';
+}
+
+// Helper function to split ingredients by multiple separators
+function splitIngredients(text) {
+    if (!text || typeof text !== 'string') return [];
+    
+    // Normalize the text - replace common separators with a consistent delimiter
+    let normalized = text
+        .replace(/\s+and\s+/gi, '|')  // Replace " and " with |
+        .replace(/\s+with\s+/gi, '|') // Replace " with " with |
+        .replace(/\s+or\s+/gi, '|')  // Replace " or " with |
+        .replace(/,/g, '|');           // Replace commas with |
+    
+    // Split by the delimiter and clean up
+    const parts = normalized
+        .split('|')
+        .map(s => s.trim())
+        .filter(s => s && s.length > 0);
+    
+    return parts;
 }
 
 function getMealIngredients(meal) {
@@ -871,8 +1066,18 @@ function getMealIngredients(meal) {
     if (Array.isArray(meal.ingredients)) {
         return meal.ingredients.map(normalizeIng).filter(i => i.name);
     }
-    if (typeof meal === 'string' && meal.includes(',')) {
-        return meal.split(',').map(s => s.trim()).filter(Boolean).map(n => ({ name: n, qty: null }));
+    // Check if meal is a string that might contain ingredients
+    if (typeof meal === 'string') {
+        // Check if it contains any of the separators
+        if (/,|\s+(and|with|or)\s+/i.test(meal)) {
+            const ingredients = splitIngredients(meal);
+            return ingredients.map(n => ({ name: n, qty: null }));
+        }
+    }
+    // If meal has ingredients as a string property
+    if (meal.ingredients && typeof meal.ingredients === 'string') {
+        const ingredients = splitIngredients(meal.ingredients);
+        return ingredients.map(n => ({ name: n, qty: null }));
     }
     const name = extractMealName(meal);
     return name ? [{ name, qty: null }] : [];
@@ -887,7 +1092,8 @@ function weeklyPlanShowIngredients(event, dayIndex, mealType) {
     const pop = document.getElementById('weeklyPlanIngredientPopover');
     if (!pop) return;
     const saved = getSaved7DayPlanFromStorage();
-    const meal = saved?.plan?.days?.[dayIndex]?.meals?.[mealType];
+    const day = saved?.plan?.days?.[dayIndex];
+    const meal = getMealFromDay(day, mealType);
     const name = extractMealName(meal);
     const cacheKey = `${dayIndex}-${mealType}`;
 
@@ -998,11 +1204,162 @@ function weeklyPlanShowIngredients(event, dayIndex, mealType) {
     pop.style.display = 'block';
 }
 
+// Show meal selection dialog
+function showMealSelectionDialog(mealsToLog) {
+    return new Promise((resolve) => {
+        // Create modal overlay
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(4px);
+        `;
+        
+        // Create modal content
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            background: var(--dark-bg);
+            border-radius: 15px;
+            padding: 25px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        `;
+        
+        const mealTypeLabels = {
+            breakfast: 'Breakfast',
+            lunch: 'Lunch',
+            dinner: 'Dinner',
+            snack: 'Snack'
+        };
+        
+        const mealIcons = {
+            breakfast: 'fa-coffee',
+            lunch: 'fa-utensils',
+            dinner: 'fa-drumstick-bite',
+            snack: 'fa-cookie-bite'
+        };
+        
+        // Create checkboxes for each meal
+        let checkboxesHtml = '<div style="margin-bottom: 20px;"><h3 style="color: var(--text-primary); margin-bottom: 15px;"><i class="fas fa-calendar-day"></i> Select Meals to Log</h3></div>';
+        
+        // Add "Select All" option
+        checkboxesHtml += `
+            <div style="margin-bottom: 15px; padding: 10px; background: rgba(74, 144, 226, 0.1); border-radius: 8px;">
+                <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; color: var(--text-primary);">
+                    <input type="checkbox" id="selectAllMeals" style="width: 18px; height: 18px; cursor: pointer;" checked>
+                    <span style="font-weight: 600;"><i class="fas fa-check-square"></i> Select All (${mealsToLog.length} meals)</span>
+                </label>
+            </div>
+        `;
+        
+        mealsToLog.forEach((meal, index) => {
+            checkboxesHtml += `
+                <div style="margin-bottom: 12px; padding: 12px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                    <label style="display: flex; align-items: center; gap: 12px; cursor: pointer; color: var(--text-primary);">
+                        <input type="checkbox" class="meal-checkbox" data-index="${index}" style="width: 18px; height: 18px; cursor: pointer;" checked>
+                        <i class="fas ${mealIcons[meal.type] || 'fa-utensils'}" style="color: var(--primary-color); width: 20px;"></i>
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600;">${mealTypeLabels[meal.type] || meal.type}</div>
+                            <div style="font-size: 0.9em; color: var(--text-secondary); margin-top: 2px;">${meal.name}</div>
+                        </div>
+                    </label>
+                </div>
+            `;
+        });
+        
+        modal.innerHTML = `
+            ${checkboxesHtml}
+            <div style="display: flex; gap: 10px; margin-top: 20px; justify-content: flex-end;">
+                <button id="cancelMealSelection" style="
+                    padding: 10px 20px;
+                    background: rgba(255, 107, 107, 0.2);
+                    border: 1px solid rgba(255, 107, 107, 0.4);
+                    border-radius: 8px;
+                    color: var(--accent-color);
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.2s ease;
+                " onmouseenter="this.style.background='rgba(255, 107, 107, 0.3)'" onmouseleave="this.style.background='rgba(255, 107, 107, 0.2)'">
+                    Cancel
+                </button>
+                <button id="confirmMealSelection" style="
+                    padding: 10px 20px;
+                    background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+                    border: none;
+                    border-radius: 8px;
+                    color: white;
+                    cursor: pointer;
+                    font-weight: 600;
+                    transition: all 0.2s ease;
+                " onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform='none'">
+                    <i class="fas fa-check"></i> Log Selected Meals
+                </button>
+            </div>
+        `;
+        
+        overlay.appendChild(modal);
+        document.body.appendChild(overlay);
+        
+        // Handle select all checkbox
+        const selectAllCheckbox = modal.querySelector('#selectAllMeals');
+        const mealCheckboxes = modal.querySelectorAll('.meal-checkbox');
+        
+        selectAllCheckbox.addEventListener('change', function() {
+            mealCheckboxes.forEach(cb => {
+                cb.checked = this.checked;
+            });
+        });
+        
+        // Handle individual checkbox changes
+        mealCheckboxes.forEach(cb => {
+            cb.addEventListener('change', function() {
+                const allChecked = Array.from(mealCheckboxes).every(c => c.checked);
+                selectAllCheckbox.checked = allChecked;
+            });
+        });
+        
+        // Handle cancel
+        modal.querySelector('#cancelMealSelection').addEventListener('click', () => {
+            document.body.removeChild(overlay);
+            resolve(null);
+        });
+        
+        // Handle confirm
+        modal.querySelector('#confirmMealSelection').addEventListener('click', () => {
+            const selectedIndices = Array.from(mealCheckboxes)
+                .map((cb, idx) => cb.checked ? idx : null)
+                .filter(idx => idx !== null);
+            
+            const selected = selectedIndices.map(idx => mealsToLog[idx]);
+            document.body.removeChild(overlay);
+            resolve(selected);
+        });
+        
+        // Close on overlay click
+        overlay.addEventListener('click', (e) => {
+            if (e.target === overlay) {
+                document.body.removeChild(overlay);
+                resolve(null);
+            }
+        });
+    });
+}
+
 // Log all of today's meals from the 7-day plan
 async function logTodaysMealsFromPlan() {
     const saved = getSaved7DayPlanFromStorage();
     if (!saved?.plan) {
-        alert('No 7-day plan found. Please generate one first.');
+        showNotification('No 7-day plan found. Please generate one first.', 'warning');
         return;
     }
     
@@ -1020,7 +1377,7 @@ async function logTodaysMealsFromPlan() {
     }
     
     if (todayIndex === -1) {
-        alert('Today is not in the current 7-day plan range. Please generate a new plan.');
+        showNotification('Today is not in the current 7-day plan range. Please generate a new plan.', 'warning');
         return;
     }
     
@@ -1029,7 +1386,7 @@ async function logTodaysMealsFromPlan() {
     const mealsToLog = [];
     
     mealColumns.forEach(mealType => {
-        const meal = todayDay?.meals?.[mealType];
+        const meal = getMealFromDay(todayDay, mealType);
         const name = extractMealName(meal);
         if (name) {
             mealsToLog.push({
@@ -1042,13 +1399,14 @@ async function logTodaysMealsFromPlan() {
     });
     
     if (mealsToLog.length === 0) {
-        alert('No meals planned for today in your 7-day plan.');
+        showNotification('No meals planned for today in your 7-day plan.', 'info');
         return;
     }
     
-    const confirmMsg = `Log ${mealsToLog.length} meal(s) for today?\n\n${mealsToLog.map(m => `• ${m.type}: ${m.name}`).join('\n')}\n\nNote: You can adjust quantities and nutrition after logging.`;
-    if (!confirm(confirmMsg)) {
-        return;
+    // Show selection dialog
+    const selectedMeals = await showMealSelectionDialog(mealsToLog);
+    if (!selectedMeals || selectedMeals.length === 0) {
+        return; // User cancelled or selected nothing
     }
     
     // Navigate to meal log page
@@ -1058,11 +1416,11 @@ async function logTodaysMealsFromPlan() {
     const mealDateEl = document.getElementById('mealDate');
     if (mealDateEl) mealDateEl.value = today;
     
-    // Log each meal sequentially with a small delay
+    // Log each selected meal sequentially with a small delay
     let loggedCount = 0;
     let failedCount = 0;
     
-    for (const mealData of mealsToLog) {
+    for (const mealData of selectedMeals) {
         try {
             await new Promise(resolve => setTimeout(resolve, 500)); // Small delay between logs
             
@@ -1101,7 +1459,7 @@ async function logTodaysMealsFromPlan() {
     const resultMsg = failedCount > 0 
         ? `Logged ${loggedCount} meal(s) successfully. ${failedCount} meal(s) failed - please log them manually.`
         : `Successfully logged ${loggedCount} meal(s) for today!`;
-    alert(resultMsg);
+    showNotification(resultMsg, failedCount > 0 ? 'warning' : 'success');
     
     // Refresh plan view to show updated colors
     setTimeout(() => {
@@ -1113,8 +1471,23 @@ function loadWeeklyPlanPage(forceRefresh = false) {
     const metaEl = document.getElementById('weeklyPlanMeta');
     const wrapEl = document.getElementById('weeklyPlanTableWrap');
     const expectedEl = document.getElementById('weeklyPlanExpectedResults');
+    const refreshBtn = document.getElementById('weeklyPlanRefreshBtn');
+    const refreshIcon = document.getElementById('weeklyPlanRefreshIcon');
 
-    if (!wrapEl || !expectedEl) return;
+    // Start animation if refreshing
+    if (forceRefresh && refreshBtn && refreshIcon) {
+        refreshBtn.classList.add('refreshing');
+        refreshIcon.classList.add('spinning');
+    }
+
+    if (!wrapEl || !expectedEl) {
+        // Stop animation if early return
+        if (refreshBtn && refreshIcon) {
+            refreshBtn.classList.remove('refreshing');
+            refreshIcon.classList.remove('spinning');
+        }
+        return;
+    }
 
     // Ensure we use the latest logged meals (in case user logged after plan generation)
     try {
@@ -1164,7 +1537,7 @@ function loadWeeklyPlanPage(forceRefresh = false) {
         const dayLabel = `${displayDate || ''} • Day ${dayIndex + 1}`;
 
         const cells = mealColumns.map(mealType => {
-            const meal = day?.meals?.[mealType];
+            const meal = getMealFromDay(day, mealType);
             const name = extractMealName(meal);
             const cals = extractMealCalories(meal);
             const calsHtml = cals !== null ? `<div style="margin-top:6px; color: var(--accent-color); font-size: 0.9em;"><i class="fas fa-fire"></i> ${Math.round(cals)} cal</div>` : '';
@@ -1280,6 +1653,18 @@ function loadWeeklyPlanPage(forceRefresh = false) {
     
     // Add streak-based nudges
     renderStreakBasedNudges(plan);
+    
+    // Stop animation after refresh completes
+    if (forceRefresh) {
+        setTimeout(() => {
+            const refreshBtn = document.getElementById('weeklyPlanRefreshBtn');
+            const refreshIcon = document.getElementById('weeklyPlanRefreshIcon');
+            if (refreshBtn && refreshIcon) {
+                refreshBtn.classList.remove('refreshing');
+                refreshIcon.classList.remove('spinning');
+            }
+        }, 300); // Small delay to ensure smooth transition
+    }
 }
 
 // Render streak-based nudges based on plan adherence
@@ -1299,7 +1684,7 @@ function renderStreakBasedNudges(plan) {
         const isoDate = normalizeWeeklyPlanDayDate(plan, actualDayIndex);
         
         mealColumns.forEach(mealType => {
-            const meal = day?.meals?.[mealType];
+            const meal = getMealFromDay(day, mealType);
             const name = extractMealName(meal);
             if (!name) return;
             
@@ -1363,7 +1748,8 @@ function renderWeeklyPlanExpectedResults(plan) {
     days.forEach((day, i) => {
         let dayCals = 0;
         mealColumns.forEach(mt => {
-            const c = extractMealCalories(day?.meals?.[mt]);
+            const meal = getMealFromDay(day, mt);
+            const c = extractMealCalories(meal);
             if (c !== null) {
                 dayCals += c;
                 totalCals += c;
@@ -1971,15 +2357,26 @@ async function generateRecipe() {
     try {
         let recipes = [];
         
-        // If recipe name is provided, search database first, then use ChatGPT if not found
+        // If recipe name is provided, check cache first, then database, then ChatGPT
         if (recipeSearchInput) {
+            // Check cached recipes first
+            const cachedRecipe = getCachedRecipe(recipeSearchInput);
+            if (cachedRecipe) {
+                recipes = [cachedRecipe];
+            } else {
+                // Check database
             const dbRecipes = await searchRecipeByName(recipeSearchInput);
             if (dbRecipes.length > 0) {
                 recipes = dbRecipes;
             } else {
                 // Use ChatGPT to generate recipe by name
                 const chatGPTRecipe = await generateRecipeWithGemini(null, recipeSearchInput, userProfile);
+                    if (chatGPTRecipe) {
+                        // Cache the generated recipe
+                        setCachedRecipe(recipeSearchInput, chatGPTRecipe);
                 recipes = [chatGPTRecipe];
+                    }
+                }
             }
         } else {
             // Search database for recipes that contain ALL listed ingredients
@@ -2419,6 +2816,23 @@ function redirectToRecipeGenerator(recipeName) {
         ? recipeName.replace(/&#39;/g, "'").replace(/&quot;/g, '"')
         : '';
     
+    // Check cache first for instant display
+    const cachedRecipe = getCachedRecipe(decodedName);
+    if (cachedRecipe) {
+        // Display cached recipe directly
+        showPage('recipe');
+        setTimeout(() => {
+            const resultDiv = document.getElementById('recipeResult');
+            if (resultDiv) {
+                displayRecipes([cachedRecipe]);
+                resultDiv.classList.add('show');
+                resultDiv.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            }
+        }, 300);
+        return;
+    }
+    
+    // If not cached, proceed with normal flow
     showPage('recipe');
     
     // Wait briefly for page transition, then fill and trigger generation
@@ -2710,7 +3124,7 @@ async function logActivity() {
     const date = document.getElementById('activityDate').value;
     
     if (!duration || !calories) {
-        alert('Please fill in duration and calories!');
+        showNotification('Please fill in duration and calories!', 'error');
         return;
     }
     
@@ -2745,7 +3159,7 @@ async function logActivity() {
             document.getElementById('calories').value = '';
             clearActivityAutoFill();
             
-            alert('Activity logged successfully! (Demo mode)');
+            showNotification('Activity logged successfully! (Demo mode)', 'success');
             // Navigate to progress page
             showPage('progress');
         } else {
@@ -2765,7 +3179,7 @@ async function logActivity() {
             document.getElementById('calories').value = '';
             clearActivityAutoFill();
             
-            alert('Activity logged successfully!');
+            showNotification('Activity logged successfully!', 'success');
             // Navigate to progress page
             showPage('progress');
         }
@@ -2789,7 +3203,7 @@ async function logActivity() {
         document.getElementById('calories').value = '';
         clearActivityAutoFill();
         
-        alert('Activity logged successfully! (Saved locally)');
+        showNotification('Activity logged successfully! (Saved locally)', 'success');
         // Navigate to progress page
         showPage('progress');
     }
@@ -2851,7 +3265,7 @@ async function deleteActivityById(activityId) {
         displayActivities();
         updateOverview();
     } catch (error) {
-        alert('Error deleting activity: ' + error.message);
+        showNotification('Error deleting activity: ' + error.message, 'error');
         // Still remove from local list if API fails
         activities = activities.filter(activity => activity.id !== activityId && activity._id !== activityId);
         displayActivities();
@@ -2966,9 +3380,9 @@ async function lookupRecipeNutrition() {
                     const existingMsg = autoFillDiv.querySelector('.api-source-info');
                     if (existingMsg) existingMsg.remove();
                 }
-            } else {
-                clearAutoFill();
-            }
+        } else {
+            clearAutoFill();
+        }
         } catch (apiError) {
             console.error('GPT Nutrition API error:', apiError);
             // Better error handling - show user-friendly message
@@ -3001,6 +3415,30 @@ function handleQuantityTypeChange() {
 }
 
 // Update nutrition based on quantity (always in grams)
+// Multiply quantity by a factor (0.5 for half, 2 for double, 3 for triple, etc.)
+function multiplyQuantity(factor) {
+    const quantityInput = document.getElementById('mealQuantity');
+    if (!quantityInput) return;
+    
+    const currentQuantity = parseFloat(quantityInput.value) || 100;
+    const newQuantity = Math.round(currentQuantity * factor);
+    
+    // Ensure minimum value of 10g
+    const finalQuantity = Math.max(10, newQuantity);
+    
+    quantityInput.value = finalQuantity;
+    
+    // Trigger nutrition update
+    updateNutritionFromQuantity();
+    
+    // Add a brief visual feedback
+    quantityInput.style.transform = 'scale(1.05)';
+    quantityInput.style.transition = 'transform 0.2s ease';
+    setTimeout(() => {
+        quantityInput.style.transform = 'scale(1)';
+    }, 200);
+}
+
 function updateNutritionFromQuantity() {
     if (!currentRecipeNutrition) return;
     
@@ -3048,7 +3486,7 @@ async function logMeal() {
     const fats = parseFloat(document.getElementById('mealFats').value) || 0;
     
     if (!mealName || !calories) {
-        alert('Please fill in meal name and calories!');
+        showNotification('Please fill in meal name and calories!', 'error');
         return;
     }
     
@@ -3093,7 +3531,7 @@ async function logMeal() {
             document.getElementById('mealQuantity').value = 100;
             clearAutoFill();
             
-            alert('Meal logged successfully! (Demo mode)');
+            showNotification('Meal logged successfully! (Demo mode)', 'success');
             // Navigate to progress page
             showPage('progress');
         } else {
@@ -3117,7 +3555,7 @@ async function logMeal() {
             document.getElementById('mealQuantity').value = 100;
             clearAutoFill();
             
-            alert('Meal logged successfully!');
+            showNotification('Meal logged successfully!', 'success');
             // Navigate to progress page
             showPage('progress');
         }
@@ -3146,9 +3584,9 @@ async function logMeal() {
         document.getElementById('mealCarbs').value = '';
         document.getElementById('mealFats').value = '';
             document.getElementById('mealQuantity').value = 100;
-            clearAutoFill();
-            
-            alert('Meal logged successfully! (Saved locally)');
+        clearAutoFill();
+        
+        showNotification('Meal logged successfully! (Saved locally)', 'success');
     }
 }
 
@@ -3568,7 +4006,7 @@ function showRecipeDetails(index) {
         const fullRecipe = recipes.find(r => r.title === dish.name);
         
         if (!fullRecipe) {
-            alert('Recipe details not found');
+            showNotification('Recipe details not found', 'error');
             return;
         }
 
@@ -3644,24 +4082,43 @@ function displayRecipeModal(recipe) {
     window.currentModalRecipe = recipe;
     modal.classList.add('show');
 
-    // Close modal on X click
-    document.querySelector('.modal-close').onclick = function() {
+    // Close modal function
+    const closeModal = function() {
         modal.classList.remove('show');
+        // Clean up event listeners
+        if (modalClickHandler) modal.removeEventListener('click', modalClickHandler);
+        if (escapeHandler) document.removeEventListener('keydown', escapeHandler);
     };
+
+    // Close modal on X click - use specific selector for recipe modal
+    const closeButton = modal.querySelector('.modal-close');
+    if (closeButton) {
+        // Remove any existing listeners by replacing the button
+        const newCloseButton = closeButton.cloneNode(true);
+        closeButton.parentNode.replaceChild(newCloseButton, closeButton);
+        
+        newCloseButton.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal();
+        };
+    }
 
     // Close modal on outside click
-    modal.onclick = function(event) {
+    const modalClickHandler = function(event) {
         if (event.target === modal) {
-            modal.classList.remove('show');
+            closeModal();
         }
     };
+    modal.addEventListener('click', modalClickHandler);
 
     // Close modal on Escape key
-    document.addEventListener('keydown', function(event) {
+    const escapeHandler = function(event) {
         if (event.key === 'Escape' && modal.classList.contains('show')) {
-            modal.classList.remove('show');
+            closeModal();
         }
-    });
+    };
+    document.addEventListener('keydown', escapeHandler);
 }
 
 function displayRecipeModalPartial(dish) {
@@ -3719,15 +4176,43 @@ function displayRecipeModalPartial(dish) {
     window.currentModalRecipe = dish;
     modal.classList.add('show');
 
-    document.querySelector('.modal-close').onclick = function() {
+    // Close modal function
+    const closeModal = function() {
         modal.classList.remove('show');
+        // Clean up event listeners
+        if (modalClickHandler) modal.removeEventListener('click', modalClickHandler);
+        if (escapeHandler) document.removeEventListener('keydown', escapeHandler);
     };
 
-    modal.onclick = function(event) {
+    // Close modal on X click - use specific selector for recipe modal
+    const closeButton = modal.querySelector('.modal-close');
+    if (closeButton) {
+        // Remove any existing listeners by replacing the button
+        const newCloseButton = closeButton.cloneNode(true);
+        closeButton.parentNode.replaceChild(newCloseButton, closeButton);
+        
+        newCloseButton.onclick = function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            closeModal();
+        };
+    }
+
+    // Close modal on outside click
+    const modalClickHandler = function(event) {
         if (event.target === modal) {
-            modal.classList.remove('show');
+            closeModal();
         }
     };
+    modal.addEventListener('click', modalClickHandler);
+
+    // Close modal on Escape key
+    const escapeHandler = function(event) {
+        if (event.key === 'Escape' && modal.classList.contains('show')) {
+            closeModal();
+        }
+    };
+    document.addEventListener('keydown', escapeHandler);
 }
 
 // Handler for generator recipe details
@@ -3800,19 +4285,163 @@ function parseNutritionFromRecipe(recipe) {
     return parsed;
 }
 
+// Show custom modal for recipe meal logging
+function showRecipeMealLogModal(recipe, callback) {
+    // Remove any existing modal
+    const existing = document.getElementById('recipeMealLogModal');
+    if (existing) existing.remove();
+    
+    // Parse nutrition data
+    const baseNutrition = parseNutritionFromRecipe(recipe);
+    const recipeServings = recipe.servings || 1;
+    const nutritionPerServing = baseNutrition;
+    
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'recipeMealLogModal';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 10002;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+    `;
+    
+    // Create modal content
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: var(--dark-bg);
+        border-radius: 15px;
+        padding: 25px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    `;
+    
+    modal.innerHTML = `
+        <div style="margin-bottom: 20px;">
+            <h3 style="color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-utensils"></i> Add Recipe to Meal Log
+            </h3>
+            <div style="color: var(--text-secondary); font-size: 0.9em; margin-bottom: 15px;">
+                <strong>${recipe.title || recipe.name}</strong>
+                ${recipeServings > 1 ? `<br>Recipe serves ${recipeServings}` : ''}
+            </div>
+            <div style="background: rgba(74, 144, 226, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 15px; font-size: 0.9em; color: var(--text-secondary);">
+                <strong>Nutrition per 100g:</strong> ${Math.round(nutritionPerServing.calories)} cal, 
+                ${Math.round(nutritionPerServing.protein)}g protein, 
+                ${Math.round(nutritionPerServing.carbs)}g carbs, 
+                ${Math.round(nutritionPerServing.fats)}g fats
+            </div>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; color: var(--text-primary); margin-bottom: 8px; font-weight: 600;">
+                Weight (grams)
+            </label>
+            <input type="number" id="recipeMealWeight" placeholder="100" value="100" min="10" step="10" 
+                   style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); 
+                          background: rgba(255,255,255,0.05); color: var(--text-primary); font-size: 1em;">
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; color: var(--text-primary); margin-bottom: 8px; font-weight: 600;">
+                Meal Type
+            </label>
+            <select id="recipeMealType" 
+                    style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); 
+                           background: rgba(255,255,255,0.05); color: var(--text-primary); font-size: 1em;">
+                <option value="breakfast">Breakfast</option>
+                <option value="lunch">Lunch</option>
+                <option value="dinner" selected>Dinner</option>
+                <option value="snack">Snack</option>
+            </select>
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button id="recipeMealLogCancel" style="
+                padding: 12px 24px;
+                background: rgba(255, 107, 107, 0.2);
+                border: 1px solid rgba(255, 107, 107, 0.4);
+                border-radius: 8px;
+                color: var(--accent-color);
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.2s ease;
+            " onmouseenter="this.style.background='rgba(255, 107, 107, 0.3)'" onmouseleave="this.style.background='rgba(255, 107, 107, 0.2)'">
+                Cancel
+            </button>
+            <button id="recipeMealLogSubmit" style="
+                padding: 12px 24px;
+                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+                border: none;
+                border-radius: 8px;
+                color: white;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.2s ease;
+            " onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform='none'">
+                <i class="fas fa-plus"></i> Add to Meal Log
+            </button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Handle cancel
+    document.getElementById('recipeMealLogCancel').addEventListener('click', () => {
+        overlay.remove();
+    });
+    
+    // Handle submit
+    document.getElementById('recipeMealLogSubmit').addEventListener('click', () => {
+        const weightGrams = parseFloat(document.getElementById('recipeMealWeight').value);
+        const mealType = document.getElementById('recipeMealType').value;
+        
+        if (isNaN(weightGrams) || weightGrams <= 0) {
+            showNotification('Please enter a valid weight in grams (greater than 0).', 'error');
+            return;
+        }
+        
+        overlay.remove();
+        if (callback) callback(weightGrams, mealType);
+    });
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
+    
+    // Focus on weight input
+    setTimeout(() => {
+        document.getElementById('recipeMealWeight').focus();
+        document.getElementById('recipeMealWeight').select();
+    }, 100);
+}
+
 // Add recipe to meal log
 async function addRecipeToMealLog() {
     const recipe = window.currentModalRecipe;
     
     if (!recipe) {
-        alert('Recipe data not found. Please try viewing the recipe again.');
+        showNotification('Recipe data not found. Please try viewing the recipe again.', 'error');
         return;
     }
 
     // Check if user is logged in
     const currentUserId = localStorage.getItem('currentUserId');
     if (!currentUserId) {
-        alert('Please log in to add meals to your log.');
+        showNotification('Please log in to add meals to your log.', 'error');
         return;
     }
 
@@ -3820,75 +4449,23 @@ async function addRecipeToMealLog() {
     const baseNutrition = parseNutritionFromRecipe(recipe);
     
     if (baseNutrition.calories === 0) {
-        alert('Nutritional information not available for this recipe.');
+        showNotification('Nutritional information not available for this recipe.', 'error');
         return;
     }
 
-    // Nutrition values are typically per serving in recipe databases
-    // If recipe has servings field, we'll show it for reference, but assume nutrition is per serving
-    const recipeServings = recipe.servings || 1;
-    const nutritionPerServing = baseNutrition; // Nutrition is already per serving
-    
-    // Show recipe servings info if available
-    const servingsInfo = recipeServings > 1 ? ` (Recipe serves ${recipeServings})` : '';
-
-    // Prompt for weight in grams
-    const weightInput = prompt(
-        `How many grams would you like to add?${servingsInfo}\n\n` +
-        `Recipe: ${recipe.title || recipe.name}\n` +
-        `Nutrition per 100g: ${Math.round(nutritionPerServing.calories)} cal, ` +
-        `${Math.round(nutritionPerServing.protein)}g protein\n\n` +
-        `Enter weight in grams:`,
-        '100'
-    );
-
-    if (weightInput === null) {
-        return; // User cancelled
-    }
-
-    const weightGrams = parseFloat(weightInput);
-    if (isNaN(weightGrams) || weightGrams <= 0) {
-        alert('Please enter a valid weight in grams (greater than 0).');
-        return;
-    }
-
-    // Prompt for meal type
-    const mealTypeInput = prompt(
-        `Which meal is this for?\n\n` +
-        `1. Breakfast\n` +
-        `2. Lunch\n` +
-        `3. Dinner\n` +
-        `4. Snack\n\n` +
-        `Enter number (1-4):`,
-        '3'
-    );
-
-    if (mealTypeInput === null) {
-        return; // User cancelled
-    }
-
-    const mealTypeMap = {
-        '1': 'breakfast',
-        '2': 'lunch',
-        '3': 'dinner',
-        '4': 'snack'
-    };
-
-    const mealType = mealTypeMap[mealTypeInput.trim()];
-    if (!mealType) {
-        alert('Invalid meal type. Please enter 1, 2, 3, or 4.');
-        return;
-    }
-
-    // Calculate nutrition for the specified weight (nutritionPerServing is per 100g)
-    const multiplier = weightGrams / 100;
+    // Show custom modal for input
+    showRecipeMealLogModal(recipe, async (weightGrams, mealType) => {
+        const nutritionPerServing = baseNutrition;
+        
+        // Calculate nutrition for the specified weight (nutritionPerServing is per 100g)
+        const multiplier = weightGrams / 100;
     const finalNutrition = {
-        calories: Math.round(nutritionPerServing.calories * multiplier),
-        protein: Math.round(nutritionPerServing.protein * multiplier * 10) / 10,
-        carbs: Math.round(nutritionPerServing.carbs * multiplier * 10) / 10,
-        fats: Math.round(nutritionPerServing.fats * multiplier * 10) / 10,
-        fiber: Math.round(nutritionPerServing.fiber * multiplier * 10) / 10,
-        sugar: Math.round(nutritionPerServing.sugar * multiplier * 10) / 10
+            calories: Math.round(nutritionPerServing.calories * multiplier),
+            protein: Math.round(nutritionPerServing.protein * multiplier * 10) / 10,
+            carbs: Math.round(nutritionPerServing.carbs * multiplier * 10) / 10,
+            fats: Math.round(nutritionPerServing.fats * multiplier * 10) / 10,
+            fiber: Math.round(nutritionPerServing.fiber * multiplier * 10) / 10,
+            sugar: Math.round(nutritionPerServing.sugar * multiplier * 10) / 10
     };
 
     // Get current date
@@ -3899,8 +4476,8 @@ async function addRecipeToMealLog() {
         type: mealType,
         name: recipe.title || recipe.name,
         date: today,
-        quantity: weightGrams,
-        quantityType: 'grams',
+            quantity: weightGrams,
+            quantityType: 'grams',
         calories: finalNutrition.calories,
         protein: finalNutrition.protein,
         carbs: finalNutrition.carbs,
@@ -3924,10 +4501,11 @@ async function addRecipeToMealLog() {
             localStorage.setItem('meals', JSON.stringify(meals));
             
             displayMeals();
+                loadRecentMealsChips();
             updateOverview();
             updateProgressPage();
             
-            alert(`Meal added successfully!\n\n${meal.name}\n${servingSize} serving(s)\n${finalNutrition.calories} calories`);
+                showNotification(`Meal added successfully! ${meal.name} (${finalNutrition.calories} cal)`, 'success');
             // Navigate to progress page
             showPage('progress');
         } else {
@@ -3938,23 +4516,25 @@ async function addRecipeToMealLog() {
             localStorage.setItem('meals', JSON.stringify(meals));
             
             displayMeals();
+                loadRecentMealsChips();
             updateOverview();
             updateProgressPage();
             
-            alert(`Meal added successfully!\n\n${meal.name}\n${servingSize} serving(s)\n${finalNutrition.calories} calories`);
+                showNotification(`Meal added successfully! ${meal.name} (${finalNutrition.calories} cal)`, 'success');
             // Navigate to progress page
             showPage('progress');
         }
 
-        // Close the modal
+            // Close the recipe modal
         const modal = document.getElementById('recipeModal');
         if (modal) {
             modal.classList.remove('show');
         }
     } catch (error) {
         console.error('Error adding meal to log:', error);
-        alert('Failed to add meal to log. Please try again.');
+            showNotification('Failed to add meal to log. Please try again.', 'error');
     }
+    });
 }
 
 // Theme Toggle Functions
@@ -5995,10 +6575,99 @@ function display7DayPlan(plan) {
     window.current7DayPlan = plan;
 }
 
+// Get or set cached recipe
+function getCachedRecipe(mealName) {
+    try {
+        const cached = localStorage.getItem('cachedRecipes');
+        if (!cached) return null;
+        const recipes = JSON.parse(cached);
+        // Normalize meal name for lookup (lowercase, trim)
+        const normalizedName = mealName.toLowerCase().trim();
+        return recipes[normalizedName] || null;
+    } catch (e) {
+        console.error('Error reading cached recipes:', e);
+        return null;
+    }
+}
+
+function setCachedRecipe(mealName, recipe) {
+    try {
+        const cached = localStorage.getItem('cachedRecipes');
+        const recipes = cached ? JSON.parse(cached) : {};
+        // Normalize meal name for storage (lowercase, trim)
+        const normalizedName = mealName.toLowerCase().trim();
+        recipes[normalizedName] = recipe;
+        localStorage.setItem('cachedRecipes', JSON.stringify(recipes));
+    } catch (e) {
+        console.error('Error saving cached recipe:', e);
+    }
+}
+
+// Generate recipes for all meals in the 7-day plan
+async function generateRecipesForPlan(plan) {
+    if (!plan || !plan.days) return;
+    
+    const userProfile = window.userProfile || JSON.parse(localStorage.getItem('userProfile') || 'null');
+    const mealNames = new Set();
+    
+    // Collect all unique meal names from the plan
+    plan.days.forEach(day => {
+        if (day.meals) {
+            Object.values(day.meals).forEach(meal => {
+                const mealName = typeof meal === 'string' ? meal : (meal.name || meal.suggestion || '');
+                if (mealName && mealName.trim()) {
+                    mealNames.add(mealName.trim());
+                }
+            });
+        }
+    });
+    
+    if (mealNames.size === 0) return;
+    
+    // Show notification
+    showNotification(`Generating recipes for ${mealNames.size} meals... This may take a moment.`, 'info', 5000);
+    
+    let generatedCount = 0;
+    let cachedCount = 0;
+    
+    // Generate recipes for each meal (check cache first)
+    for (const mealName of mealNames) {
+        // Check if recipe already cached
+        const cached = getCachedRecipe(mealName);
+        if (cached) {
+            cachedCount++;
+            continue;
+        }
+        
+        try {
+            // Generate recipe using AI
+            const recipe = await generateRecipeWithGemini(null, mealName, userProfile);
+            if (recipe && recipe.title) {
+                setCachedRecipe(mealName, recipe);
+                generatedCount++;
+            }
+            
+            // Small delay to avoid overwhelming the API
+            await new Promise(resolve => setTimeout(resolve, 500));
+        } catch (error) {
+            console.error(`Error generating recipe for ${mealName}:`, error);
+            // Continue with other meals even if one fails
+        }
+    }
+    
+    // Show completion notification
+    if (generatedCount > 0 || cachedCount > 0) {
+        const message = cachedCount > 0 
+            ? `Recipes ready! ${cachedCount} from cache, ${generatedCount} newly generated.`
+            : `${generatedCount} recipes generated and cached!`;
+        showNotification(message, 'success', 4000);
+    }
+}
+
 // Save 7-day plan to chat
-function save7DayPlanToChat() {
+async function save7DayPlanToChat() {
     if (!window.current7DayPlan) {
-        alert('No 7-day plan to save.');
+        showNotification('No 7-day plan to save.', 'error');
         return;
     }
     
@@ -6032,9 +6701,14 @@ function save7DayPlanToChat() {
     // Save chat after 7-day plan is added
     saveChatToStorage();
     
+    // Generate and cache recipes for all meals in the plan (async, don't wait)
+    generateRecipesForPlan(plan).catch(err => {
+        console.error('Error generating recipes for plan:', err);
+    });
+    
     // Close modal and show success
     closeDietPlan();
-    alert('7-day plan saved to chat and to your 7-Day Plan tab!');
+    showNotification('7-day plan saved! Generating recipes in the background...', 'success');
 
     // Navigate user to the tab view for easier actioning
     showPage('weeklyPlan');

@@ -17,7 +17,7 @@ const getFoodNutrition = async (req, res) => {
                 error: 'Please provide a food name'
             });
         }
-        
+
         // Always use GPT-4o-mini for nutrition estimation
         let nutritionData = await getNutritionFromChatGPT(foodName, quantity);
 

@@ -71,7 +71,7 @@
     <!-- Main Application -->
     <div id="appScreen" class="app-container" style="display: none;">
         <nav class="navbar">
-            <div class="nav-brand">
+            <div class="nav-brand" onclick="navigateToHome()" style="cursor: pointer;">
                 <i class="fas fa-heartbeat"></i>
                 <span>VitaTrackr</span>
             </div>
@@ -517,7 +517,20 @@
                     </div>
                     <div class="input-section">
                         <label for="mealQuantity">Weight (grams)</label>
-                        <input type="number" id="mealQuantity" placeholder="100" step="10" min="10" value="100" onchange="updateNutritionFromQuantity()">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <input type="number" id="mealQuantity" placeholder="100" step="10" min="10" value="100" onchange="updateNutritionFromQuantity()" style="flex: 1;">
+                            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+                                <button type="button" onclick="multiplyQuantity(0.5)" class="quantity-multiplier-btn" title="Half (0.5x)" style="padding: 8px 12px; font-size: 0.85em;">
+                                    ½x
+                                </button>
+                                <button type="button" onclick="multiplyQuantity(2)" class="quantity-multiplier-btn" title="Double (2x)" style="padding: 8px 12px; font-size: 0.85em;">
+                                    2x
+                                </button>
+                                <button type="button" onclick="multiplyQuantity(3)" class="quantity-multiplier-btn" title="Triple (3x)" style="padding: 8px 12px; font-size: 0.85em;">
+                                    3x
+                                </button>
+                            </div>
+                        </div>
                     </div>
                     <div id="nutritionAutoFill" style="display: none; background: rgba(80, 200, 120, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--secondary-color);">
                         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -726,8 +739,8 @@
                             <button onclick="logTodaysMealsFromPlan()" class="btn-primary" style="background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);">
                                 <i class="fas fa-bolt"></i> Log Today's Meals
                             </button>
-                            <button onclick="loadWeeklyPlanPage(true)" class="btn-primary" style="background: var(--accent-color);">
-                                <i class="fas fa-sync-alt"></i> Refresh
+                            <button id="weeklyPlanRefreshBtn" onclick="loadWeeklyPlanPage(true)" class="btn-primary" style="background: var(--accent-color);">
+                                <i class="fas fa-sync-alt" id="weeklyPlanRefreshIcon"></i> Refresh
                             </button>
                             <button onclick="showPage('chatbot')" class="btn-primary" style="background: var(--secondary-color);">
                                 <i class="fas fa-comments"></i> Go to Chat
