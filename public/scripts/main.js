@@ -1526,8 +1526,8 @@ function loadWeeklyPlanPage(forceRefresh = false) {
 
     const headerHtml = `
         <tr>
-            <th style="padding: 12px; text-align:left; position: sticky; left: 0; background: #ffffff; box-shadow: 4px 0 8px rgba(0,0,0,0.04);">Day</th>
-            ${mealColumns.map(m => `<th style="padding: 12px; text-align:left; text-transform:capitalize;">${m}</th>`).join('')}
+            <th style="padding: 12px; text-align:left; position: sticky; left: 0; background: rgba(255,255,255,0.06); box-shadow: 4px 0 8px rgba(0,0,0,0.1); color: var(--text-primary);">Day</th>
+            ${mealColumns.map(m => `<th style="padding: 12px; text-align:left; text-transform:capitalize; color: var(--text-primary);">${m}</th>`).join('')}
         </tr>
     `;
 
@@ -1543,8 +1543,8 @@ function loadWeeklyPlanPage(forceRefresh = false) {
             const calsHtml = cals !== null ? `<div style="margin-top:6px; color: var(--accent-color); font-size: 0.9em;"><i class="fas fa-fire"></i> ${Math.round(cals)} cal</div>` : '';
 
             // Determine background color based on whether user logged this slot in Meal Log
-            let bgColor = '#ffffff';
-            let borderColor = 'rgba(0,0,0,0.04)';
+            let bgColor = 'rgba(255,255,255,0.04)';
+            let borderColor = 'rgba(255,255,255,0.08)';
             if (isoDate) {
                 const sameDateMeals = meals
                     .map(m => ({ meal: m, iso: getMealDateISO(m) }))
@@ -1555,30 +1555,30 @@ function loadWeeklyPlanPage(forceRefresh = false) {
                     const sameName = sameTypeMeals.some(m => m.name && name && m.name.toLowerCase() === name.toLowerCase());
                     if (sameTypeMeals.length === 0) {
                         // Other meals logged this day, but this meal-type slot skipped
-                        bgColor = 'rgba(255, 235, 238, 0.9)'; // very light red
-                        borderColor = 'rgba(244, 67, 54, 0.18)';
+                        bgColor = 'rgba(255, 107, 107, 0.15)'; // dark theme red
+                        borderColor = 'rgba(255, 107, 107, 0.3)';
                     } else if (sameName) {
                         // Logged exactly this meal for this slot
-                        bgColor = 'rgba(232, 245, 233, 0.95)'; // very light green
-                        borderColor = 'rgba(56, 142, 60, 0.25)';
+                        bgColor = 'rgba(80, 200, 120, 0.15)'; // dark theme green
+                        borderColor = 'rgba(80, 200, 120, 0.3)';
                     } else {
                         // Logged a different meal for this slot
-                        bgColor = 'rgba(255, 249, 196, 0.9)'; // very light yellow
-                        borderColor = 'rgba(251, 192, 45, 0.22)';
+                        bgColor = 'rgba(255, 193, 7, 0.15)'; // dark theme yellow
+                        borderColor = 'rgba(255, 193, 7, 0.3)';
                     }
                 }
             }
 
             if (!name) {
                 return `
-                    <td style="padding: 12px; vertical-align: top; min-width: 220px; background: ${bgColor}; border: 1px solid ${borderColor};">
+                    <td style="padding: 12px; vertical-align: top; min-width: 220px; background: ${bgColor}; border: 1px solid ${borderColor}; color: var(--text-primary);">
                         <div style="color: var(--text-secondary);">—</div>
                     </td>
                 `;
             }
 
             return `
-                <td style="padding: 12px; vertical-align: top; min-width: 220px; background: ${bgColor}; border: 1px solid ${borderColor};">
+                <td style="padding: 12px; vertical-align: top; min-width: 220px; background: ${bgColor}; border: 1px solid ${borderColor}; color: var(--text-primary);">
                     <div>
                         <span
                             onclick="weeklyPlanSelectMeal(event, ${dayIndex}, '${mealType}')"
@@ -1616,8 +1616,9 @@ function loadWeeklyPlanPage(forceRefresh = false) {
                     position: sticky;
                     left: 0;
                     min-width: 180px;
-                    background: #ffffff;
-                    box-shadow: 4px 0 8px rgba(0,0,0,0.04);
+                    background: rgba(255,255,255,0.06);
+                    box-shadow: 4px 0 8px rgba(0,0,0,0.1);
+                    color: var(--text-primary);
                 ">
                     <div style="font-weight: 900; color: var(--text-primary);">${dayLabel}</div>
                     ${day?.notes ? `<div style="margin-top:8px; color: var(--text-secondary); font-style: italic; font-size: 0.9em;">${day.notes}</div>` : ''}
@@ -1639,11 +1640,11 @@ function loadWeeklyPlanPage(forceRefresh = false) {
                 </div>
             </div>
         </div>
-        <table style="width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; overflow: hidden;">
-            <thead style="background: rgba(255,255,255,0.06);">
+        <table style="width: 100%; border-collapse: separate; border-spacing: 0; min-width: 900px; border: 1px solid rgba(255,255,255,0.12); border-radius: 12px; overflow: hidden; background: rgba(255,255,255,0.02);">
+            <thead style="background: rgba(255,255,255,0.08);">
                 ${headerHtml}
             </thead>
-            <tbody>
+            <tbody style="background: rgba(255,255,255,0.02);">
                 ${rowsHtml || `<tr><td style="padding: 14px; color: var(--text-secondary);">No days found in the saved plan.</td></tr>`}
             </tbody>
         </table>
@@ -3745,7 +3746,7 @@ function displayMeals() {
                         <p><i class="fas fa-calendar"></i> ${formattedDate} | <i class="fas fa-fire"></i> ${meal.calories} cal | P: ${meal.protein}g C: ${meal.carbs}g F: ${meal.fats}g</p>
                     </div>
                 </div>
-                <button onclick="deleteMeal(${meal.id})" style="background: var(--accent-color); border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
+                <button onclick="deleteMeal('${meal.id || meal._id || ''}')" style="background: var(--accent-color); border: none; color: white; padding: 8px 15px; border-radius: 5px; cursor: pointer;">
                     <i class="fas fa-trash"></i>
                 </button>
             </div>
@@ -3753,11 +3754,75 @@ function displayMeals() {
     }).join('');
 }
 
-function deleteMeal(id) {
-    meals = meals.filter(meal => meal.id !== id);
-    localStorage.setItem('meals', JSON.stringify(meals));
-    displayMeals();
-    updateOverview();
+async function deleteMeal(id) {
+    if (!id) {
+        showNotification('Error: Meal ID is missing. Cannot delete meal.', 'error');
+        return;
+    }
+    
+    // Find the meal to delete - check both id and _id fields
+    const mealToDelete = meals.find(meal => {
+        const mealId = meal.id || meal._id;
+        return mealId === id || mealId === String(id) || String(mealId) === String(id);
+    });
+    
+    if (!mealToDelete) {
+        showNotification('Meal not found. It may have already been deleted.', 'warning');
+        return;
+    }
+    
+    try {
+        // Check if user is in demo mode
+        const currentUserId = localStorage.getItem('currentUserId');
+        const isDemoUser = currentUserId && currentUserId.startsWith('demo-');
+        
+        if (!isDemoUser) {
+            // Delete from API for real users
+            try {
+                // Use the deleteMeal function from api.js (available globally)
+                const response = await fetch(`/api/meals/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || 'Failed to delete from server');
+                }
+            } catch (error) {
+                console.error('Error deleting meal from API:', error);
+                showNotification('Failed to delete meal from server. Trying local delete...', 'warning');
+            }
+        }
+        
+        // Remove from local array - use proper comparison
+        const initialLength = meals.length;
+        meals = meals.filter(meal => {
+            const mealId = meal.id || meal._id;
+            // Use strict comparison with type conversion for safety
+            return String(mealId) !== String(id);
+        });
+        
+        if (meals.length === initialLength) {
+            showNotification('Failed to delete meal. Meal ID mismatch.', 'error');
+            console.error('Delete failed. Looking for ID:', id, 'Available IDs:', meals.map(m => m.id || m._id));
+            return;
+        }
+        
+        // Update localStorage
+        localStorage.setItem('meals', JSON.stringify(meals));
+        
+        // Refresh display
+        displayMeals();
+        updateOverview();
+        updateProgressPage();
+        
+        showNotification('Meal deleted successfully!', 'success');
+    } catch (error) {
+        console.error('Error deleting meal:', error);
+        showNotification('An error occurred while deleting the meal.', 'error');
+    }
 }
 
 // Overview Dashboard
