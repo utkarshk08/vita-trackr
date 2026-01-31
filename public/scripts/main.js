@@ -3887,36 +3887,57 @@ function updateOverview() {
             const targetProtein = profile?.macroSplit?.protein || 25;
             const targetFats = profile?.macroSplit?.fats || 30;
             
+            // Calculate progress bar widths relative to target
+            const carbsBarWidth = carbsPct >= targetCarbs ? 100 : (carbsPct / targetCarbs) * 100;
+            const proteinBarWidth = proteinPct >= targetProtein ? 100 : (proteinPct / targetProtein) * 100;
+            const fatsBarWidth = fatsPct >= targetFats ? 100 : (fatsPct / targetFats) * 100;
+            
+            // Target marker is always at 100% (the target position in relative scale)
+            // Since bars are relative to target, 100% = target reached
+            const targetMarkerPosition = 100;
+            
             macroBalanceHtml = `
-                <div class="insight-card" style="background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(80, 200, 120, 0.1) 100%); border: 2px solid rgba(74, 144, 226, 0.2);">
-                    <h4><i class="fas fa-chart-pie" style="color: var(--primary-color);"></i> Macro Balance (This Week)</h4>
-                    <div style="margin-top: 12px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="font-weight: 600;">Carbs:</span>
-                            <span style="color: ${Math.abs(carbsPct - targetCarbs) <= 5 ? 'var(--secondary-color)' : 'var(--accent-color)'};">
-                                ${carbsPct}% <small>(target: ${targetCarbs}%)</small>
-                            </span>
+                <div class="macro-balance-card" style="background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(80, 200, 120, 0.1) 100%); border: 2px solid rgba(74, 144, 226, 0.2); border-radius: 12px; padding: 25px; margin-bottom: 25px; width: 100%; grid-column: 1 / -1;">
+                    <h4 style="margin-top: 0; margin-bottom: 20px; display: flex; align-items: center; gap: 10px; color: var(--text-primary);">
+                        <i class="fas fa-chart-pie" style="color: var(--primary-color); font-size: 1.3em;"></i> 
+                        <span>Macro Balance (This Week)</span>
+                    </h4>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 20px; margin-top: 15px;">
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <span style="font-weight: 600; color: var(--text-primary); font-size: 1em;">Carbs:</span>
+                                <span style="color: ${Math.abs(carbsPct - targetCarbs) <= 5 ? 'var(--secondary-color)' : 'var(--accent-color)'}; font-weight: 600;">
+                                    ${carbsPct}% <small style="font-size: 0.85em; opacity: 0.8;">(target: ${targetCarbs}%)</small>
+                                </span>
+                            </div>
+                            <div style="height: 10px; background: rgba(0,0,0,0.1); border-radius: 5px; overflow: visible; margin-bottom: 15px; position: relative;">
+                                <div style="height: 100%; width: ${Math.min(carbsBarWidth, 100)}%; background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%); transition: width 0.5s ease; border-radius: 5px; ${carbsPct >= targetCarbs ? 'border: 2px solid rgba(255, 107, 107, 0.9); box-shadow: 0 0 4px rgba(255, 107, 107, 0.5);' : ''}"></div>
+                                <div style="position: absolute; left: ${targetMarkerPosition}%; top: -2px; bottom: -2px; width: 2px; background: rgba(255, 255, 255, 0.8); box-shadow: 0 0 2px rgba(0, 0, 0, 0.3); pointer-events: none; z-index: 1;"></div>
+                            </div>
                         </div>
-                        <div style="height: 8px; background: rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
-                            <div style="height: 100%; width: ${carbsPct}%; background: linear-gradient(90deg, #ffd700 0%, #ffed4e 100%); transition: width 0.5s ease;"></div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <span style="font-weight: 600; color: var(--text-primary); font-size: 1em;">Protein:</span>
+                                <span style="color: ${Math.abs(proteinPct - targetProtein) <= 5 ? 'var(--secondary-color)' : 'var(--accent-color)'}; font-weight: 600;">
+                                    ${proteinPct}% <small style="font-size: 0.85em; opacity: 0.8;">(target: ${targetProtein}%)</small>
+                                </span>
+                            </div>
+                            <div style="height: 10px; background: rgba(0,0,0,0.1); border-radius: 5px; overflow: visible; margin-bottom: 15px; position: relative;">
+                                <div style="height: 100%; width: ${Math.min(proteinBarWidth, 100)}%; background: linear-gradient(90deg, #4a90e2 0%, #6ba3e8 100%); transition: width 0.5s ease; border-radius: 5px; ${proteinPct >= targetProtein ? 'border: 2px solid rgba(255, 107, 107, 0.9); box-shadow: 0 0 4px rgba(255, 107, 107, 0.5);' : ''}"></div>
+                                <div style="position: absolute; left: ${targetMarkerPosition}%; top: -2px; bottom: -2px; width: 2px; background: rgba(255, 255, 255, 0.8); box-shadow: 0 0 2px rgba(0, 0, 0, 0.3); pointer-events: none; z-index: 1;"></div>
+                            </div>
                         </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="font-weight: 600;">Protein:</span>
-                            <span style="color: ${Math.abs(proteinPct - targetProtein) <= 5 ? 'var(--secondary-color)' : 'var(--accent-color)'};">
-                                ${proteinPct}% <small>(target: ${targetProtein}%)</small>
-                            </span>
-                        </div>
-                        <div style="height: 8px; background: rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden; margin-bottom: 12px;">
-                            <div style="height: 100%; width: ${proteinPct}%; background: linear-gradient(90deg, #4a90e2 0%, #6ba3e8 100%); transition: width 0.5s ease;"></div>
-                        </div>
-                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                            <span style="font-weight: 600;">Fats:</span>
-                            <span style="color: ${Math.abs(fatsPct - targetFats) <= 5 ? 'var(--secondary-color)' : 'var(--accent-color)'};">
-                                ${fatsPct}% <small>(target: ${targetFats}%)</small>
-                            </span>
-                        </div>
-                        <div style="height: 8px; background: rgba(0,0,0,0.1); border-radius: 4px; overflow: hidden;">
-                            <div style="height: 100%; width: ${fatsPct}%; background: linear-gradient(90deg, #ff6b6b 0%, #ff8787 100%); transition: width 0.5s ease;"></div>
+                        <div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                <span style="font-weight: 600; color: var(--text-primary); font-size: 1em;">Fats:</span>
+                                <span style="color: ${Math.abs(fatsPct - targetFats) <= 5 ? 'var(--secondary-color)' : 'var(--accent-color)'}; font-weight: 600;">
+                                    ${fatsPct}% <small style="font-size: 0.85em; opacity: 0.8;">(target: ${targetFats}%)</small>
+                                </span>
+                            </div>
+                            <div style="height: 10px; background: rgba(0,0,0,0.1); border-radius: 5px; overflow: visible; margin-bottom: 15px; position: relative;">
+                                <div style="height: 100%; width: ${Math.min(fatsBarWidth, 100)}%; background: linear-gradient(90deg, #ff6b6b 0%, #ff8787 100%); transition: width 0.5s ease; border-radius: 5px; ${fatsPct >= targetFats ? 'border: 2px solid rgba(255, 107, 107, 0.9); box-shadow: 0 0 4px rgba(255, 107, 107, 0.5);' : ''}"></div>
+                                <div style="position: absolute; left: ${targetMarkerPosition}%; top: -2px; bottom: -2px; width: 2px; background: rgba(255, 255, 255, 0.8); box-shadow: 0 0 2px rgba(0, 0, 0, 0.3); pointer-events: none; z-index: 1;"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -3981,12 +4002,16 @@ function updateOverview() {
         description: 'Remember to drink water throughout your activities for optimal performance.'
     });
     
-    nutritionDiv.innerHTML = macroBalanceHtml + insights.map(insight => `
+    nutritionDiv.innerHTML = macroBalanceHtml + `
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; width: 100%;">
+            ${insights.map(insight => `
         <div class="insight-card">
             <h4><i class="fas fa-lightbulb" style="color: var(--secondary-color);"></i> ${insight.title}</h4>
             <p>${insight.description}</p>
         </div>
-    `).join('');
+            `).join('')}
+        </div>
+    `;
     
     // Display daily plan (using cached version if available)
     loadDailyPlan();
@@ -4701,6 +4726,9 @@ async function logWeight() {
 }
 
 // Calculate Achievements
+// Track newly unlocked achievements for animations
+window.newlyUnlockedAchievements = new Set();
+
 function calculateAchievements() {
     const achievements = [];
     
@@ -4717,93 +4745,799 @@ function calculateAchievements() {
     const activityStreak = calculateStreak(activities, 'date');
     const mealStreak = calculateStreak(meals, 'date');
     
-    // Define all achievements
+    // Calculate days since first use
+    const firstActivityDate = activities.length > 0 ? new Date(Math.min(...activities.map(a => new Date(a.date).getTime()))) : null;
+    const firstMealDate = meals.length > 0 ? new Date(Math.min(...meals.map(m => new Date(m.date).getTime()))) : null;
+    const firstUseDate = firstActivityDate && firstMealDate 
+        ? new Date(Math.min(firstActivityDate.getTime(), firstMealDate.getTime()))
+        : (firstActivityDate || firstMealDate);
+    const daysSinceFirstUse = firstUseDate ? Math.floor((new Date() - firstUseDate) / (1000 * 60 * 60 * 24)) + 1 : 0;
+    
+    // Calculate nutrition goals met
+    const userProfile = window.userProfile || JSON.parse(localStorage.getItem('userProfile') || 'null');
+    const calorieGoal = userProfile?.caloricGoal || 2000;
+    const mealsWithGoal = meals.filter(meal => {
+        const mealDate = typeof meal.date === 'string' ? meal.date.split('T')[0] : new Date(meal.date).toISOString().split('T')[0];
+        const dayMeals = meals.filter(m => {
+            const mDate = typeof m.date === 'string' ? m.date.split('T')[0] : new Date(m.date).toISOString().split('T')[0];
+            return mDate === mealDate;
+        });
+        const dayCalories = dayMeals.reduce((sum, m) => sum + (m.calories || 0), 0);
+        return Math.abs(dayCalories - calorieGoal) <= calorieGoal * 0.1; // Within 10% of goal
+    });
+    const daysMetGoal = new Set(mealsWithGoal.map(m => typeof m.date === 'string' ? m.date.split('T')[0] : new Date(m.date).toISOString().split('T')[0])).size;
+    
+    // Check if user has used chatbot
+    const chatHistory = JSON.parse(localStorage.getItem('chatHistory') || '[]');
+    const chatbotUses = chatHistory.filter(msg => msg.role === 'user').length;
+    
+    // Check if user has uploaded report
+    const hasReport = localStorage.getItem('currentReportAnalysis') !== null;
+    
+    // Define all achievements by category
     const achievementDefinitions = [
+        // 🔥 CONSISTENCY - Streak-Based Achievements
         {
-            id: 'first_activity',
-            name: 'First Steps',
-            description: 'Log your first activity',
-            icon: 'fa-running',
-            unlocked: totalActivities >= 1
-        },
-        {
-            id: 'activity_rookie',
-            name: 'Activity Rookie',
-            description: 'Log 5 activities',
-            icon: 'fa-star',
-            unlocked: totalActivities >= 5
-        },
-        {
-            id: 'activity_veteran',
-            name: 'Activity Veteran',
-            description: 'Log 25 activities',
-            icon: 'fa-medal',
-            unlocked: totalActivities >= 25
-        },
-        {
-            id: 'calorie_burner',
-            name: 'Calorie Burner',
-            description: 'Burn 1000 calories',
+            id: 'streak_3_meals',
+            category: 'consistency',
+            name: '3-Day Meal Streak',
+            description: 'Logged meals 3 days in a row',
             icon: 'fa-fire',
-            unlocked: totalCaloriesBurned >= 1000
+            unlocked: mealStreak >= 3,
+            progress: mealStreak,
+            target: 3,
+            badge: 'bronze',
+            reason: mealStreak >= 3 ? `You logged meals for ${mealStreak} days in a row! 🎉` : `Keep going! ${mealStreak}/3 days`
         },
         {
-            id: 'calorie_master',
-            name: 'Calorie Master',
-            description: 'Burn 10000 calories',
-            icon: 'fa-fire-alt',
-            unlocked: totalCaloriesBurned >= 10000
+            id: 'streak_7_meals',
+            category: 'consistency',
+            name: '7-Day Meal Streak',
+            description: 'Logged meals 7 days in a row',
+            icon: 'fa-fire',
+            unlocked: mealStreak >= 7,
+            progress: mealStreak,
+            target: 7,
+            badge: 'silver',
+            reason: mealStreak >= 7 ? `Amazing! ${mealStreak} days of consistent meal logging! 🔥` : `You're at ${mealStreak}/7 days`
         },
         {
-            id: 'meal_tracker',
-            name: 'Meal Tracker',
-            description: 'Log your first meal',
+            id: 'streak_30_meals',
+            category: 'consistency',
+            name: '30-Day Meal Streak',
+            description: 'Logged meals 30 days in a row',
+            icon: 'fa-fire',
+            unlocked: mealStreak >= 30,
+            progress: mealStreak,
+            target: 30,
+            badge: 'gold',
+            reason: mealStreak >= 30 ? `Incredible! ${mealStreak} days streak! 🏆` : `Keep the momentum! ${mealStreak}/30 days`
+        },
+        {
+            id: 'streak_3_activity',
+            category: 'consistency',
+            name: '3-Day Activity Streak',
+            description: 'Logged activity 3 days in a row',
+            icon: 'fa-fire',
+            unlocked: activityStreak >= 3,
+            progress: activityStreak,
+            target: 3,
+            badge: 'bronze',
+            reason: activityStreak >= 3 ? `You stayed active for ${activityStreak} days! 🎉` : `Keep moving! ${activityStreak}/3 days`
+        },
+        {
+            id: 'streak_7_activity',
+            category: 'consistency',
+            name: '7-Day Activity Streak',
+            description: 'Logged activity 7 days in a row',
+            icon: 'fa-fire',
+            unlocked: activityStreak >= 7,
+            progress: activityStreak,
+            target: 7,
+            badge: 'silver',
+            reason: activityStreak >= 7 ? `Outstanding! ${activityStreak} days of activity! 🔥` : `You're at ${activityStreak}/7 days`
+        },
+        {
+            id: 'streak_30_activity',
+            category: 'consistency',
+            name: '30-Day Activity Streak',
+            description: 'Logged activity 30 days in a row',
+            icon: 'fa-fire',
+            unlocked: activityStreak >= 30,
+            progress: activityStreak,
+            target: 30,
+            badge: 'gold',
+            reason: activityStreak >= 30 ? `Legendary! ${activityStreak} days streak! 🏆` : `Keep going! ${activityStreak}/30 days`
+        },
+        {
+            id: 'streak_14_meals',
+            category: 'consistency',
+            name: '14-Day Meal Streak',
+            description: 'Logged meals 14 days in a row',
+            icon: 'fa-fire',
+            unlocked: mealStreak >= 14,
+            progress: mealStreak,
+            target: 14,
+            badge: 'silver',
+            reason: mealStreak >= 14 ? `Excellent! ${mealStreak} days of meal tracking! 🔥` : `You're at ${mealStreak}/14 days`
+        },
+        {
+            id: 'streak_60_meals',
+            category: 'consistency',
+            name: '60-Day Meal Streak',
+            description: 'Logged meals 60 days in a row',
+            icon: 'fa-fire',
+            unlocked: mealStreak >= 60,
+            progress: mealStreak,
+            target: 60,
+            badge: 'gold',
+            reason: mealStreak >= 60 ? `Unstoppable! ${mealStreak} days streak! 🏆` : `Keep pushing! ${mealStreak}/60 days`
+        },
+        {
+            id: 'streak_14_activity',
+            category: 'consistency',
+            name: '14-Day Activity Streak',
+            description: 'Logged activity 14 days in a row',
+            icon: 'fa-fire',
+            unlocked: activityStreak >= 14,
+            progress: activityStreak,
+            target: 14,
+            badge: 'silver',
+            reason: activityStreak >= 14 ? `Fantastic! ${activityStreak} days of activity! 🔥` : `You're at ${activityStreak}/14 days`
+        },
+        {
+            id: 'streak_60_activity',
+            category: 'consistency',
+            name: '60-Day Activity Streak',
+            description: 'Logged activity 60 days in a row',
+            icon: 'fa-fire',
+            unlocked: activityStreak >= 60,
+            progress: activityStreak,
+            target: 60,
+            badge: 'gold',
+            reason: activityStreak >= 60 ? `Unstoppable! ${activityStreak} days streak! 🏆` : `Keep pushing! ${activityStreak}/60 days`
+        },
+        {
+            id: 'streak_100_meals',
+            category: 'consistency',
+            name: '100-Day Meal Streak',
+            description: 'Logged meals 100 days in a row',
+            icon: 'fa-fire',
+            unlocked: mealStreak >= 100,
+            progress: mealStreak,
+            target: 100,
+            badge: 'gold',
+            reason: mealStreak >= 100 ? `Legendary! ${mealStreak} days streak! 🏆` : `Incredible progress! ${mealStreak}/100 days`
+        },
+        {
+            id: 'dual_streak_5',
+            category: 'consistency',
+            name: 'Dual Tracker',
+            description: 'Log both meals and activities for 5 days in a row',
+            icon: 'fa-balance-scale',
+            unlocked: activityStreak >= 5 && mealStreak >= 5,
+            progress: Math.min(activityStreak, mealStreak),
+            target: 5,
+            badge: 'silver',
+            reason: (activityStreak >= 5 && mealStreak >= 5) ? `Amazing! You tracked both for ${Math.min(activityStreak, mealStreak)} days! 🎯` : `Track both meals and activities for 5 days`
+        },
+        
+        // 🥗 NUTRITION - Nutrition-Based Achievements
+        {
+            id: 'healthy_eater_5',
+            category: 'nutrition',
+            name: 'Healthy Eater',
+            description: 'Met calorie goal 5 days',
             icon: 'fa-apple-alt',
-            unlocked: totalMeals >= 1
+            unlocked: daysMetGoal >= 5,
+            progress: daysMetGoal,
+            target: 5,
+            badge: 'bronze',
+            reason: daysMetGoal >= 5 ? `You stayed within your calorie limit for ${daysMetGoal} days! 🎉` : `You've met your goal ${daysMetGoal}/5 days`
+        },
+        {
+            id: 'healthy_eater_10',
+            category: 'nutrition',
+            name: 'Nutrition Master',
+            description: 'Met calorie goal 10 days',
+            icon: 'fa-apple-alt',
+            unlocked: daysMetGoal >= 10,
+            progress: daysMetGoal,
+            target: 10,
+            badge: 'silver',
+            reason: daysMetGoal >= 10 ? `Excellent! ${daysMetGoal} days of balanced nutrition! 🥗` : `Keep it up! ${daysMetGoal}/10 days`
+        },
+        {
+            id: 'first_meal',
+            category: 'nutrition',
+            name: 'First Meal Logged',
+            description: 'Log your first meal',
+            icon: 'fa-utensils',
+            unlocked: totalMeals >= 1,
+            progress: totalMeals,
+            target: 1,
+            badge: 'bronze',
+            reason: totalMeals >= 1 ? `You've logged ${totalMeals} meal(s)! 🎉` : 'Log your first meal to unlock'
         },
         {
             id: 'meal_professional',
+            category: 'nutrition',
             name: 'Meal Professional',
             description: 'Log 50 meals',
             icon: 'fa-utensils',
-            unlocked: totalMeals >= 50
+            unlocked: totalMeals >= 50,
+            progress: totalMeals,
+            target: 50,
+            badge: 'silver',
+            reason: totalMeals >= 50 ? `You've logged ${totalMeals} meals! Amazing tracking! 🏆` : `You've logged ${totalMeals}/50 meals`
         },
         {
-            id: 'streak_starter',
-            name: 'Streak Starter',
-            description: '3 day activity streak',
-            icon: 'fa-fire',
-            unlocked: activityStreak >= 3
+            id: 'meal_master',
+            category: 'nutrition',
+            name: 'Meal Master',
+            description: 'Log 100 meals',
+            icon: 'fa-utensils',
+            unlocked: totalMeals >= 100,
+            progress: totalMeals,
+            target: 100,
+            badge: 'gold',
+            reason: totalMeals >= 100 ? `Incredible! ${totalMeals} meals logged! 🎊` : `You've logged ${totalMeals}/100 meals`
         },
         {
-            id: 'streak_champion',
-            name: 'Streak Champion',
-            description: '7 day activity streak',
-            icon: 'fa-fire-alt',
-            unlocked: activityStreak >= 7
+            id: 'healthy_eater_20',
+            category: 'nutrition',
+            name: 'Nutrition Champion',
+            description: 'Met calorie goal 20 days',
+            icon: 'fa-apple-alt',
+            unlocked: daysMetGoal >= 20,
+            progress: daysMetGoal,
+            target: 20,
+            badge: 'gold',
+            reason: daysMetGoal >= 20 ? `Outstanding! ${daysMetGoal} days of perfect nutrition! 🥗` : `You've met your goal ${daysMetGoal}/20 days`
         },
         {
-            id: 'wellness_warrior',
-            name: 'Wellness Warrior',
-            description: '500 total activity minutes',
-            icon: 'fa-dumbbell',
-            unlocked: totalMinutes >= 500
+            id: 'meal_enthusiast',
+            category: 'nutrition',
+            name: 'Meal Enthusiast',
+            description: 'Log 25 meals',
+            icon: 'fa-utensils',
+            unlocked: totalMeals >= 25,
+            progress: totalMeals,
+            target: 25,
+            badge: 'bronze',
+            reason: totalMeals >= 25 ? `Great job! ${totalMeals} meals logged! 🎉` : `You've logged ${totalMeals}/25 meals`
         },
         {
-            id: 'nutrition_expert',
-            name: 'Nutrition Expert',
-            description: 'Log meals for 7 days',
+            id: 'meal_legend',
+            category: 'nutrition',
+            name: 'Meal Legend',
+            description: 'Log 200 meals',
+            icon: 'fa-utensils',
+            unlocked: totalMeals >= 200,
+            progress: totalMeals,
+            target: 200,
+            badge: 'gold',
+            reason: totalMeals >= 200 ? `Legendary! ${totalMeals} meals logged! 🎊` : `You've logged ${totalMeals}/200 meals`
+        },
+        {
+            id: 'protein_tracker',
+            category: 'nutrition',
+            name: 'Protein Tracker',
+            description: 'Log meals with protein data 20 times',
+            icon: 'fa-drumstick-bite',
+            unlocked: meals.filter(m => m.protein && m.protein > 0).length >= 20,
+            progress: meals.filter(m => m.protein && m.protein > 0).length,
+            target: 20,
+            badge: 'silver',
+            reason: meals.filter(m => m.protein && m.protein > 0).length >= 20 ? `You've tracked protein ${meals.filter(m => m.protein && m.protein > 0).length} times! 💪` : `Track protein ${meals.filter(m => m.protein && m.protein > 0).length}/20 times`
+        },
+        {
+            id: 'balanced_macros',
+            category: 'nutrition',
+            name: 'Macro Master',
+            description: 'Log meals with all macros (protein, carbs, fats) 15 times',
             icon: 'fa-chart-pie',
-            unlocked: mealStreak >= 7
+            unlocked: meals.filter(m => m.protein && m.carbs && m.fats && m.protein > 0 && m.carbs > 0 && m.fats > 0).length >= 15,
+            progress: meals.filter(m => m.protein && m.carbs && m.fats && m.protein > 0 && m.carbs > 0 && m.fats > 0).length,
+            target: 15,
+            badge: 'silver',
+            reason: meals.filter(m => m.protein && m.carbs && m.fats && m.protein > 0 && m.carbs > 0 && m.fats > 0).length >= 15 ? `Perfect! You've tracked complete macros ${meals.filter(m => m.protein && m.carbs && m.fats && m.protein > 0 && m.carbs > 0 && m.fats > 0).length} times! 🎯` : `Track all macros ${meals.filter(m => m.protein && m.carbs && m.fats && m.protein > 0 && m.carbs > 0 && m.fats > 0).length}/15 times`
         },
         {
-            id: 'balanced_life',
-            name: 'Balanced Life',
-            description: 'Log both meals and activities for 5 days',
-            icon: 'fa-balance-scale',
-            unlocked: activityStreak >= 5 && mealStreak >= 5
+            id: 'weekly_nutrition',
+            category: 'nutrition',
+            name: 'Weekly Nutritionist',
+            description: 'Met calorie goal for 7 consecutive days',
+            icon: 'fa-calendar-week',
+            unlocked: daysMetGoal >= 7,
+            progress: daysMetGoal,
+            target: 7,
+            badge: 'silver',
+            reason: daysMetGoal >= 7 ? `Perfect week! ${daysMetGoal} days of balanced nutrition! 📅` : `Meet your goal for ${daysMetGoal}/7 days`
+        },
+        
+        // 🏃 FITNESS - Fitness Achievements
+        {
+            id: 'first_activity',
+            category: 'fitness',
+            name: 'First Step',
+            description: 'Log your first activity',
+            icon: 'fa-running',
+            unlocked: totalActivities >= 1,
+            progress: totalActivities,
+            target: 1,
+            badge: 'bronze',
+            reason: totalActivities >= 1 ? `You've logged ${totalActivities} activity! 🎉` : 'Log your first activity to unlock'
+        },
+        {
+            id: 'activity_rookie',
+            category: 'fitness',
+            name: 'Activity Rookie',
+            description: 'Log 5 activities',
+            icon: 'fa-running',
+            unlocked: totalActivities >= 5,
+            progress: totalActivities,
+            target: 5,
+            badge: 'bronze',
+            reason: totalActivities >= 5 ? `You've completed ${totalActivities} activities! 🎉` : `You've logged ${totalActivities}/5 activities`
+        },
+        {
+            id: 'cardio_champ',
+            category: 'fitness',
+            name: 'Cardio Champ',
+            description: 'Complete 10 workouts',
+            icon: 'fa-dumbbell',
+            unlocked: totalActivities >= 10,
+            progress: totalActivities,
+            target: 10,
+            badge: 'silver',
+            reason: totalActivities >= 10 ? `Amazing! ${totalActivities} workouts completed! 🏃` : `You've completed ${totalActivities}/10 workouts`
+        },
+        {
+            id: 'calorie_burner',
+            category: 'fitness',
+            name: 'Calorie Burner',
+            description: 'Burn 1000 calories',
+            icon: 'fa-fire',
+            unlocked: totalCaloriesBurned >= 1000,
+            progress: totalCaloriesBurned,
+            target: 1000,
+            badge: 'bronze',
+            reason: totalCaloriesBurned >= 1000 ? `You've burned ${Math.round(totalCaloriesBurned)} calories! 🔥` : `You've burned ${Math.round(totalCaloriesBurned)}/1000 calories`
+        },
+        {
+            id: 'calorie_master',
+            category: 'fitness',
+            name: 'Calorie Master',
+            description: 'Burn 10000 calories',
+            icon: 'fa-fire-alt',
+            unlocked: totalCaloriesBurned >= 10000,
+            progress: totalCaloriesBurned,
+            target: 10000,
+            badge: 'gold',
+            reason: totalCaloriesBurned >= 10000 ? `Incredible! ${Math.round(totalCaloriesBurned)} calories burned! 🏆` : `You've burned ${Math.round(totalCaloriesBurned)}/10000 calories`
+        },
+        {
+            id: '30min_warrior',
+            category: 'fitness',
+            name: '30-Minute Warrior',
+            description: 'Complete 30 minutes of activity in a day',
+            icon: 'fa-clock',
+            unlocked: activities.some(act => (act.duration || 0) >= 30),
+            progress: activities.filter(act => (act.duration || 0) >= 30).length,
+            target: 1,
+            badge: 'bronze',
+            reason: activities.some(act => (act.duration || 0) >= 30) ? 'You completed 30+ minutes in a day! 💪' : 'Complete 30 minutes of activity in one day'
+        },
+        {
+            id: 'activity_veteran',
+            category: 'fitness',
+            name: 'Activity Veteran',
+            description: 'Log 25 activities',
+            icon: 'fa-running',
+            unlocked: totalActivities >= 25,
+            progress: totalActivities,
+            target: 25,
+            badge: 'silver',
+            reason: totalActivities >= 25 ? `Impressive! ${totalActivities} activities logged! 🏃` : `You've logged ${totalActivities}/25 activities`
+        },
+        {
+            id: 'activity_legend',
+            category: 'fitness',
+            name: 'Activity Legend',
+            description: 'Log 50 activities',
+            icon: 'fa-running',
+            unlocked: totalActivities >= 50,
+            progress: totalActivities,
+            target: 50,
+            badge: 'gold',
+            reason: totalActivities >= 50 ? `Legendary! ${totalActivities} activities completed! 🏆` : `You've logged ${totalActivities}/50 activities`
+        },
+        {
+            id: 'calorie_warrior',
+            category: 'fitness',
+            name: 'Calorie Warrior',
+            description: 'Burn 5000 calories',
+            icon: 'fa-fire',
+            unlocked: totalCaloriesBurned >= 5000,
+            progress: totalCaloriesBurned,
+            target: 5000,
+            badge: 'silver',
+            reason: totalCaloriesBurned >= 5000 ? `Amazing! ${Math.round(totalCaloriesBurned)} calories burned! 🔥` : `You've burned ${Math.round(totalCaloriesBurned)}/5000 calories`
+        },
+        {
+            id: 'hour_warrior',
+            category: 'fitness',
+            name: 'Hour Warrior',
+            description: 'Complete 60 minutes of activity in a day',
+            icon: 'fa-clock',
+            unlocked: activities.some(act => (act.duration || 0) >= 60),
+            progress: activities.filter(act => (act.duration || 0) >= 60).length,
+            target: 1,
+            badge: 'silver',
+            reason: activities.some(act => (act.duration || 0) >= 60) ? 'You completed 60+ minutes in a day! 💪' : 'Complete 60 minutes of activity in one day'
+        },
+        {
+            id: 'total_minutes_500',
+            category: 'fitness',
+            name: 'Fitness Enthusiast',
+            description: 'Accumulate 500 total activity minutes',
+            icon: 'fa-dumbbell',
+            unlocked: totalMinutes >= 500,
+            progress: totalMinutes,
+            target: 500,
+            badge: 'silver',
+            reason: totalMinutes >= 500 ? `Excellent! ${totalMinutes} total minutes of activity! 🏋️` : `You've accumulated ${totalMinutes}/500 minutes`
+        },
+        {
+            id: 'total_minutes_1000',
+            category: 'fitness',
+            name: 'Fitness Master',
+            description: 'Accumulate 1000 total activity minutes',
+            icon: 'fa-dumbbell',
+            unlocked: totalMinutes >= 1000,
+            progress: totalMinutes,
+            target: 1000,
+            badge: 'gold',
+            reason: totalMinutes >= 1000 ? `Incredible! ${totalMinutes} total minutes of activity! 🏋️` : `You've accumulated ${totalMinutes}/1000 minutes`
+        },
+        {
+            id: 'daily_activity_5',
+            category: 'fitness',
+            name: 'Active Week',
+            description: 'Log activities on 5 different days',
+            icon: 'fa-calendar-check',
+            unlocked: new Set(activities.map(a => typeof a.date === 'string' ? a.date.split('T')[0] : new Date(a.date).toISOString().split('T')[0])).size >= 5,
+            progress: new Set(activities.map(a => typeof a.date === 'string' ? a.date.split('T')[0] : new Date(a.date).toISOString().split('T')[0])).size,
+            target: 5,
+            badge: 'bronze',
+            reason: new Set(activities.map(a => typeof a.date === 'string' ? a.date.split('T')[0] : new Date(a.date).toISOString().split('T')[0])).size >= 5 ? `Great! You've been active on ${new Set(activities.map(a => typeof a.date === 'string' ? a.date.split('T')[0] : new Date(a.date).toISOString().split('T')[0])).size} different days! 📅` : `Be active on ${new Set(activities.map(a => typeof a.date === 'string' ? a.date.split('T')[0] : new Date(a.date).toISOString().split('T')[0])).size}/5 different days`
+        },
+        
+        // 📊 TRACKING DISCIPLINE - Habit Achievements
+        {
+            id: 'data_logger',
+            category: 'tracking',
+            name: 'Data Logger',
+            description: 'Log meals 10 times',
+            icon: 'fa-clipboard-list',
+            unlocked: totalMeals >= 10,
+            progress: totalMeals,
+            target: 10,
+            badge: 'bronze',
+            reason: totalMeals >= 10 ? `You've logged ${totalMeals} meals! Great tracking! 📊` : `You've logged ${totalMeals}/10 meals`
+        },
+        {
+            id: 'health_aware',
+            category: 'tracking',
+            name: 'Health Aware',
+            description: 'Upload your first health report',
+            icon: 'fa-file-medical',
+            unlocked: hasReport,
+            progress: hasReport ? 1 : 0,
+            target: 1,
+            badge: 'silver',
+            reason: hasReport ? 'You uploaded your health report! 📄' : 'Upload a health report to unlock'
+        },
+        {
+            id: 'ai_explorer',
+            category: 'tracking',
+            name: 'AI Explorer',
+            description: 'Use AI assistant 5 times',
+            icon: 'fa-robot',
+            unlocked: chatbotUses >= 5,
+            progress: chatbotUses,
+            target: 5,
+            badge: 'silver',
+            reason: chatbotUses >= 5 ? `You've used AI assistant ${chatbotUses} times! 🤖` : `You've used AI ${chatbotUses}/5 times`
+        },
+        {
+            id: 'tracking_master',
+            category: 'tracking',
+            name: 'Tracking Master',
+            description: 'Log 100 total entries (meals + activities)',
+            icon: 'fa-chart-line',
+            unlocked: (totalMeals + totalActivities) >= 100,
+            progress: totalMeals + totalActivities,
+            target: 100,
+            badge: 'gold',
+            reason: (totalMeals + totalActivities) >= 100 ? `Amazing! ${totalMeals + totalActivities} total entries! 📊` : `You've logged ${totalMeals + totalActivities}/100 entries`
+        },
+        {
+            id: 'ai_master',
+            category: 'tracking',
+            name: 'AI Master',
+            description: 'Use AI assistant 20 times',
+            icon: 'fa-robot',
+            unlocked: chatbotUses >= 20,
+            progress: chatbotUses,
+            target: 20,
+            badge: 'gold',
+            reason: chatbotUses >= 20 ? `Expert level! You've used AI ${chatbotUses} times! 🤖` : `You've used AI ${chatbotUses}/20 times`
+        },
+        {
+            id: 'recipe_explorer',
+            category: 'tracking',
+            name: 'Recipe Explorer',
+            description: 'Generate 5 recipes',
+            icon: 'fa-utensils',
+            unlocked: (() => {
+                const cachedRecipes = JSON.parse(localStorage.getItem('cachedRecipes') || '{}');
+                return Object.keys(cachedRecipes).length >= 5;
+            })(),
+            progress: (() => {
+                const cachedRecipes = JSON.parse(localStorage.getItem('cachedRecipes') || '{}');
+                return Object.keys(cachedRecipes).length;
+            })(),
+            target: 5,
+            badge: 'silver',
+            reason: (() => {
+                const cachedRecipes = JSON.parse(localStorage.getItem('cachedRecipes') || '{}');
+                const count = Object.keys(cachedRecipes).length;
+                return count >= 5 ? `Great! You've generated ${count} recipes! 🍳` : `Generate ${count}/5 recipes`;
+            })()
+        },
+        {
+            id: 'plan_creator',
+            category: 'tracking',
+            name: 'Plan Creator',
+            description: 'Create a 7-day plan',
+            icon: 'fa-calendar-week',
+            unlocked: (() => {
+                const savedPlan = JSON.parse(localStorage.getItem('saved7DayPlan') || 'null');
+                return savedPlan !== null;
+            })(),
+            progress: (() => {
+                const savedPlan = JSON.parse(localStorage.getItem('saved7DayPlan') || 'null');
+                return savedPlan !== null ? 1 : 0;
+            })(),
+            target: 1,
+            badge: 'silver',
+            reason: (() => {
+                const savedPlan = JSON.parse(localStorage.getItem('saved7DayPlan') || 'null');
+                return savedPlan !== null ? 'You created a 7-day plan! 📅' : 'Create a 7-day meal plan to unlock';
+            })()
+        },
+        {
+            id: 'data_enthusiast',
+            category: 'tracking',
+            name: 'Data Enthusiast',
+            description: 'Log 50 total entries (meals + activities)',
+            icon: 'fa-clipboard-list',
+            unlocked: (totalMeals + totalActivities) >= 50,
+            progress: totalMeals + totalActivities,
+            target: 50,
+            badge: 'silver',
+            reason: (totalMeals + totalActivities) >= 50 ? `Excellent tracking! ${totalMeals + totalActivities} entries! 📊` : `You've logged ${totalMeals + totalActivities}/50 entries`
+        },
+        {
+            id: 'complete_tracker',
+            category: 'tracking',
+            name: 'Complete Tracker',
+            description: 'Log both meals and activities on the same day 10 times',
+            icon: 'fa-check-double',
+            unlocked: (() => {
+                const mealDates = new Set(meals.map(m => typeof m.date === 'string' ? m.date.split('T')[0] : new Date(m.date).toISOString().split('T')[0]));
+                const activityDates = new Set(activities.map(a => typeof a.date === 'string' ? a.date.split('T')[0] : new Date(a.date).toISOString().split('T')[0]));
+                const commonDates = [...mealDates].filter(d => activityDates.has(d));
+                return commonDates.length >= 10;
+            })(),
+            progress: (() => {
+                const mealDates = new Set(meals.map(m => typeof m.date === 'string' ? m.date.split('T')[0] : new Date(m.date).toISOString().split('T')[0]));
+                const activityDates = new Set(activities.map(a => typeof a.date === 'string' ? a.date.split('T')[0] : new Date(a.date).toISOString().split('T')[0]));
+                const commonDates = [...mealDates].filter(d => activityDates.has(d));
+                return commonDates.length;
+            })(),
+            target: 10,
+            badge: 'gold',
+            reason: (() => {
+                const mealDates = new Set(meals.map(m => typeof m.date === 'string' ? m.date.split('T')[0] : new Date(m.date).toISOString().split('T')[0]));
+                const activityDates = new Set(activities.map(a => typeof a.date === 'string' ? a.date.split('T')[0] : new Date(a.date).toISOString().split('T')[0]));
+                const commonDates = [...mealDates].filter(d => activityDates.has(d));
+                return commonDates.length >= 10 ? `Perfect! You tracked both on ${commonDates.length} days! 🎯` : `Track both on ${commonDates.length}/10 days`;
+            })()
+        },
+        
+        // 🏅 MILESTONES - Milestone Achievements
+        {
+            id: 'day_1',
+            category: 'milestone',
+            name: 'Day 1 Complete',
+            description: 'Complete your first day',
+            icon: 'fa-calendar-check',
+            unlocked: daysSinceFirstUse >= 1,
+            progress: daysSinceFirstUse,
+            target: 1,
+            badge: 'bronze',
+            reason: daysSinceFirstUse >= 1 ? `You've been using VitaTrackr for ${daysSinceFirstUse} day(s)! 🎉` : 'Complete your first day'
+        },
+        {
+            id: 'week_1',
+            category: 'milestone',
+            name: 'Week 1 Complete',
+            description: 'Use app for 7 days',
+            icon: 'fa-calendar-week',
+            unlocked: daysSinceFirstUse >= 7,
+            progress: daysSinceFirstUse,
+            target: 7,
+            badge: 'silver',
+            reason: daysSinceFirstUse >= 7 ? `You've been using VitaTrackr for ${daysSinceFirstUse} days! 🎊` : `You've used the app for ${daysSinceFirstUse}/7 days`
+        },
+        {
+            id: 'month_1',
+            category: 'milestone',
+            name: '1 Month with VitaTrackr',
+            description: 'Use app for 30 days',
+            icon: 'fa-calendar-alt',
+            unlocked: daysSinceFirstUse >= 30,
+            progress: daysSinceFirstUse,
+            target: 30,
+            badge: 'gold',
+            reason: daysSinceFirstUse >= 30 ? `Amazing! ${daysSinceFirstUse} days with VitaTrackr! 🏆` : `You've used the app for ${daysSinceFirstUse}/30 days`
+        },
+        {
+            id: 'health_conscious',
+            category: 'milestone',
+            name: 'Health Conscious',
+            description: 'Use app for 60 days',
+            icon: 'fa-heart',
+            unlocked: daysSinceFirstUse >= 60,
+            progress: daysSinceFirstUse,
+            target: 60,
+            badge: 'gold',
+            reason: daysSinceFirstUse >= 60 ? `Incredible! ${daysSinceFirstUse} days of health tracking! 🎊` : `You've used the app for ${daysSinceFirstUse}/60 days`
+        },
+        {
+            id: 'hundred_meals',
+            category: 'milestone',
+            name: '100 Meals Logged',
+            description: 'Log 100 meals',
+            icon: 'fa-trophy',
+            unlocked: totalMeals >= 100,
+            progress: totalMeals,
+            target: 100,
+            badge: 'gold',
+            reason: totalMeals >= 100 ? `Milestone reached! ${totalMeals} meals logged! 🎊` : `You've logged ${totalMeals}/100 meals`
+        },
+        {
+            id: 'hundred_activities',
+            category: 'milestone',
+            name: '100 Activities Logged',
+            description: 'Log 100 activities',
+            icon: 'fa-trophy',
+            unlocked: totalActivities >= 100,
+            progress: totalActivities,
+            target: 100,
+            badge: 'gold',
+            reason: totalActivities >= 100 ? `Milestone reached! ${totalActivities} activities logged! 🎊` : `You've logged ${totalActivities}/100 activities`
+        },
+        {
+            id: 'week_2',
+            category: 'milestone',
+            name: '2 Weeks Complete',
+            description: 'Use app for 14 days',
+            icon: 'fa-calendar-week',
+            unlocked: daysSinceFirstUse >= 14,
+            progress: daysSinceFirstUse,
+            target: 14,
+            badge: 'silver',
+            reason: daysSinceFirstUse >= 14 ? `Great commitment! ${daysSinceFirstUse} days with VitaTrackr! 🎊` : `You've used the app for ${daysSinceFirstUse}/14 days`
+        },
+        {
+            id: 'month_2',
+            category: 'milestone',
+            name: '2 Months with VitaTrackr',
+            description: 'Use app for 60 days',
+            icon: 'fa-calendar-alt',
+            unlocked: daysSinceFirstUse >= 60,
+            progress: daysSinceFirstUse,
+            target: 60,
+            badge: 'gold',
+            reason: daysSinceFirstUse >= 60 ? `Amazing dedication! ${daysSinceFirstUse} days! 🏆` : `You've used the app for ${daysSinceFirstUse}/60 days`
+        },
+        {
+            id: 'month_3',
+            category: 'milestone',
+            name: '3 Months with VitaTrackr',
+            description: 'Use app for 90 days',
+            icon: 'fa-calendar-alt',
+            unlocked: daysSinceFirstUse >= 90,
+            progress: daysSinceFirstUse,
+            target: 90,
+            badge: 'gold',
+            reason: daysSinceFirstUse >= 90 ? `Incredible! ${daysSinceFirstUse} days of health tracking! 🎊` : `You've used the app for ${daysSinceFirstUse}/90 days`
+        },
+        {
+            id: 'year_1',
+            category: 'milestone',
+            name: '1 Year with VitaTrackr',
+            description: 'Use app for 365 days',
+            icon: 'fa-calendar-alt',
+            unlocked: daysSinceFirstUse >= 365,
+            progress: daysSinceFirstUse,
+            target: 365,
+            badge: 'gold',
+            reason: daysSinceFirstUse >= 365 ? `Legendary! ${daysSinceFirstUse} days! You're a true health champion! 🏆` : `You've used the app for ${daysSinceFirstUse}/365 days`
+        },
+        {
+            id: 'first_week_complete',
+            category: 'milestone',
+            name: 'First Week Complete',
+            description: 'Complete your first week',
+            icon: 'fa-calendar-check',
+            unlocked: daysSinceFirstUse >= 7,
+            progress: daysSinceFirstUse,
+            target: 7,
+            badge: 'bronze',
+            reason: daysSinceFirstUse >= 7 ? `Congratulations! ${daysSinceFirstUse} days completed! 🎉` : `Complete ${daysSinceFirstUse}/7 days`
+        },
+        {
+            id: 'fifty_meals',
+            category: 'milestone',
+            name: '50 Meals Logged',
+            description: 'Log 50 meals',
+            icon: 'fa-trophy',
+            unlocked: totalMeals >= 50,
+            progress: totalMeals,
+            target: 50,
+            badge: 'silver',
+            reason: totalMeals >= 50 ? `Milestone reached! ${totalMeals} meals logged! 🎊` : `You've logged ${totalMeals}/50 meals`
+        },
+        {
+            id: 'fifty_activities',
+            category: 'milestone',
+            name: '50 Activities Logged',
+            description: 'Log 50 activities',
+            icon: 'fa-trophy',
+            unlocked: totalActivities >= 50,
+            progress: totalActivities,
+            target: 50,
+            badge: 'silver',
+            reason: totalActivities >= 50 ? `Milestone reached! ${totalActivities} activities logged! 🎊` : `You've logged ${totalActivities}/50 activities`
         }
     ];
+    
+    // Check for newly unlocked achievements
+    const previouslyUnlocked = JSON.parse(localStorage.getItem('unlockedAchievements') || '[]');
+    const nowUnlocked = achievementDefinitions.filter(a => a.unlocked).map(a => a.id);
+    const newlyUnlocked = nowUnlocked.filter(id => !previouslyUnlocked.includes(id));
+    
+    if (newlyUnlocked.length > 0) {
+        // Save newly unlocked
+        localStorage.setItem('unlockedAchievements', JSON.stringify(nowUnlocked));
+        window.newlyUnlockedAchievements = new Set(newlyUnlocked);
+        
+        // Show confetti and notification for each new achievement
+        newlyUnlocked.forEach(achievementId => {
+            const achievement = achievementDefinitions.find(a => a.id === achievementId);
+            if (achievement) {
+                setTimeout(() => {
+                    triggerConfetti();
+                    showNotification(`🏆 Achievement Unlocked: ${achievement.name}!`, 'success', 4000);
+                }, newlyUnlocked.indexOf(achievementId) * 500);
+            }
+        });
+    }
     
     return achievementDefinitions;
 }
@@ -4840,26 +5574,192 @@ function calculateStreak(items, dateField) {
 function updateProgressPage() {
     updateAchievements();
     updateStreaks();
+    
+    // Initialize filter button states
+    const activityPeriod = window.chartPeriods?.activity || '7d';
+    const nutritionPeriod = window.chartPeriods?.nutrition || '7d';
+    
+    const activityFilters = document.getElementById('activityChartFilters');
+    const nutritionFilters = document.getElementById('nutritionChartFilters');
+    
+    if (activityFilters) {
+        activityFilters.querySelectorAll('.period-filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.period === activityPeriod);
+        });
+        
+        // Add tooltip for custom range if active
+        if (activityPeriod === 'custom' && window.chartPeriods?.customRanges?.activity) {
+            const range = window.chartPeriods.customRanges.activity;
+            const customBtn = activityFilters.querySelector('[data-period="custom"]');
+            if (customBtn) {
+                const start = new Date(range.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const end = new Date(range.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                customBtn.title = `Custom: ${start} - ${end}`;
+            }
+        }
+    }
+    
+    if (nutritionFilters) {
+        nutritionFilters.querySelectorAll('.period-filter-btn').forEach(btn => {
+            btn.classList.toggle('active', btn.dataset.period === nutritionPeriod);
+        });
+        
+        // Add tooltip for custom range if active
+        if (nutritionPeriod === 'custom' && window.chartPeriods?.customRanges?.nutrition) {
+            const range = window.chartPeriods.customRanges.nutrition;
+            const customBtn = nutritionFilters.querySelector('[data-period="custom"]');
+            if (customBtn) {
+                const start = new Date(range.startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const end = new Date(range.endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                customBtn.title = `Custom: ${start} - ${end}`;
+            }
+        }
+    }
+    
     updateCharts();
 }
 
-// Display Achievements
+// Confetti animation function
+function triggerConfetti() {
+    const confettiCount = 50;
+    const confetti = [];
+    const colors = ['#50c878', '#4a90e2', '#ff6b6b', '#ffd93d', '#ff6b9d', '#c44569'];
+    
+    for (let i = 0; i < confettiCount; i++) {
+        const confettiPiece = document.createElement('div');
+        confettiPiece.style.cssText = `
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: ${colors[Math.floor(Math.random() * colors.length)]};
+            left: ${Math.random() * 100}vw;
+            top: -10px;
+            z-index: 100001;
+            pointer-events: none;
+            border-radius: 50%;
+            animation: confetti-fall ${1 + Math.random() * 2}s linear forwards;
+        `;
+        document.body.appendChild(confettiPiece);
+        confetti.push(confettiPiece);
+        
+        setTimeout(() => confettiPiece.remove(), 3000);
+    }
+}
+
+// Current active achievement tab
+window.activeAchievementTab = localStorage.getItem('activeAchievementTab') || 'consistency';
+
+// Display Achievement Tabs
+function renderAchievementTabs(achievements) {
+    const tabsDiv = document.getElementById('achievementTabs');
+    if (!tabsDiv) return;
+    
+    // Group achievements by category
+    const categories = {
+        consistency: { name: '🔥 Consistency', icon: 'fa-fire', key: 'consistency' },
+        nutrition: { name: '🥗 Nutrition', icon: 'fa-apple-alt', key: 'nutrition' },
+        fitness: { name: '🏃 Fitness', icon: 'fa-running', key: 'fitness' },
+        tracking: { name: '📊 Tracking', icon: 'fa-clipboard-list', key: 'tracking' },
+        milestone: { name: '🏅 Milestones', icon: 'fa-trophy', key: 'milestone' }
+    };
+    
+    // Calculate progress for each category
+    const categoryStats = {};
+    Object.keys(categories).forEach(catKey => {
+        const catAchievements = achievements.filter(a => a.category === catKey);
+        const unlockedCount = catAchievements.filter(a => a.unlocked).length;
+        const totalCount = catAchievements.length;
+        categoryStats[catKey] = { unlocked: unlockedCount, total: totalCount };
+    });
+    
+    // Render tabs
+    tabsDiv.innerHTML = Object.values(categories).map(category => {
+        const stats = categoryStats[category.key];
+        const isActive = window.activeAchievementTab === category.key;
+        
+        return `
+            <button class="achievement-tab ${isActive ? 'active' : ''}" 
+                    onclick="switchAchievementTab('${category.key}')"
+                    data-category="${category.key}">
+                <span class="achievement-tab-icon"><i class="fas ${category.icon}"></i></span>
+                <span class="achievement-tab-name">${category.name}</span>
+                <span class="achievement-tab-progress">(${stats.unlocked}/${stats.total})</span>
+            </button>
+        `;
+    }).join('');
+}
+
+// Switch Achievement Tab
+function switchAchievementTab(category) {
+    window.activeAchievementTab = category;
+    localStorage.setItem('activeAchievementTab', category);
+    
+    // Update tab buttons
+    document.querySelectorAll('.achievement-tab').forEach(tab => {
+        tab.classList.toggle('active', tab.dataset.category === category);
+    });
+    
+    // Re-render achievements for selected category
+    updateAchievements();
+}
+
+// Display Achievements with Tab Filtering
 function updateAchievements() {
     const achievements = calculateAchievements();
     const achievementsDiv = document.getElementById('achievementsDisplay');
     
     if (!achievementsDiv) return;
     
-    achievementsDiv.innerHTML = achievements.map(achievement => {
-        const statusClass = achievement.unlocked ? 'unlocked' : 'locked';
+    // Render tabs first
+    renderAchievementTabs(achievements);
+    
+    // Filter achievements by active tab
+    const filteredAchievements = achievements.filter(a => a.category === window.activeAchievementTab);
+    
+    if (filteredAchievements.length === 0) {
+        achievementsDiv.innerHTML = `
+            <div style="text-align: center; padding: 40px; color: var(--text-secondary);">
+                <i class="fas fa-inbox" style="font-size: 3em; margin-bottom: 15px; opacity: 0.5;"></i>
+                <p>No achievements in this category yet.</p>
+            </div>
+        `;
+        return;
+    }
+    
+    // Render filtered achievements
+    achievementsDiv.innerHTML = filteredAchievements.map(achievement => {
+        const isNewlyUnlocked = window.newlyUnlockedAchievements?.has(achievement.id);
+        const progressPercent = achievement.progress !== undefined 
+            ? Math.min((achievement.progress / achievement.target) * 100, 100) 
+            : 100;
+        const badgeClass = achievement.badge || 'bronze';
+        
         return `
-            <div class="achievement-badge ${statusClass}" onclick="showAchievementDetails('${achievement.id}')">
-                <div class="achievement-icon"><i class="fas ${achievement.icon}"></i></div>
+            <div class="achievement-badge ${achievement.unlocked ? 'unlocked' : 'locked'} ${badgeClass} ${isNewlyUnlocked ? 'newly-unlocked' : ''}" 
+                 onclick="showAchievementDetails('${achievement.id}')"
+                 data-achievement-id="${achievement.id}">
+                ${achievement.unlocked ? '' : '<div class="achievement-lock"><i class="fas fa-lock"></i></div>'}
+                <div class="achievement-icon ${achievement.unlocked ? '' : 'locked-icon'}">
+                    <i class="fas ${achievement.icon}"></i>
+                </div>
                 <div class="achievement-name">${achievement.name}</div>
                 <div class="achievement-desc">${achievement.description}</div>
+                ${achievement.progress !== undefined ? `
+                    <div class="achievement-progress">
+                        <div class="achievement-progress-bar">
+                            <div class="achievement-progress-fill" style="width: ${progressPercent}%"></div>
+                        </div>
+                        <div class="achievement-progress-text">${achievement.progress}/${achievement.target}</div>
+                    </div>
+                ` : ''}
             </div>
         `;
     }).join('');
+    
+    // Clear newly unlocked after rendering
+    if (window.newlyUnlockedAchievements) {
+        window.newlyUnlockedAchievements.clear();
+    }
 }
 
 // Display Streaks
@@ -4887,9 +5787,449 @@ function showAchievementDetails(achievementId) {
     const achievements = calculateAchievements();
     const achievement = achievements.find(a => a.id === achievementId);
     
-    if (achievement) {
-        const status = achievement.unlocked ? '✅ UNLOCKED' : '🔒 LOCKED';
-        alert(`${achievement.name}\n${achievement.description}\n\nStatus: ${status}`);
+    if (!achievement) return;
+    
+    const progressPercent = achievement.progress !== undefined 
+        ? Math.min((achievement.progress / achievement.target) * 100, 100) 
+        : 100;
+    
+    // Remove existing modal
+    const existing = document.getElementById('achievementDetailModal');
+    if (existing) existing.remove();
+    
+    // Create modal
+    const overlay = document.createElement('div');
+    overlay.id = 'achievementDetailModal';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 10002;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+    `;
+    
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: var(--dark-bg);
+        border-radius: 20px;
+        padding: 30px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        border: 2px solid ${achievement.unlocked ? 'rgba(80, 200, 120, 0.5)' : 'rgba(255, 255, 255, 0.1)'};
+    `;
+    
+    modal.innerHTML = `
+        <div style="text-align: center;">
+            <div class="achievement-icon-large ${achievement.unlocked ? '' : 'locked-icon'}" style="
+                font-size: 4em;
+                margin-bottom: 15px;
+                color: ${achievement.unlocked ? 'var(--secondary-color)' : 'rgba(255,255,255,0.3)'};
+            ">
+                <i class="fas ${achievement.icon}"></i>
+            </div>
+            <h3 style="color: var(--text-primary); margin-bottom: 10px; font-size: 1.5em;">
+                ${achievement.name}
+            </h3>
+            <p style="color: var(--text-secondary); margin-bottom: 20px; font-size: 1em;">
+                ${achievement.description}
+            </p>
+            ${achievement.reason ? `
+                <div style="background: rgba(80, 200, 120, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 3px solid var(--secondary-color);">
+                    <p style="color: var(--text-primary); margin: 0; font-size: 0.95em; text-align: left;">
+                        ${achievement.reason}
+                    </p>
+                </div>
+            ` : ''}
+            ${achievement.progress !== undefined ? `
+                <div style="margin-bottom: 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="color: var(--text-secondary); font-size: 0.9em;">Progress</span>
+                        <span style="color: var(--text-primary); font-weight: 600;">${achievement.progress}/${achievement.target}</span>
+                    </div>
+                    <div style="background: rgba(255,255,255,0.1); height: 8px; border-radius: 4px; overflow: hidden;">
+                        <div style="background: linear-gradient(90deg, var(--secondary-color), var(--primary-color)); height: 100%; width: ${progressPercent}%; transition: width 0.3s ease;"></div>
+                    </div>
+                </div>
+            ` : ''}
+            <div style="margin-top: 20px;">
+                <span style="
+                    display: inline-block;
+                    padding: 8px 16px;
+                    background: ${achievement.unlocked ? 'rgba(80, 200, 120, 0.2)' : 'rgba(255,255,255,0.1)'};
+                    color: ${achievement.unlocked ? 'var(--secondary-color)' : 'var(--text-secondary)'};
+                    border-radius: 20px;
+                    font-weight: 600;
+                    font-size: 0.9em;
+                ">
+                    ${achievement.unlocked ? '✅ UNLOCKED' : '🔒 LOCKED'}
+                </span>
+            </div>
+            <button onclick="document.getElementById('achievementDetailModal').remove()" style="
+                margin-top: 20px;
+                padding: 12px 30px;
+                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+                border: none;
+                border-radius: 8px;
+                color: white;
+                cursor: pointer;
+                font-weight: 600;
+                font-size: 1em;
+            ">
+                Close
+            </button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
+}
+
+// Chart period state - load from localStorage or default to 7d
+window.chartPeriods = (() => {
+    try {
+        const saved = localStorage.getItem('chartPeriods');
+        if (saved) {
+            const parsed = JSON.parse(saved);
+            return {
+                activity: parsed.activity || '7d',
+                nutrition: parsed.nutrition || '7d',
+                customRanges: parsed.customRanges || {}
+            };
+        }
+    } catch (e) {
+        console.error('Error loading chart periods:', e);
+    }
+    return {
+        activity: '7d',
+        nutrition: '7d',
+        customRanges: {}
+    };
+})();
+
+// Get date range for a given period
+function getDateRangeForPeriod(period) {
+    const today = new Date();
+    today.setHours(23, 59, 59, 999);
+    let startDate = new Date();
+    
+    // Handle custom date range
+    if (period === 'custom') {
+        const customRange = window.chartPeriods?.customRanges?.[window.currentChartType] || window.chartPeriods?.customRanges?.activity;
+        if (customRange && customRange.startDate && customRange.endDate) {
+            return {
+                startDate: new Date(customRange.startDate),
+                endDate: new Date(customRange.endDate)
+            };
+        }
+        // Fallback to 7 days if no custom range set
+        startDate.setDate(today.getDate() - 6);
+        startDate.setHours(0, 0, 0, 0);
+        return { startDate, endDate: today };
+    }
+    
+    // Get profile creation date for 'max' period
+    const userProfile = window.userProfile || JSON.parse(localStorage.getItem('userProfile') || 'null');
+    const profileCreatedAt = userProfile?.createdAt ? new Date(userProfile.createdAt) : null;
+    
+    switch(period) {
+        case '7d':
+            startDate.setDate(today.getDate() - 6);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case 'currentMonth':
+            startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+            break;
+        case 'lastMonth':
+            startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+            const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0, 23, 59, 59, 999);
+            return { startDate, endDate: lastMonthEnd };
+        case '30d':
+            startDate.setDate(today.getDate() - 29);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case '90d':
+            startDate.setDate(today.getDate() - 89);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case '1y':
+            startDate.setFullYear(today.getFullYear() - 1);
+            startDate.setHours(0, 0, 0, 0);
+            break;
+        case 'max':
+            if (profileCreatedAt) {
+                startDate = new Date(profileCreatedAt);
+                startDate.setHours(0, 0, 0, 0);
+            } else {
+                // Fallback to 1 year if no profile date
+                startDate.setFullYear(today.getFullYear() - 1);
+                startDate.setHours(0, 0, 0, 0);
+            }
+            break;
+        default:
+            startDate.setDate(today.getDate() - 6);
+            startDate.setHours(0, 0, 0, 0);
+    }
+    
+    return { startDate, endDate: today };
+}
+
+// Generate date labels and data points based on period
+function generateChartDataPoints(startDate, endDate, period) {
+    const points = [];
+    const daysDiff = Math.ceil((endDate - startDate) / (1000 * 60 * 60 * 24));
+    
+    // Determine aggregation level based on period length
+    let aggregation = 'daily'; // daily, weekly, monthly
+    let labelFormat = { month: 'short', day: 'numeric' };
+    
+    if (daysDiff > 365) {
+        aggregation = 'monthly';
+        labelFormat = { month: 'short', year: '2-digit' };
+    } else if (daysDiff > 30) {
+        // Use weekly aggregation for periods > 30 days (including 90 days)
+        aggregation = 'weekly';
+        labelFormat = { month: 'short', day: 'numeric' };
+    }
+    
+    if (aggregation === 'daily') {
+        // Daily data points
+        for (let d = new Date(startDate); d <= endDate; d.setDate(d.getDate() + 1)) {
+            points.push({
+                date: new Date(d).toISOString().split('T')[0],
+                label: new Date(d).toLocaleDateString('en-US', labelFormat)
+            });
+        }
+    } else if (aggregation === 'weekly') {
+        // Weekly data points (start of each week)
+        const current = new Date(startDate);
+        let weekNum = 1;
+        while (current <= endDate) {
+            const weekEnd = new Date(current);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            const weekLabel = current.getMonth() === weekEnd.getMonth() 
+                ? `${current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { day: 'numeric' })}`
+                : `${current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${weekEnd.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+            
+            points.push({
+                date: new Date(current).toISOString().split('T')[0],
+                label: weekLabel,
+                isWeek: true,
+                weekStart: new Date(current)
+            });
+            current.setDate(current.getDate() + 7);
+            weekNum++;
+        }
+    } else {
+        // Monthly data points
+        const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
+        while (current <= endDate) {
+            points.push({
+                date: new Date(current).toISOString().split('T')[0],
+                label: new Date(current).toLocaleDateString('en-US', { month: 'short', year: '2-digit' }),
+                isMonth: true,
+                monthStart: new Date(current)
+            });
+            current.setMonth(current.getMonth() + 1);
+        }
+    }
+    
+    return { points, aggregation };
+}
+
+// Show custom date range picker
+function showCustomDateRangePicker(chartType) {
+    window.currentChartType = chartType;
+    
+    // Remove any existing modal
+    const existing = document.getElementById('customDateRangeModal');
+    if (existing) existing.remove();
+    
+    // Get existing custom range if any
+    const existingRange = window.chartPeriods?.customRanges?.[chartType];
+    const defaultStart = existingRange?.startDate || new Date(Date.now() - 6 * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
+    const defaultEnd = existingRange?.endDate || new Date().toISOString().split('T')[0];
+    
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'customDateRangeModal';
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 10002;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        backdrop-filter: blur(4px);
+    `;
+    
+    // Create modal content
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: var(--dark-bg);
+        border-radius: 15px;
+        padding: 25px;
+        max-width: 500px;
+        width: 90%;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+    `;
+    
+    modal.innerHTML = `
+        <div style="margin-bottom: 20px;">
+            <h3 style="color: var(--text-primary); margin-bottom: 10px; display: flex; align-items: center; gap: 10px;">
+                <i class="fas fa-calendar-alt"></i> Custom Date Range
+            </h3>
+            <p style="color: var(--text-secondary); font-size: 0.9em;">Select a custom date range for ${chartType === 'activity' ? 'Activity' : 'Nutrition'} Trends</p>
+        </div>
+        
+        <div style="margin-bottom: 15px;">
+            <label style="display: block; color: var(--text-primary); margin-bottom: 8px; font-weight: 600;">
+                Start Date
+            </label>
+            <input type="date" id="customStartDate" value="${defaultStart}" 
+                   style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); 
+                          background: rgba(255,255,255,0.05); color: var(--text-primary); font-size: 1em;">
+        </div>
+        
+        <div style="margin-bottom: 20px;">
+            <label style="display: block; color: var(--text-primary); margin-bottom: 8px; font-weight: 600;">
+                End Date
+            </label>
+            <input type="date" id="customEndDate" value="${defaultEnd}" 
+                   style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); 
+                          background: rgba(255,255,255,0.05); color: var(--text-primary); font-size: 1em;">
+        </div>
+        
+        <div style="display: flex; gap: 10px; justify-content: flex-end;">
+            <button id="customDateCancel" style="
+                padding: 12px 24px;
+                background: rgba(255, 107, 107, 0.2);
+                border: 1px solid rgba(255, 107, 107, 0.4);
+                border-radius: 8px;
+                color: var(--accent-color);
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.2s ease;
+            " onmouseenter="this.style.background='rgba(255, 107, 107, 0.3)'" onmouseleave="this.style.background='rgba(255, 107, 107, 0.2)'">
+                Cancel
+            </button>
+            <button id="customDateApply" style="
+                padding: 12px 24px;
+                background: linear-gradient(135deg, var(--secondary-color) 0%, var(--primary-color) 100%);
+                border: none;
+                border-radius: 8px;
+                color: white;
+                cursor: pointer;
+                font-weight: 600;
+                transition: all 0.2s ease;
+            " onmouseenter="this.style.transform='translateY(-1px)'" onmouseleave="this.style.transform='none'">
+                <i class="fas fa-check"></i> Apply
+            </button>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Handle cancel
+    document.getElementById('customDateCancel').addEventListener('click', () => {
+        overlay.remove();
+    });
+    
+    // Handle apply
+    document.getElementById('customDateApply').addEventListener('click', () => {
+        const startDate = document.getElementById('customStartDate').value;
+        const endDate = document.getElementById('customEndDate').value;
+        
+        if (!startDate || !endDate) {
+            showNotification('Please select both start and end dates.', 'error');
+            return;
+        }
+        
+        if (new Date(startDate) > new Date(endDate)) {
+            showNotification('Start date must be before end date.', 'error');
+            return;
+        }
+        
+        // Save custom range
+        if (!window.chartPeriods.customRanges) {
+            window.chartPeriods.customRanges = {};
+        }
+        window.chartPeriods.customRanges[chartType] = {
+            startDate: startDate,
+            endDate: endDate
+        };
+        
+        // Set period to custom and update
+        setChartPeriod(chartType, 'custom');
+        
+        // Show success notification
+        const start = new Date(startDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        const end = new Date(endDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        showNotification(`Custom range set: ${start} - ${end}`, 'success', 3000);
+        
+        overlay.remove();
+    });
+    
+    // Close on overlay click
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+            overlay.remove();
+        }
+    });
+}
+
+// Set chart period and update
+function setChartPeriod(chartType, period) {
+    window.chartPeriods[chartType] = period;
+    
+    // Save to localStorage
+    try {
+        localStorage.setItem('chartPeriods', JSON.stringify(window.chartPeriods));
+    } catch (e) {
+        console.error('Error saving chart periods:', e);
+    }
+    
+    // Update active button
+    const filterContainer = document.getElementById(`${chartType}ChartFilters`);
+    if (filterContainer) {
+        filterContainer.querySelectorAll('.period-filter-btn').forEach(btn => {
+            btn.classList.remove('active');
+            if (btn.dataset.period === period) {
+                btn.classList.add('active');
+            }
+        });
+        
+        // If custom period, also highlight the custom button
+        if (period === 'custom') {
+            const customBtn = filterContainer.querySelector('[data-period="custom"]');
+            if (customBtn) customBtn.classList.add('active');
+        }
+    }
+    
+    // Update the chart
+    if (chartType === 'activity') {
+        updateActivityChart(period);
+    } else if (chartType === 'nutrition') {
+        updateNutritionChart(period);
     }
 }
 
@@ -4897,11 +6237,11 @@ function showAchievementDetails(achievementId) {
 function updateCharts() {
     // Use setTimeout to ensure DOM is ready and Chart.js is loaded
     setTimeout(() => {
-        updateActivityChart();
+        updateActivityChart(window.chartPeriods.activity || '7d');
     }, 100);
     
     setTimeout(() => {
-        updateNutritionChart();
+        updateNutritionChart(window.chartPeriods.nutrition || '7d');
     }, 150);
     
     setTimeout(() => {
@@ -4910,7 +6250,7 @@ function updateCharts() {
 }
 
 // Activity Chart
-function updateActivityChart() {
+function updateActivityChart(period = '7d') {
     const canvas = document.getElementById('activityChart');
     if (!canvas) {
         console.log('Activity chart canvas not found');
@@ -4936,32 +6276,84 @@ function updateActivityChart() {
         window.activityChartInstance.destroy();
     }
     
-    // Get last 7 days of activities
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        return date.toISOString().split('T')[0];
-    }).reverse();
+    // Get date range for the selected period
+    const { startDate, endDate } = getDateRangeForPeriod(period);
+    const { points, aggregation } = generateChartDataPoints(startDate, endDate, period);
     
-    const activityCaloriesByDay = last7Days.map(date => {
-        const dayActivities = activities.filter(act => {
-            // Handle both date string and Date object formats
+    // Ensure activities array exists
+    const activitiesArray = window.activities || activities || [];
+    
+    // Aggregate activity data based on period
+    const activityCaloriesByPeriod = points.map(point => {
+        let periodActivities = [];
+        
+        try {
+            if (aggregation === 'daily') {
+                // Daily aggregation
+                periodActivities = activitiesArray.filter(act => {
+                    if (!act || !act.date) return false;
             const actDate = typeof act.date === 'string' ? act.date.split('T')[0] : new Date(act.date).toISOString().split('T')[0];
-            return actDate === date;
-        });
-        return dayActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
+                    return actDate === point.date;
+                });
+            } else if (aggregation === 'weekly' && point.weekStart) {
+                // Weekly aggregation
+                const weekStart = new Date(point.weekStart);
+                weekStart.setHours(0, 0, 0, 0);
+                const weekEnd = new Date(weekStart);
+                weekEnd.setDate(weekEnd.getDate() + 6);
+                weekEnd.setHours(23, 59, 59, 999);
+                
+                periodActivities = activitiesArray.filter(act => {
+                    if (!act || !act.date) return false;
+                    let actDate;
+                    if (typeof act.date === 'string') {
+                        actDate = new Date(act.date);
+                    } else {
+                        actDate = new Date(act.date);
+                    }
+                    // Normalize to start of day for comparison
+                    actDate.setHours(0, 0, 0, 0);
+                    return actDate >= weekStart && actDate <= weekEnd;
+                });
+            } else if (aggregation === 'monthly' && point.monthStart) {
+                // Monthly aggregation
+                const monthStart = new Date(point.monthStart);
+                monthStart.setHours(0, 0, 0, 0);
+                const monthEnd = new Date(monthStart.getFullYear(), monthStart.getMonth() + 1, 0, 23, 59, 59, 999);
+                
+                periodActivities = activitiesArray.filter(act => {
+                    if (!act || !act.date) return false;
+                    let actDate;
+                    if (typeof act.date === 'string') {
+                        actDate = new Date(act.date);
+                    } else {
+                        actDate = new Date(act.date);
+                    }
+                    // Normalize to start of day for comparison
+                    actDate.setHours(0, 0, 0, 0);
+                    return actDate >= monthStart && actDate <= monthEnd;
+                });
+            }
+        } catch (err) {
+            console.error('Error processing point:', point, err);
+            return 0;
+        }
+        
+        return periodActivities.reduce((sum, act) => sum + (act.calories || 0), 0);
     });
     
     console.log('Activity chart data:', {
-        activities: activities.length,
-        last7Days: last7Days,
-        activityCaloriesByDay: activityCaloriesByDay,
-        sampleDates: activities.slice(0, 3).map(a => a.date)
+        activities: activitiesArray.length,
+        period: period,
+        points: points.length,
+        aggregation: aggregation,
+        activityCaloriesByPeriod: activityCaloriesByPeriod,
+        sampleDates: activitiesArray.slice(0, 3).map(a => a?.date)
     });
     
     // Show message if no activity data
-    const totalCalories = activityCaloriesByDay.reduce((a, b) => a + b, 0);
-    if (totalCalories === 0 && activities.length === 0) {
+    const totalCalories = activityCaloriesByPeriod.reduce((a, b) => a + b, 0);
+    if (totalCalories === 0 && activitiesArray.length === 0) {
         // Keep canvas but show a message below
         const existingMsg = canvas.parentElement.querySelector('.no-data-message');
         if (!existingMsg) {
@@ -4983,21 +6375,26 @@ function updateActivityChart() {
     const tickColor = isLightMode ? '#5a6c7d' : '#b0b0b0';
     
     try {
+        // Adjust point radius and font size based on data points
+        const pointRadius = points.length > 30 ? 2 : (points.length > 14 ? 3 : 4);
+        const fontSize = points.length > 30 ? 9 : (points.length > 14 ? 10 : 11);
+        const maxTicks = points.length > 30 ? 10 : (points.length > 14 ? 14 : undefined);
+        
         window.activityChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
-                labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                labels: points.map(p => p.label),
                 datasets: [{
                     label: 'Calories Burned',
-                    data: activityCaloriesByDay,
+                    data: activityCaloriesByPeriod,
                     borderColor: '#50c878',
                     backgroundColor: 'rgba(80, 200, 120, 0.1)',
                     tension: 0.4,
                     fill: true,
-                    pointRadius: 4,
+                    pointRadius: pointRadius,
                     pointBackgroundColor: '#50c878',
                     pointBorderColor: '#ffffff',
-                    pointBorderWidth: 2
+                    pointBorderWidth: points.length <= 30 ? 2 : 1
                 }]
             },
             options: {
@@ -5034,7 +6431,7 @@ function updateActivityChart() {
                         ticks: {
                             color: tickColor,
                             font: {
-                                size: 11
+                                size: fontSize
                             }
                         },
                         grid: {
@@ -5046,8 +6443,9 @@ function updateActivityChart() {
                         ticks: {
                             color: tickColor,
                             font: {
-                                size: 11
-                            }
+                                size: fontSize
+                            },
+                            maxTicksLimit: maxTicks
                         },
                         grid: {
                             color: gridColor,
@@ -5058,15 +6456,24 @@ function updateActivityChart() {
             }
         });
         
-        console.log('✅ Activity chart rendered successfully with', activityCaloriesByDay.length, 'data points');
+        console.log('✅ Activity chart rendered successfully with', activityCaloriesByPeriod.length, 'data points for period', period);
     } catch (error) {
         console.error('❌ Error rendering activity chart:', error);
-        canvas.parentElement.innerHTML += '<p style="text-align: center; color: var(--accent-color); padding-top: 20px;">Error loading chart. Please refresh the page.</p>';
+        console.error('Error details:', error.stack);
+        // Don't replace the entire parent, just show error message
+        const errorMsg = canvas.parentElement.querySelector('.chart-error-message');
+        if (!errorMsg) {
+            const msg = document.createElement('p');
+            msg.className = 'chart-error-message';
+            msg.style.cssText = 'text-align: center; color: var(--accent-color); padding-top: 20px;';
+            msg.textContent = 'Error loading chart. Please refresh the page.';
+            canvas.parentElement.appendChild(msg);
+        }
     }
 }
 
 // Nutrition Chart
-function updateNutritionChart() {
+function updateNutritionChart(period = '7d') {
     const canvas = document.getElementById('nutritionChart');
     if (!canvas) {
         console.log('Nutrition chart canvas not found');
@@ -5091,34 +6498,57 @@ function updateNutritionChart() {
         window.nutritionChartInstance.destroy();
     }
     
-    const last7Days = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date();
-        date.setDate(date.getDate() - i);
-        return date.toISOString().split('T')[0];
-    }).reverse();
+    // Get date range for the selected period
+    const { startDate, endDate } = getDateRangeForPeriod(period);
+    const { points, aggregation } = generateChartDataPoints(startDate, endDate, period);
     
-    const nutritionByDay = last7Days.map(date => {
-        const dayMeals = meals.filter(meal => {
-            // Handle both date string and Date object formats
+    // Aggregate nutrition data based on period
+    const nutritionByPeriod = points.map(point => {
+        let periodMeals = [];
+        
+        if (aggregation === 'daily') {
+            // Daily aggregation
+            periodMeals = meals.filter(meal => {
             const mealDate = typeof meal.date === 'string' ? meal.date.split('T')[0] : new Date(meal.date).toISOString().split('T')[0];
-            return mealDate === date;
-        });
+                return mealDate === point.date;
+            });
+        } else if (aggregation === 'weekly') {
+            // Weekly aggregation
+            const weekEnd = new Date(point.weekStart);
+            weekEnd.setDate(weekEnd.getDate() + 6);
+            weekEnd.setHours(23, 59, 59, 999);
+            
+            periodMeals = meals.filter(meal => {
+                const mealDate = typeof meal.date === 'string' ? new Date(meal.date) : new Date(meal.date);
+                return mealDate >= point.weekStart && mealDate <= weekEnd;
+            });
+        } else {
+            // Monthly aggregation
+            const monthEnd = new Date(point.monthStart.getFullYear(), point.monthStart.getMonth() + 1, 0, 23, 59, 59, 999);
+            
+            periodMeals = meals.filter(meal => {
+                const mealDate = typeof meal.date === 'string' ? new Date(meal.date) : new Date(meal.date);
+                return mealDate >= point.monthStart && mealDate <= monthEnd;
+            });
+        }
+        
         return {
-            calories: dayMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0),
-            protein: dayMeals.reduce((sum, meal) => sum + (meal.protein || 0), 0),
-            carbs: dayMeals.reduce((sum, meal) => sum + (meal.carbs || 0), 0)
+            calories: periodMeals.reduce((sum, meal) => sum + (meal.calories || 0), 0),
+            protein: periodMeals.reduce((sum, meal) => sum + (meal.protein || 0), 0),
+            carbs: periodMeals.reduce((sum, meal) => sum + (meal.carbs || 0), 0)
         };
     });
     
     console.log('Nutrition chart data:', {
         meals: meals.length,
-        last7Days: last7Days,
-        nutritionByDay: nutritionByDay,
+        period: period,
+        points: points.length,
+        nutritionByPeriod: nutritionByPeriod,
         sampleDates: meals.slice(0, 3).map(m => m.date)
     });
     
     // Show message if no nutrition data
-    const totalCalories = nutritionByDay.reduce((sum, n) => sum + n.calories, 0);
+    const totalCalories = nutritionByPeriod.reduce((sum, n) => sum + n.calories, 0);
     if (totalCalories === 0 && meals.length === 0) {
         // Keep canvas but show a message below
         const existingMsg = canvas.parentElement.querySelector('.no-data-message');
@@ -5141,28 +6571,32 @@ function updateNutritionChart() {
     const tickColor = isLightMode ? '#5a6c7d' : '#b0b0b0';
     
     try {
+        // Adjust font size based on data points
+        const fontSize = points.length > 30 ? 9 : (points.length > 14 ? 10 : 11);
+        const maxTicks = points.length > 30 ? 10 : (points.length > 14 ? 14 : undefined);
+        
         window.nutritionChartInstance = new Chart(ctx, {
             type: 'bar',
             data: {
-                labels: last7Days.map(date => new Date(date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })),
+                labels: points.map(p => p.label),
                 datasets: [
                     {
                         label: 'Calories (×0.1)',
-                        data: nutritionByDay.map(n => n.calories / 10),
+                        data: nutritionByPeriod.map(n => n.calories / 10),
                         backgroundColor: 'rgba(255, 107, 107, 0.6)',
                         borderColor: '#ff6b6b',
                         borderWidth: 2
                     },
                     {
                         label: 'Protein (g)',
-                        data: nutritionByDay.map(n => n.protein),
+                        data: nutritionByPeriod.map(n => n.protein),
                         backgroundColor: 'rgba(74, 144, 226, 0.6)',
                         borderColor: '#4a90e2',
                         borderWidth: 2
                     },
                     {
                         label: 'Carbs (g)',
-                        data: nutritionByDay.map(n => n.carbs),
+                        data: nutritionByPeriod.map(n => n.carbs),
                         backgroundColor: 'rgba(255, 215, 0, 0.6)',
                         borderColor: '#ffd700',
                         borderWidth: 2
@@ -5215,8 +6649,9 @@ function updateNutritionChart() {
                         ticks: {
                             color: tickColor,
                             font: {
-                                size: 11
-                            }
+                                size: fontSize
+                            },
+                            maxTicksLimit: maxTicks
                         },
                         grid: {
                             color: gridColor,
@@ -5227,7 +6662,7 @@ function updateNutritionChart() {
             }
         });
         
-        console.log('✅ Nutrition chart rendered successfully with', nutritionByDay.length, 'data points');
+        console.log('✅ Nutrition chart rendered successfully with', nutritionByPeriod.length, 'data points for period', period);
     } catch (error) {
         console.error('❌ Error rendering nutrition chart:', error);
         canvas.parentElement.innerHTML += '<p style="text-align: center; color: var(--accent-color); padding-top: 20px;">Error loading chart. Please refresh the page.</p>';

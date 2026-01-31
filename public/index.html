@@ -799,12 +799,40 @@
 
                 <!-- Charts Section -->
                 <div class="content-card">
-                    <h3><i class="fas fa-chart-area"></i> Activity Trends (Last 7 Days)</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <h3 style="margin: 0;"><i class="fas fa-chart-area"></i> Activity Trends</h3>
+                        <div class="chart-period-filters" id="activityChartFilters">
+                            <button class="period-filter-btn active" data-period="7d" onclick="setChartPeriod('activity', '7d')">7 Days</button>
+                            <button class="period-filter-btn" data-period="currentMonth" onclick="setChartPeriod('activity', 'currentMonth')">This Month</button>
+                            <button class="period-filter-btn" data-period="lastMonth" onclick="setChartPeriod('activity', 'lastMonth')">Last Month</button>
+                            <button class="period-filter-btn" data-period="30d" onclick="setChartPeriod('activity', '30d')">30 Days</button>
+                            <button class="period-filter-btn" data-period="90d" onclick="setChartPeriod('activity', '90d')">90 Days</button>
+                            <button class="period-filter-btn" data-period="1y" onclick="setChartPeriod('activity', '1y')">1 Year</button>
+                            <button class="period-filter-btn" data-period="max" onclick="setChartPeriod('activity', 'max')">Max</button>
+                            <button class="period-filter-btn" data-period="custom" onclick="showCustomDateRangePicker('activity')" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 152, 0, 0.2) 100%); border-color: rgba(255, 193, 7, 0.4);">
+                                <i class="fas fa-calendar-alt"></i> Custom
+                            </button>
+                        </div>
+                    </div>
                     <canvas id="activityChart"></canvas>
                 </div>
 
                 <div class="content-card">
-                    <h3><i class="fas fa-apple-alt"></i> Nutrition Trends (Last 7 Days)</h3>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px;">
+                        <h3 style="margin: 0;"><i class="fas fa-apple-alt"></i> Nutrition Trends</h3>
+                        <div class="chart-period-filters" id="nutritionChartFilters">
+                            <button class="period-filter-btn active" data-period="7d" onclick="setChartPeriod('nutrition', '7d')">7 Days</button>
+                            <button class="period-filter-btn" data-period="currentMonth" onclick="setChartPeriod('nutrition', 'currentMonth')">This Month</button>
+                            <button class="period-filter-btn" data-period="lastMonth" onclick="setChartPeriod('nutrition', 'lastMonth')">Last Month</button>
+                            <button class="period-filter-btn" data-period="30d" onclick="setChartPeriod('nutrition', '30d')">30 Days</button>
+                            <button class="period-filter-btn" data-period="90d" onclick="setChartPeriod('nutrition', '90d')">90 Days</button>
+                            <button class="period-filter-btn" data-period="1y" onclick="setChartPeriod('nutrition', '1y')">1 Year</button>
+                            <button class="period-filter-btn" data-period="max" onclick="setChartPeriod('nutrition', 'max')">Max</button>
+                            <button class="period-filter-btn" data-period="custom" onclick="showCustomDateRangePicker('nutrition')" style="background: linear-gradient(135deg, rgba(255, 193, 7, 0.2) 0%, rgba(255, 152, 0, 0.2) 100%); border-color: rgba(255, 193, 7, 0.4);">
+                                <i class="fas fa-calendar-alt"></i> Custom
+                            </button>
+                        </div>
+                    </div>
                     <canvas id="nutritionChart"></canvas>
                 </div>
 
@@ -830,6 +858,9 @@
                 <!-- Achievements Section -->
                 <div class="content-card">
                     <h3><i class="fas fa-medal"></i> Your Achievements</h3>
+                    <div id="achievementTabs" class="achievement-tabs">
+                        <!-- Tabs will be dynamically generated -->
+                    </div>
                     <div id="achievementsDisplay" class="achievements-grid"></div>
                 </div>
             </section>
