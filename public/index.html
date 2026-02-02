@@ -23,14 +23,21 @@
                 <form id="loginForm">
                     <div class="form-group">
                         <i class="fas fa-user"></i>
-                        <input type="text" id="username" placeholder="Username" required>
+                        <input type="text" id="username" placeholder="Username" required autocomplete="username">
+                        <div id="usernameError" class="field-error"></div>
                     </div>
                     <div class="form-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="password" placeholder="Password" required>
+                        <input type="password" id="password" placeholder="Password" required autocomplete="current-password">
+                        <div id="passwordError" class="field-error"></div>
                     </div>
-                    <button type="submit" class="btn-primary">
-                        <i class="fas fa-sign-in-alt"></i> Login
+                    <div style="text-align: right; margin-bottom: 15px;">
+                        <a href="#" id="forgotPasswordLink" style="color: var(--primary-color); text-decoration: none; font-size: 0.9em;">
+                            <i class="fas fa-key"></i> Forgot Password?
+                        </a>
+                    </div>
+                    <button type="submit" class="btn-primary" id="loginBtn">
+                        <i class="fas fa-sign-in-alt"></i> <span id="loginBtnText">Login</span>
                     </button>
                 </form>
                 <p class="signup-link">
@@ -38,27 +45,131 @@
                 </p>
             </div>
 
+            <!-- Forgot Password Form -->
+            <div id="forgotPasswordContainer" style="display: none;">
+                <h3 style="color: var(--text-primary); margin-bottom: 20px;">
+                    <i class="fas fa-key"></i> Reset Password
+                </h3>
+                <form id="forgotPasswordForm">
+                    <div class="form-group">
+                        <i class="fas fa-envelope"></i>
+                        <input type="email" id="forgotPasswordEmail" placeholder="Enter your email address" required>
+                        <div id="forgotPasswordError" class="field-error"></div>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-paper-plane"></i> Send Reset Link
+                    </button>
+                </form>
+                <p class="signup-link" style="margin-top: 20px;">
+                    <a href="#" id="backToLoginFromForgot">Back to Login</a>
+                </p>
+            </div>
+
+            <!-- Email Verification OTP Form -->
+            <div id="emailVerificationContainer" style="display: none;">
+                <h3 style="color: var(--text-primary); margin-bottom: 20px;">
+                    <i class="fas fa-envelope-circle-check"></i> Verify Your Email
+                </h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">
+                    We've sent a 6-digit OTP to <strong id="verificationEmailAddress"></strong>
+                </p>
+                <form id="emailVerificationForm">
+                    <div class="form-group">
+                        <i class="fas fa-key"></i>
+                        <input type="text" id="verificationOTP" placeholder="Enter 6-digit OTP" maxlength="6" pattern="[0-9]{6}" required autocomplete="off" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold;">
+                        <div id="verificationOTPError" class="field-error"></div>
+                    </div>
+                    <button type="submit" class="btn-primary" id="verifyOTPBtn">
+                        <i class="fas fa-check"></i> <span id="verifyOTPBtnText">Verify OTP</span>
+                    </button>
+                </form>
+                <p class="signup-link" style="margin-top: 15px;">
+                    <a href="#" id="resendVerificationBtn">Resend OTP</a> | 
+                    <a href="#" id="backToLoginFromVerification">Back to Login</a>
+                </p>
+            </div>
+
+            <!-- Password Reset OTP Form -->
+            <div id="resetPasswordOTPContainer" style="display: none;">
+                <h3 style="color: var(--text-primary); margin-bottom: 20px;">
+                    <i class="fas fa-key"></i> Verify OTP
+                </h3>
+                <p style="color: var(--text-secondary); margin-bottom: 20px; text-align: center;">
+                    We've sent a 6-digit OTP to <strong id="resetPasswordEmailAddress"></strong>
+                </p>
+                <form id="resetPasswordOTPForm">
+                    <div class="form-group">
+                        <i class="fas fa-key"></i>
+                        <input type="text" id="resetPasswordOTP" placeholder="Enter 6-digit OTP" maxlength="6" pattern="[0-9]{6}" required autocomplete="off" style="text-align: center; font-size: 24px; letter-spacing: 8px; font-weight: bold;">
+                        <div id="resetPasswordOTPError" class="field-error"></div>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-check"></i> Verify OTP
+                    </button>
+                </form>
+                <p class="signup-link" style="margin-top: 15px;">
+                    <a href="#" id="resendResetOTPBtn">Resend OTP</a> | 
+                    <a href="#" id="backToForgotPassword">Back</a>
+                </p>
+            </div>
+
+            <!-- Password Reset Form (after OTP verification) -->
+            <div id="resetPasswordContainer" style="display: none;">
+                <h3 style="color: var(--text-primary); margin-bottom: 20px;">
+                    <i class="fas fa-lock"></i> Set New Password
+                </h3>
+                <form id="resetPasswordForm">
+                    <div class="form-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="resetPassword" placeholder="New Password" required>
+                        <div id="resetPasswordError" class="field-error"></div>
+                        <div id="resetPasswordStrength" class="password-strength"></div>
+                    </div>
+                    <div class="form-group">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="resetConfirmPassword" placeholder="Confirm New Password" required>
+                        <div id="resetConfirmPasswordError" class="field-error"></div>
+                    </div>
+                    <button type="submit" class="btn-primary">
+                        <i class="fas fa-check"></i> Reset Password
+                    </button>
+                </form>
+            </div>
+
             <!-- Sign Up Form -->
             <div id="signupFormContainer" style="display: none;">
                 <form id="signupForm">
                     <div class="form-group">
                         <i class="fas fa-user"></i>
-                        <input type="text" id="signupUsername" placeholder="Choose Username" required>
+                        <input type="text" id="signupUsername" placeholder="Choose Username (3-30 characters)" required autocomplete="username">
+                        <div id="signupUsernameError" class="field-error"></div>
+                        <div id="usernameAvailability" class="field-hint"></div>
                     </div>
                     <div class="form-group">
                         <i class="fas fa-envelope"></i>
-                        <input type="email" id="signupEmail" placeholder="Email Address" required>
+                        <input type="email" id="signupEmail" placeholder="Email Address" required autocomplete="email">
+                        <div id="signupEmailError" class="field-error"></div>
                     </div>
                     <div class="form-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="signupPassword" placeholder="Create Password" required>
+                        <input type="password" id="signupPassword" placeholder="Create Password (min 8 characters)" required autocomplete="new-password">
+                        <div id="signupPasswordError" class="field-error"></div>
+                        <div id="passwordStrength" class="password-strength"></div>
                     </div>
                     <div class="form-group">
                         <i class="fas fa-lock"></i>
-                        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required>
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm Password" required autocomplete="new-password">
+                        <div id="signupConfirmPasswordError" class="field-error"></div>
                     </div>
-                    <button type="submit" class="btn-primary">
-                        <i class="fas fa-user-plus"></i> Create Account
+                    <div style="margin-bottom: 15px; padding-left: 0;">
+                        <label style="display: flex; align-items: center; gap: 8px; color: var(--text-secondary); font-size: 0.9em; cursor: pointer; width: 100%;">
+                            <input type="checkbox" id="signupTerms" required style="cursor: pointer; flex-shrink: 0; margin: 0; width: auto;">
+                            <span style="flex: 1;">I agree to the <a href="#" style="color: var(--primary-color);">Terms of Service</a> and <a href="#" style="color: var(--primary-color);">Privacy Policy</a></span>
+                        </label>
+                        <div id="signupTermsError" class="field-error"></div>
+                    </div>
+                    <button type="submit" class="btn-primary" id="signupBtn">
+                        <i class="fas fa-user-plus"></i> <span id="signupBtnText">Create Account</span>
                     </button>
                 </form>
                 <p class="signup-link">

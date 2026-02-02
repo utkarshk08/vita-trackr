@@ -146,6 +146,121 @@ body.light-mode .theme-toggle {
     color: var(--text-secondary);
 }
 
+.form-group input:invalid:not(:placeholder-shown) {
+    border-color: rgba(255, 107, 107, 0.5);
+}
+
+.form-group input:valid:not(:placeholder-shown) {
+    border-color: rgba(80, 200, 120, 0.5);
+}
+
+/* Field Error Messages */
+.field-error {
+    color: #ff6b6b;
+    font-size: 0.85em;
+    margin-top: 5px;
+    min-height: 18px;
+    display: none;
+}
+
+.field-error.show {
+    display: block;
+}
+
+.field-hint {
+    color: var(--text-secondary);
+    font-size: 0.85em;
+    margin-top: 5px;
+    min-height: 18px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.field-hint.success {
+    color: var(--secondary-color);
+}
+
+.field-hint.error {
+    color: #ff6b6b;
+}
+
+/* Password Strength Indicator */
+.password-strength {
+    margin-top: 8px;
+    height: 4px;
+    border-radius: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    display: none;
+}
+
+.password-strength.show {
+    display: block;
+}
+
+.password-strength-bar {
+    height: 100%;
+    transition: width 0.3s ease, background 0.3s ease;
+    border-radius: 2px;
+}
+
+.password-strength.weak .password-strength-bar {
+    width: 33%;
+    background: linear-gradient(90deg, #ff6b6b, #ff8787);
+}
+
+.password-strength.medium .password-strength-bar {
+    width: 66%;
+    background: linear-gradient(90deg, #ffd93d, #ffed4e);
+}
+
+.password-strength.strong .password-strength-bar {
+    width: 100%;
+    background: linear-gradient(90deg, #50c878, #6dd88a);
+}
+
+.password-strength-text {
+    font-size: 0.8em;
+    margin-top: 5px;
+    color: var(--text-secondary);
+}
+
+.password-strength.weak .password-strength-text {
+    color: #ff6b6b;
+}
+
+.password-strength.medium .password-strength-text {
+    color: #ffd93d;
+}
+
+.password-strength.strong .password-strength-text {
+    color: #50c878;
+}
+
+/* Loading State */
+.btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+.btn-primary .spinner {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin-right: 8px;
+    vertical-align: middle;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
 .btn-primary {
     width: 100%;
     padding: 15px;

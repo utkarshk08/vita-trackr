@@ -6,12 +6,24 @@ const {
     loginUser,
     getUserProfile,
     updateUserProfile,
-    getUserDashboard
+    getUserDashboard,
+    checkUsernameAvailability,
+    verifyEmail,
+    resendVerificationEmail,
+    forgotPassword,
+    verifyResetOTP,
+    resetPassword
 } = require('../controllers/userController');
 
 // Public routes
+router.get('/check-username', checkUsernameAvailability);
 router.post('/register', registerUser);
 router.post('/login', loginUser);
+router.post('/verify-email', verifyEmail);
+router.post('/resend-verification', resendVerificationEmail);
+router.post('/forgot-password', forgotPassword);
+router.post('/verify-reset-otp', verifyResetOTP);
+router.post('/reset-password', resetPassword);
 
 // Private routes
 router.get('/:userId', getUserProfile);

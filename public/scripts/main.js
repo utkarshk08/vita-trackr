@@ -73,11 +73,174 @@ document.addEventListener('DOMContentLoaded', function() {
     // Initialize support chatbot (always visible)
     initializeSupportChatbot();
     
+    // Validation Functions
+    function validateEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    function validatePassword(password) {
+        return password.length >= 8;
+    }
+
+    function checkPasswordStrength(password) {
+        if (password.length === 0) return { strength: 'none', text: '' };
+        if (password.length < 8) return { strength: 'weak', text: 'Password must be at least 8 characters' };
+        
+        let strength = 0;
+        if (password.length >= 8) strength++;
+        if (password.length >= 12) strength++;
+        if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+        if (/\d/.test(password)) strength++;
+        if (/[^a-zA-Z\d]/.test(password)) strength++;
+        
+        if (strength <= 2) return { strength: 'weak', text: 'Weak password' };
+        if (strength <= 3) return { strength: 'medium', text: 'Medium strength' };
+        return { strength: 'strong', text: 'Strong password' };
+    }
+
+    function showFieldError(fieldId, message) {
+        const errorEl = document.getElementById(fieldId + 'Error');
+        if (errorEl) {
+            errorEl.textContent = message;
+            errorEl.classList.add('show');
+        }
+    }
+
+    function hideFieldError(fieldId) {
+        const errorEl = document.getElementById(fieldId + 'Error');
+        if (errorEl) {
+            errorEl.textContent = '';
+            errorEl.classList.remove('show');
+        }
+    }
+
+    function updatePasswordStrength(password, strengthId) {
+        const strengthEl = document.getElementById(strengthId);
+        if (!strengthEl) return;
+        
+        if (password.length === 0) {
+            strengthEl.classList.remove('show', 'weak', 'medium', 'strong');
+            return;
+        }
+        
+        const { strength, text } = checkPasswordStrength(password);
+        strengthEl.classList.add('show', strength);
+        strengthEl.classList.remove('weak', 'medium', 'strong');
+        strengthEl.classList.add(strength);
+        
+        const barEl = strengthEl.querySelector('.password-strength-bar') || document.createElement('div');
+        barEl.className = 'password-strength-bar';
+        if (!strengthEl.querySelector('.password-strength-bar')) {
+            strengthEl.innerHTML = `<div class="password-strength-bar"></div><div class="password-strength-text">${text}</div>`;
+        } else {
+            strengthEl.querySelector('.password-strength-text').textContent = text;
+        }
+    }
+
+    // Username availability check (debounced)
+    let usernameCheckTimeout;
+    async function checkUsernameAvailability(username) {
+        if (username.length < 3) {
+            document.getElementById('usernameAvailability').innerHTML = '';
+            return;
+        }
+        
+        clearTimeout(usernameCheckTimeout);
+        usernameCheckTimeout = setTimeout(async () => {
+            try {
+                const response = await fetch(`/api/users/check-username?username=${encodeURIComponent(username)}`);
+                const data = await response.json();
+                const hintEl = document.getElementById('usernameAvailability');
+                if (hintEl) {
+                    if (data.available) {
+                        hintEl.innerHTML = '<i class="fas fa-check-circle"></i> Username available';
+                        hintEl.classList.add('success');
+                        hintEl.classList.remove('error');
+                    } else {
+                        hintEl.innerHTML = '<i class="fas fa-times-circle"></i> Username already taken';
+                        hintEl.classList.add('error');
+                        hintEl.classList.remove('success');
+                    }
+                }
+            } catch (error) {
+                console.error('Error checking username:', error);
+            }
+        }, 500);
+    }
+
+    // Real-time validation for signup form
+    document.getElementById('signupUsername')?.addEventListener('input', function(e) {
+        const username = e.target.value.trim();
+        hideFieldError('signupUsername');
+        
+        if (username.length > 0 && username.length < 3) {
+            showFieldError('signupUsername', 'Username must be at least 3 characters');
+        } else if (username.length > 30) {
+            showFieldError('signupUsername', 'Username must be less than 30 characters');
+        } else if (username.length >= 3) {
+            checkUsernameAvailability(username);
+        }
+    });
+
+    document.getElementById('signupEmail')?.addEventListener('input', function(e) {
+        const email = e.target.value.trim();
+        hideFieldError('signupEmail');
+        
+        if (email.length > 0 && !validateEmail(email)) {
+            showFieldError('signupEmail', 'Please enter a valid email address');
+        }
+    });
+
+    document.getElementById('signupPassword')?.addEventListener('input', function(e) {
+        const password = e.target.value;
+        hideFieldError('signupPassword');
+        updatePasswordStrength(password, 'passwordStrength');
+        
+        if (password.length > 0 && !validatePassword(password)) {
+            showFieldError('signupPassword', 'Password must be at least 8 characters');
+        }
+    });
+
+    document.getElementById('signupConfirmPassword')?.addEventListener('input', function(e) {
+        const password = document.getElementById('signupPassword').value;
+        const confirmPassword = e.target.value;
+        hideFieldError('signupConfirmPassword');
+        
+        if (confirmPassword.length > 0 && password !== confirmPassword) {
+            showFieldError('signupConfirmPassword', 'Passwords do not match');
+        }
+    });
+
     // Login form submission
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    const loginForm = document.getElementById('loginForm');
+    if (!loginForm) {
+        console.error('Login form not found!');
+    } else {
+        loginForm.addEventListener('submit', async function(e) {
         e.preventDefault();
-        const username = document.getElementById('username').value;
+        const username = document.getElementById('username').value.trim();
         const password = document.getElementById('password').value;
+        const loginBtn = document.getElementById('loginBtn');
+        const loginBtnText = document.getElementById('loginBtnText');
+        
+        // Clear previous errors
+        hideFieldError('username');
+        hideFieldError('password');
+        
+        // Basic validation
+        if (!username) {
+            showFieldError('username', 'Username is required');
+            return;
+        }
+        if (!password) {
+            showFieldError('password', 'Password is required');
+            return;
+        }
+        
+        // Disable button and show loading
+        loginBtn.disabled = true;
+        loginBtnText.innerHTML = '<span class="spinner"></span> Logging in...';
         
         try {
             // Try API login first
@@ -86,7 +249,7 @@ document.addEventListener('DOMContentLoaded', function() {
             // Load user profile
             userProfile = await getUserProfile();
             localStorage.setItem('userProfile', JSON.stringify(userProfile));
-            updateSubscriptionBadge(); // Update subscription badge after login
+            updateSubscriptionBadge();
             
             document.getElementById('loginScreen').style.display = 'none';
             document.getElementById('appScreen').style.display = 'block';
@@ -102,112 +265,362 @@ document.addEventListener('DOMContentLoaded', function() {
                 showPage('home');
             }
             
-            alert('Login successful!');
+            showNotification('Login successful!', 'success');
         } catch (error) {
             console.error('API login failed:', error);
-            // Fallback: Allow basic demo mode (for testing)
-            if (username && password) {
-                // Store basic demo user
-                const demoUserId = 'demo-' + Date.now();
-                const demoUser = {
-                    userId: demoUserId,
-                    username: username,
-                    email: username + '@demo.com',
-                    isSetupComplete: false
-                };
-                localStorage.setItem('currentUser', JSON.stringify(demoUser));
-                localStorage.setItem('currentUserId', demoUserId);
-                
-                // Set userProfile for demo mode
-                userProfile = {
-                    ...demoUser,
-                    subscriptionStatus: 'pro',
-                    isActive: true
-                };
-                localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('appScreen').style.display = 'block';
-                showPage('profile');
-                
-                alert('Demo mode: Please create your profile');
-            } else {
-                alert('Login failed: ' + error.message);
+            
+            // Check if email verification is required
+            if (error.response && error.response.requiresEmailVerification) {
+                showNotification('Please verify your email before logging in. Check your inbox for the verification link.', 'warning', 5000);
+                showEmailVerificationSent(error.response.email || username + '@email.com');
+                loginBtn.disabled = false;
+                loginBtnText.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
+                return;
             }
+            
+            const errorMessage = error.message || 'Login failed. Please check your credentials.';
+            showFieldError('password', errorMessage);
+            showNotification(errorMessage, 'error');
+        } finally {
+            loginBtn.disabled = false;
+            loginBtnText.innerHTML = '<i class="fas fa-sign-in-alt"></i> Login';
         }
-    });
+        });
+    }
     
-    // Sign up form submission
-    document.getElementById('signupForm').addEventListener('submit', async function(e) {
+    // Show email verification OTP form
+    function showEmailVerificationSent(email) {
+        document.getElementById('loginFormContainer').style.display = 'none';
+        document.getElementById('signupFormContainer').style.display = 'none';
+        document.getElementById('forgotPasswordContainer').style.display = 'none';
+        document.getElementById('resetPasswordContainer').style.display = 'none';
+        document.getElementById('resetPasswordOTPContainer').style.display = 'none';
+        document.getElementById('emailVerificationContainer').style.display = 'block';
+        document.getElementById('verificationEmailAddress').textContent = email;
+        document.getElementById('verificationOTP').value = '';
+        document.getElementById('verificationOTP').focus();
+    }
+    
+    // Store email for verification
+    let pendingVerificationEmail = null;
+
+    // Show forgot password form
+    document.getElementById('forgotPasswordLink')?.addEventListener('click', function(e) {
         e.preventDefault();
-        const username = document.getElementById('signupUsername').value;
-        const email = document.getElementById('signupEmail').value;
-        const password = document.getElementById('signupPassword').value;
-        const confirmPassword = document.getElementById('signupConfirmPassword').value;
+        document.getElementById('loginFormContainer').style.display = 'none';
+        document.getElementById('forgotPasswordContainer').style.display = 'block';
+    });
+
+    document.getElementById('backToLoginFromForgot')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('forgotPasswordContainer').style.display = 'none';
+        document.getElementById('loginFormContainer').style.display = 'block';
+    });
+
+    document.getElementById('backToLoginFromVerification')?.addEventListener('click', function(e) {
+        e.preventDefault();
+        document.getElementById('emailVerificationContainer').style.display = 'none';
+        document.getElementById('loginFormContainer').style.display = 'block';
+        pendingVerificationEmail = null;
+    });
+
+    // Forgot password form submission
+    document.getElementById('forgotPasswordForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = document.getElementById('forgotPasswordEmail').value.trim();
+        hideFieldError('forgotPasswordEmail');
         
-        // Validate passwords match
-        if (password !== confirmPassword) {
-            alert('Passwords do not match!');
+        if (!email) {
+            showFieldError('forgotPasswordEmail', 'Email is required');
+            return;
+        }
+        
+        if (!validateEmail(email)) {
+            showFieldError('forgotPasswordEmail', 'Please enter a valid email address');
             return;
         }
         
         try {
-            const userData = await registerUser(username, email, password);
-            
-            // Load user profile
-            userProfile = await getUserProfile();
-            localStorage.setItem('userProfile', JSON.stringify(userProfile));
-            updateSubscriptionBadge(); // Update subscription badge after registration
-            
-            document.getElementById('loginScreen').style.display = 'none';
-            document.getElementById('appScreen').style.display = 'block';
-            showPage('profile');
-            
-            alert('Account created successfully! Please complete your profile.');
+            await requestPasswordReset(email);
+            showNotification('Password reset OTP sent to your email!', 'success', 5000);
+            document.getElementById('forgotPasswordContainer').style.display = 'none';
+            document.getElementById('resetPasswordOTPContainer').style.display = 'block';
+            document.getElementById('resetPasswordEmailAddress').textContent = email;
+            window.pendingResetEmail = email; // Store email for reset
+            document.getElementById('resetPasswordOTP').value = '';
+            document.getElementById('resetPasswordOTP').focus();
         } catch (error) {
-            console.error('Registration failed:', error);
-            // Fallback: Allow basic demo user for testing
-            if (username && email && password) {
-                const demoUserId = 'demo-' + Date.now();
-                const demoUser = {
-                    userId: demoUserId,
-                    username: username,
-                    email: email,
-                    isSetupComplete: false
-                };
-                localStorage.setItem('currentUser', JSON.stringify(demoUser));
-                localStorage.setItem('currentUserId', demoUserId);
-                
-                // Set userProfile for demo mode
-                userProfile = {
-                    ...demoUser,
-                    subscriptionStatus: 'pro',
-                    isActive: true
-                };
-                localStorage.setItem('userProfile', JSON.stringify(userProfile));
-                
-                document.getElementById('loginScreen').style.display = 'none';
-                document.getElementById('appScreen').style.display = 'block';
-                showPage('profile');
-                
-                alert('Demo mode: Registration recorded locally. Please create your profile.');
-            } else {
-                alert('Registration failed: ' + error.message);
-            }
+            showFieldError('forgotPasswordEmail', error.message || 'Failed to send reset OTP');
+            showNotification(error.message || 'Failed to send password reset OTP', 'error');
+        }
+    });
+
+    // Password reset OTP form submission
+    document.getElementById('resetPasswordOTPForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = window.pendingResetEmail;
+        const otp = document.getElementById('resetPasswordOTP').value.trim();
+        hideFieldError('resetPasswordOTP');
+        
+        if (!otp || otp.length !== 6) {
+            showFieldError('resetPasswordOTP', 'Please enter a valid 6-digit OTP');
+            return;
+        }
+        
+        if (!email) {
+            showNotification('Email not found. Please request a new password reset.', 'error');
+            return;
+        }
+        
+        try {
+            await verifyResetOTP(email, otp);
+            // OTP verified, show password reset form
+            document.getElementById('resetPasswordOTPContainer').style.display = 'none';
+            document.getElementById('resetPasswordContainer').style.display = 'block';
+            window.pendingResetOTP = otp; // Store OTP for password reset
+        } catch (error) {
+            showFieldError('resetPasswordOTP', error.message || 'Invalid or expired OTP');
+            showNotification(error.message || 'Invalid or expired OTP', 'error');
         }
     });
     
-    // Toggle between login and signup forms
-    document.getElementById('showSignup').addEventListener('click', function(e) {
+    // Reset password form submission (after OTP verification)
+    document.getElementById('resetPasswordForm')?.addEventListener('submit', async function(e) {
         e.preventDefault();
-        document.getElementById('loginFormContainer').style.display = 'none';
-        document.getElementById('signupFormContainer').style.display = 'block';
+        const email = window.pendingResetEmail;
+        const otp = window.pendingResetOTP;
+        const password = document.getElementById('resetPassword').value;
+        const confirmPassword = document.getElementById('resetConfirmPassword').value;
+        
+        hideFieldError('resetPassword');
+        hideFieldError('resetConfirmPassword');
+        
+        if (!validatePassword(password)) {
+            showFieldError('resetPassword', 'Password must be at least 8 characters');
+            return;
+        }
+        
+        if (password !== confirmPassword) {
+            showFieldError('resetConfirmPassword', 'Passwords do not match');
+            return;
+        }
+        
+        if (!email || !otp) {
+            showNotification('Session expired. Please request a new password reset.', 'error');
+            document.getElementById('resetPasswordContainer').style.display = 'none';
+            document.getElementById('forgotPasswordContainer').style.display = 'block';
+            return;
+        }
+        
+        try {
+            await resetPassword(email, otp, password);
+            showNotification('Password reset successfully! You can now login.', 'success', 5000);
+            document.getElementById('resetPasswordContainer').style.display = 'none';
+            document.getElementById('loginFormContainer').style.display = 'block';
+            window.pendingResetEmail = null;
+            window.pendingResetOTP = null;
+        } catch (error) {
+            showNotification(error.message || 'Failed to reset password', 'error');
+        }
     });
     
-    document.getElementById('showLogin').addEventListener('click', function(e) {
+    document.getElementById('backToForgotPassword')?.addEventListener('click', function(e) {
         e.preventDefault();
+        document.getElementById('resetPasswordOTPContainer').style.display = 'none';
+        document.getElementById('forgotPasswordContainer').style.display = 'block';
+        window.pendingResetEmail = null;
+    });
+    
+    document.getElementById('resendResetOTPBtn')?.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const email = window.pendingResetEmail;
+        if (!email) {
+            showNotification('Email not found. Please request a new password reset.', 'error');
+            return;
+        }
+        try {
+            await requestPasswordReset(email);
+            showNotification('OTP resent successfully!', 'success');
+        } catch (error) {
+            showNotification(error.message || 'Failed to resend OTP', 'error');
+        }
+    });
+
+    // Email verification OTP form submission
+    document.getElementById('emailVerificationForm')?.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const email = pendingVerificationEmail || document.getElementById('verificationEmailAddress').textContent;
+        const otp = document.getElementById('verificationOTP').value.trim();
+        const verifyBtn = document.getElementById('verifyOTPBtn');
+        const verifyBtnText = document.getElementById('verifyOTPBtnText');
+        
+        hideFieldError('verificationOTP');
+        
+        if (!otp || otp.length !== 6) {
+            showFieldError('verificationOTP', 'Please enter a valid 6-digit OTP');
+            return;
+        }
+        
+        if (!email) {
+            showNotification('Email not found. Please sign up again.', 'error');
+            return;
+        }
+        
+        verifyBtn.disabled = true;
+        verifyBtnText.innerHTML = '<span class="spinner"></span> Verifying...';
+        
+        try {
+            await verifyEmail(email, otp);
+            showNotification('Email verified successfully! You can now login.', 'success', 5000);
+            document.getElementById('emailVerificationContainer').style.display = 'none';
+            document.getElementById('loginFormContainer').style.display = 'block';
+            pendingVerificationEmail = null;
+        } catch (error) {
+            showFieldError('verificationOTP', error.message || 'Invalid or expired OTP');
+            showNotification(error.message || 'Invalid or expired OTP', 'error');
+        } finally {
+            verifyBtn.disabled = false;
+            verifyBtnText.innerHTML = '<i class="fas fa-check"></i> Verify OTP';
+        }
+    });
+    
+    // Resend verification OTP
+    document.getElementById('resendVerificationBtn')?.addEventListener('click', async function(e) {
+        e.preventDefault();
+        const email = pendingVerificationEmail || document.getElementById('verificationEmailAddress').textContent;
+        if (!email) {
+            showNotification('Email not found. Please sign up again.', 'error');
+            return;
+        }
+        try {
+            await resendVerificationEmail(email);
+            showNotification('OTP resent successfully!', 'success');
+            document.getElementById('verificationOTP').value = '';
+            document.getElementById('verificationOTP').focus();
+        } catch (error) {
+            showNotification(error.message || 'Failed to resend OTP', 'error');
+        }
+    });
+    
+    // Sign up form submission
+    const signupForm = document.getElementById('signupForm');
+    if (!signupForm) {
+        console.error('Signup form not found!');
+    } else {
+        signupForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        const username = document.getElementById('signupUsername').value.trim();
+        const email = document.getElementById('signupEmail').value.trim();
+        const password = document.getElementById('signupPassword').value;
+        const confirmPassword = document.getElementById('signupConfirmPassword').value;
+        const terms = document.getElementById('signupTerms').checked;
+        const signupBtn = document.getElementById('signupBtn');
+        const signupBtnText = document.getElementById('signupBtnText');
+        
+        // Clear previous errors
+        hideFieldError('signupUsername');
+        hideFieldError('signupEmail');
+        hideFieldError('signupPassword');
+        hideFieldError('signupConfirmPassword');
+        hideFieldError('signupTerms');
+        
+        // Validation
+        let hasErrors = false;
+        
+        if (username.length < 3 || username.length > 30) {
+            showFieldError('signupUsername', 'Username must be between 3 and 30 characters');
+            hasErrors = true;
+        }
+        
+        if (!validateEmail(email)) {
+            showFieldError('signupEmail', 'Please enter a valid email address');
+            hasErrors = true;
+        }
+        
+        if (!validatePassword(password)) {
+            showFieldError('signupPassword', 'Password must be at least 8 characters');
+            hasErrors = true;
+        }
+        
+        if (password !== confirmPassword) {
+            showFieldError('signupConfirmPassword', 'Passwords do not match');
+            hasErrors = true;
+        }
+        
+        if (!terms) {
+            showFieldError('signupTerms', 'You must agree to the terms and conditions');
+            hasErrors = true;
+        }
+        
+        if (hasErrors) {
+            return;
+        }
+        
+        // Disable button and show loading
+        signupBtn.disabled = true;
+        signupBtnText.innerHTML = '<span class="spinner"></span> Creating Account...';
+        
+        try {
+            const userData = await registerUser(username, email, password);
+            
+            // Store email for verification
+            pendingVerificationEmail = email;
+            
+            // Show email verification OTP form
+            showEmailVerificationSent(email);
+            showNotification('Account created! Check your email for the OTP.', 'success', 5000);
+        } catch (error) {
+            console.error('Registration failed:', error);
+            const errorMessage = error.message || 'Registration failed. Please try again.';
+            
+            if (errorMessage.includes('username') || errorMessage.includes('Username')) {
+                showFieldError('signupUsername', 'Username is already taken');
+            } else if (errorMessage.includes('email') || errorMessage.includes('Email')) {
+                showFieldError('signupEmail', 'Email is already registered');
+            } else {
+                showNotification(errorMessage, 'error');
+            }
+        } finally {
+            signupBtn.disabled = false;
+            signupBtnText.innerHTML = '<i class="fas fa-user-plus"></i> Create Account';
+        }
+        });
+    }
+    
+    // Toggle between login and signup forms
+    const showSignupBtn = document.getElementById('showSignup');
+    const showLoginBtn = document.getElementById('showLogin');
+    
+    if (showSignupBtn) {
+        showSignupBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            document.getElementById('loginFormContainer').style.display = 'none';
+            document.getElementById('signupFormContainer').style.display = 'block';
+            document.getElementById('forgotPasswordContainer').style.display = 'none';
+            document.getElementById('emailVerificationContainer').style.display = 'none';
+            document.getElementById('resetPasswordContainer').style.display = 'none';
+        });
+    }
+    
+    if (showLoginBtn) {
+        showLoginBtn.addEventListener('click', function(e) {
+            e.preventDefault();
         document.getElementById('signupFormContainer').style.display = 'none';
         document.getElementById('loginFormContainer').style.display = 'block';
+        document.getElementById('forgotPasswordContainer').style.display = 'none';
+        document.getElementById('emailVerificationContainer').style.display = 'none';
+        document.getElementById('resetPasswordOTPContainer').style.display = 'none';
+        document.getElementById('resetPasswordContainer').style.display = 'none';
+        });
+    }
+
+    // OTP input formatting (auto-format to numbers only)
+    document.getElementById('verificationOTP')?.addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
+    });
+    
+    document.getElementById('resetPasswordOTP')?.addEventListener('input', function(e) {
+        e.target.value = e.target.value.replace(/\D/g, '').slice(0, 6);
     });
     
     // Update recipe suggestions when ingredients change (with debounce)
@@ -3811,11 +4224,11 @@ async function deleteMeal(id) {
         }
         
         // Update localStorage
-        localStorage.setItem('meals', JSON.stringify(meals));
+    localStorage.setItem('meals', JSON.stringify(meals));
         
         // Refresh display
-        displayMeals();
-        updateOverview();
+    displayMeals();
+    updateOverview();
         updateProgressPage();
         
         showNotification('Meal deleted successfully!', 'success');

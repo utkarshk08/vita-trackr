@@ -10,7 +10,8 @@ const userSchema = new mongoose.Schema({
         trim: true,
         lowercase: true,
         minlength: 3,
-        maxlength: 30
+        maxlength: 30,
+        match: [/^[a-z0-9_]+$/, 'Username can only contain lowercase letters, numbers, and underscores']
     },
     email: {
         type: String,
@@ -23,7 +24,49 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        minlength: 6
+        minlength: 8
+    },
+    
+    // Email Verification (OTP-based)
+    isEmailVerified: {
+        type: Boolean,
+        default: false
+    },
+    emailVerificationOTP: {
+        type: String,
+        default: null
+    },
+    emailVerificationOTPExpiry: {
+        type: Date,
+        default: null
+    },
+    // Legacy token support (for migration)
+    emailVerificationToken: {
+        type: String,
+        default: null
+    },
+    emailVerificationTokenExpiry: {
+        type: Date,
+        default: null
+    },
+    
+    // Password Reset (OTP-based)
+    passwordResetOTP: {
+        type: String,
+        default: null
+    },
+    passwordResetOTPExpiry: {
+        type: Date,
+        default: null
+    },
+    // Legacy token support (for migration)
+    passwordResetToken: {
+        type: String,
+        default: null
+    },
+    passwordResetTokenExpiry: {
+        type: Date,
+        default: null
     },
     
     // Basic Details

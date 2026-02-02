@@ -21,7 +21,11 @@ async function apiCall(endpoint, options = {}) {
         const data = await response.json();
         
         if (!response.ok) {
-            throw new Error(data.error || 'API request failed');
+            // Create error with full response data for special error handling
+            const error = new Error(data.error || 'API request failed');
+            error.response = data; // Include full response for checking requiresEmailVerification, etc.
+            error.status = response.status;
+            throw error;
         }
         
         return data;
@@ -60,6 +64,59 @@ async function loginUser(username, password) {
     localStorage.setItem('currentUserId', currentUserId);
     localStorage.setItem('currentUser', JSON.stringify(currentUser));
     
+    return data.data;
+}
+
+// Check username availability
+async function checkUsernameAvailability(username) {
+    const data = await apiCall(`/users/check-username?username=${encodeURIComponent(username)}`, {
+        method: 'GET'
+    });
+    return data.data;
+}
+
+// Verify email with OTP
+async function verifyEmail(email, otp) {
+    const data = await apiCall('/users/verify-email', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp })
+    });
+    return data.data;
+}
+
+// Resend verification email
+async function resendVerificationEmail(email) {
+    const data = await apiCall('/users/resend-verification', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+    });
+    return data.data;
+}
+
+// Request password reset
+async function requestPasswordReset(email) {
+    const data = await apiCall('/users/forgot-password', {
+        method: 'POST',
+        body: JSON.stringify({ email })
+    });
+    return data.data;
+}
+
+// Verify password reset OTP
+async function verifyResetOTP(email, otp) {
+    const data = await apiCall('/users/verify-reset-otp', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp })
+    });
+    return data.data;
+}
+
+// Reset password with OTP
+async function resetPassword(email, otp, newPassword) {
+    const data = await apiCall('/users/reset-password', {
+        method: 'POST',
+        body: JSON.stringify({ email, otp, newPassword })
+    });
     return data.data;
 }
 
