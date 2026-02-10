@@ -1,0 +1,132 @@
+%PDF-1.4
+1 0 obj
+<< /Type /Catalog /Pages 2 0 R >>
+endobj
+2 0 obj
+<< /Type /Pages /Kids [3 0 R] /Count 1 >>
+endobj
+3 0 obj
+<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] /Resources << /Font << /Helvetica 4 0 R /Helvetica-Bold 5 0 R >> >> /Contents 6 0 R >>
+endobj
+4 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>
+endobj
+5 0 obj
+<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>
+endobj
+6 0 obj
+<< /Length 2484 >>
+stream
+BT
+54 738 Td
+/Helvetica-Bold 16 Tf
+(VitaTrackr - One-Page Summary) Tj
+0 -20 Td
+0 -14 Td
+/Helvetica-Bold 12 Tf
+(What It Is) Tj
+0 -14 Td
+/Helvetica 10.5 Tf
+(VitaTrackr is a health and wellness web app that combines meal logging, activity) Tj
+0 -14 Td
+(tracking, and recipe guidance with AI-powered suggestions. It ships as a) Tj
+0 -14 Td
+(browser-based UI backed by a Node/Express API and MongoDB.) Tj
+0 -14 Td
+0 -14 Td
+/Helvetica-Bold 12 Tf
+(Who It's For) Tj
+0 -14 Td
+/Helvetica 10.5 Tf
+(Individuals who want a single place to track meals, activity, and personalized) Tj
+0 -14 Td
+(recipe guidance for everyday health goals.) Tj
+0 -14 Td
+0 -14 Td
+/Helvetica-Bold 12 Tf
+(What It Does) Tj
+0 -14 Td
+/Helvetica 10.5 Tf
+(- Collects comprehensive health profiles \(biometrics, goals, conditions, and) Tj
+0 -14 Td
+(  preferences\).) Tj
+0 -14 Td
+0 -6 Td
+(- Generates recipes and dish suggestions through the /api/gemini endpoints.) Tj
+0 -14 Td
+0 -6 Td
+(- Logs meals with nutrition data and quantity scaling.) Tj
+0 -14 Td
+0 -6 Td
+(- Tracks activities and calculates calories burned.) Tj
+0 -14 Td
+0 -6 Td
+(- Shows dashboard stats and recent activity/meal history.) Tj
+0 -14 Td
+0 -6 Td
+(- Provides user authentication flows \(register, login, password reset, email) Tj
+0 -14 Td
+(  verification\).) Tj
+0 -14 Td
+0 -6 Td
+/Helvetica-Bold 12 Tf
+(How It Works \(Repo-Evidenced\)) Tj
+0 -14 Td
+/Helvetica 10.5 Tf
+(- Browser UI served from public/ \(HTML, CSS, JS\) with API calls in) Tj
+0 -14 Td
+(  public/scripts/api.js.) Tj
+0 -14 Td
+0 -6 Td
+(- Express server in server.js serves static assets and routes under /api.) Tj
+0 -14 Td
+0 -6 Td
+(- Controllers in controllers/ use Mongoose models in models/ to read/write) Tj
+0 -14 Td
+(  MongoDB via config/database.js \(MONGODB_URI\).) Tj
+0 -14 Td
+0 -6 Td
+(- Frontend also uses IndexedDB for local stores \(recipes, profiles,) Tj
+0 -14 Td
+(  activities\) in public/scripts/database.js and localStorage for session) Tj
+0 -14 Td
+(  state.) Tj
+0 -14 Td
+0 -6 Td
+(- AI endpoints under /api/gemini are implemented in) Tj
+0 -14 Td
+(  controllers/geminiController.js using the OpenAI SDK and OPENAI_API_KEY.) Tj
+0 -14 Td
+0 -6 Td
+/Helvetica-Bold 12 Tf
+(How To Run \(Minimal\)) Tj
+0 -14 Td
+/Helvetica 10.5 Tf
+(1. Install dependencies: npm install) Tj
+0 -14 Td
+0 -6 Td
+(1. Create .env with MONGODB_URI \(and OPENAI_API_KEY for AI features\).) Tj
+0 -14 Td
+0 -6 Td
+(1. Start server: npm start) Tj
+0 -14 Td
+0 -6 Td
+(1. Open http://localhost:5000 in a browser.) Tj
+0 -14 Td
+ET
+endstream
+endobj
+xref
+0 7
+0000000000 65535 f 
+0000000009 00000 n 
+0000000058 00000 n 
+0000000115 00000 n 
+0000000270 00000 n 
+0000000340 00000 n 
+0000000415 00000 n 
+trailer
+<< /Size 7 /Root 1 0 R >>
+startxref
+2951
+%%EOF

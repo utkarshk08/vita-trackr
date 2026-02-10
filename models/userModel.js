@@ -250,6 +250,25 @@ const userSchema = new mongoose.Schema({
     updatedAt: {
         type: Date,
         default: Date.now
+    },
+    
+    // Connected Devices
+    googleFitConnected: {
+        type: Boolean,
+        default: false
+    },
+    googleFitTokens: {
+        accessToken: String,
+        refreshToken: String,
+        expiryDate: Date
+    },
+    googleFitConnectedAt: {
+        type: Date,
+        default: null
+    },
+    googleFitLastSync: {
+        type: Date,
+        default: null
     }
 }, {
     timestamps: true

@@ -70,6 +70,207 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
     
+    // Navigation Dropdown Toggle for Meals
+    const mealsDropdownToggle = document.getElementById('mealsDropdownToggle');
+    const mealsDropdown = document.getElementById('mealsDropdown');
+    // Navigation Dropdown Toggle for Activity
+    const activityDropdownToggle = document.getElementById('activityDropdownToggle');
+    const activityDropdown = document.getElementById('activityDropdown');
+    
+    if (mealsDropdownToggle && mealsDropdown) {
+        mealsDropdownToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Close other dropdowns
+            document.querySelectorAll('.nav-dropdown').forEach(dd => {
+                if (dd !== mealsDropdown) {
+                    dd.classList.remove('active');
+                    const menu = dd.querySelector('.nav-dropdown-menu');
+                    if (menu) {
+                        menu.style.opacity = '';
+                        menu.style.visibility = '';
+                        menu.style.transform = '';
+                        menu.style.pointerEvents = '';
+                    }
+                }
+            });
+            
+            // Toggle current dropdown
+            mealsDropdown.classList.toggle('active');
+            const menu = mealsDropdown.querySelector('.nav-dropdown-menu');
+            if (menu) {
+                if (mealsDropdown.classList.contains('active')) {
+                    menu.style.opacity = '1';
+                    menu.style.visibility = 'visible';
+                    menu.style.transform = 'translateY(0)';
+                    menu.style.pointerEvents = 'auto';
+                    menu.style.display = 'block';
+                    menu.style.zIndex = '99999';
+                    menu.style.position = 'absolute';
+                    menu.style.backgroundColor = document.body.classList.contains('light-mode') 
+                        ? 'rgba(255, 255, 255, 0.98)' 
+                        : 'rgba(26, 26, 46, 0.98)';
+                    menu.style.backdropFilter = 'blur(10px)';
+                    menu.style.webkitBackdropFilter = 'blur(10px)';
+                } else {
+                    menu.style.opacity = '';
+                    menu.style.visibility = '';
+                    menu.style.transform = '';
+                    menu.style.pointerEvents = '';
+                    menu.style.display = '';
+                    menu.style.zIndex = '';
+                    menu.style.position = '';
+                    menu.style.backgroundColor = '';
+                    menu.style.backdropFilter = '';
+                    menu.style.webkitBackdropFilter = '';
+                }
+            }
+        });
+        
+        // Handle dropdown item clicks
+        mealsDropdown.querySelectorAll('.nav-dropdown-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.getAttribute('data-page');
+                showPage(page);
+                // Close dropdown
+                mealsDropdown.classList.remove('active');
+                const menu = mealsDropdown.querySelector('.nav-dropdown-menu');
+                if (menu) {
+                    menu.style.opacity = '';
+                    menu.style.visibility = '';
+                    menu.style.transform = '';
+                    menu.style.pointerEvents = '';
+                    menu.style.display = '';
+                    menu.style.zIndex = '';
+                    menu.style.position = '';
+                    menu.style.backgroundColor = '';
+                    menu.style.backdropFilter = '';
+                    menu.style.webkitBackdropFilter = '';
+                }
+            });
+        });
+    }
+    // Navigation Dropdown Toggle for Activity
+    if (activityDropdownToggle && activityDropdown) {
+        activityDropdownToggle.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            // Close other dropdowns
+            document.querySelectorAll('.nav-dropdown').forEach(dd => {
+                if (dd !== activityDropdown) {
+                    dd.classList.remove('active');
+                    const menu = dd.querySelector('.nav-dropdown-menu');
+                    if (menu) {
+                        menu.style.opacity = '';
+                        menu.style.visibility = '';
+                        menu.style.transform = '';
+                        menu.style.pointerEvents = '';
+                        menu.style.display = '';
+                        menu.style.zIndex = '';
+                        menu.style.position = '';
+                        menu.style.backgroundColor = '';
+                        menu.style.backdropFilter = '';
+                        menu.style.webkitBackdropFilter = '';
+                    }
+                }
+            });
+            
+            // Toggle current dropdown
+            activityDropdown.classList.toggle('active');
+            const menu = activityDropdown.querySelector('.nav-dropdown-menu');
+            if (menu) {
+                if (activityDropdown.classList.contains('active')) {
+                    menu.style.opacity = '1';
+                    menu.style.visibility = 'visible';
+                    menu.style.transform = 'translateY(0)';
+                    menu.style.pointerEvents = 'auto';
+                    menu.style.display = 'block';
+                    menu.style.zIndex = '99999';
+                    menu.style.position = 'absolute';
+                    menu.style.backgroundColor = document.body.classList.contains('light-mode') 
+                        ? 'rgba(255, 255, 255, 0.98)' 
+                        : 'rgba(26, 26, 46, 0.98)';
+                    menu.style.backdropFilter = 'blur(10px)';
+                    menu.style.webkitBackdropFilter = 'blur(10px)';
+                } else {
+                    menu.style.opacity = '';
+                    menu.style.visibility = '';
+                    menu.style.transform = '';
+                    menu.style.pointerEvents = '';
+                    menu.style.display = '';
+                    menu.style.zIndex = '';
+                    menu.style.position = '';
+                    menu.style.backgroundColor = '';
+                    menu.style.backdropFilter = '';
+                    menu.style.webkitBackdropFilter = '';
+                }
+            }
+        });
+        
+        // Handle dropdown item clicks
+        activityDropdown.querySelectorAll('.nav-dropdown-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const page = this.getAttribute('data-page');
+                showPage(page);
+                // Close dropdown
+                activityDropdown.classList.remove('active');
+                const menu = activityDropdown.querySelector('.nav-dropdown-menu');
+                if (menu) {
+                    menu.style.opacity = '';
+                    menu.style.visibility = '';
+                    menu.style.transform = '';
+                    menu.style.pointerEvents = '';
+                    menu.style.display = '';
+                    menu.style.zIndex = '';
+                    menu.style.position = '';
+                    menu.style.backgroundColor = '';
+                    menu.style.backdropFilter = '';
+                    menu.style.webkitBackdropFilter = '';
+                }
+            });
+        });
+    }
+    
+    // Close dropdowns when clicking outside
+    document.addEventListener('click', function(e) {
+        if (mealsDropdown && !mealsDropdown.contains(e.target)) {
+            mealsDropdown.classList.remove('active');
+            const menu = mealsDropdown.querySelector('.nav-dropdown-menu');
+            if (menu) {
+                menu.style.opacity = '';
+                menu.style.visibility = '';
+                menu.style.transform = '';
+                menu.style.pointerEvents = '';
+                menu.style.display = '';
+                menu.style.zIndex = '';
+                menu.style.position = '';
+                menu.style.backgroundColor = '';
+                menu.style.backdropFilter = '';
+                menu.style.webkitBackdropFilter = '';
+            }
+        }
+        if (activityDropdown && !activityDropdown.contains(e.target)) {
+            activityDropdown.classList.remove('active');
+            const menu = activityDropdown.querySelector('.nav-dropdown-menu');
+            if (menu) {
+                menu.style.opacity = '';
+                menu.style.visibility = '';
+                menu.style.transform = '';
+                menu.style.pointerEvents = '';
+                menu.style.display = '';
+                menu.style.zIndex = '';
+                menu.style.position = '';
+                menu.style.backgroundColor = '';
+                menu.style.backdropFilter = '';
+                menu.style.webkitBackdropFilter = '';
+            }
+        }
+    });
+    
     // Initialize support chatbot (always visible)
     initializeSupportChatbot();
     
@@ -1137,11 +1338,27 @@ function showPage(pageName) {
     // Show selected page
     document.getElementById(pageName).classList.add('active');
     
-    // Update active nav link
+    // Update active nav link and dropdown items
     document.querySelectorAll('.nav-link').forEach(link => {
         link.classList.remove('active');
         if (link.getAttribute('data-page') === pageName) {
             link.classList.add('active');
+        }
+    });
+    
+    // Update active dropdown item
+    document.querySelectorAll('.nav-dropdown-item').forEach(item => {
+        item.classList.remove('active');
+        if (item.getAttribute('data-page') === pageName) {
+            item.classList.add('active');
+            // Also highlight the dropdown toggle if one of its items is active
+            const dropdown = item.closest('.nav-dropdown');
+            if (dropdown) {
+                const toggle = dropdown.querySelector('.nav-dropdown-toggle');
+                if (toggle) {
+                    toggle.classList.add('active');
+                }
+            }
         }
     });
     
@@ -1177,6 +1394,9 @@ function showPage(pageName) {
         loadCommonPortions(); // Load common portions shortcuts
         loadRecentMealsChips(); // Load recent meals chips
         displayMeals(); // Display meals list
+    } else if (pageName === 'connectedDevices') {
+        loadDeviceStatus(); // Load device connection status
+        loadSyncHistory(); // Load sync history
     }
 }
 
@@ -6847,6 +7067,11 @@ function updateActivityChart(period = '7d') {
         if (existingMsg) existingMsg.remove();
     }
     
+    // Average calories across the selected period (including zero days)
+    const avgActivityCalories = activityCaloriesByPeriod.length
+        ? totalCalories / activityCaloriesByPeriod.length
+        : 0;
+    
     const isLightMode = document.body.classList.contains('light-mode');
     const textColor = isLightMode ? '#2c3e50' : '#ffffff';
     const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
@@ -6862,18 +7087,29 @@ function updateActivityChart(period = '7d') {
             type: 'line',
             data: {
                 labels: points.map(p => p.label),
-                datasets: [{
-                    label: 'Calories Burned',
-                    data: activityCaloriesByPeriod,
-                    borderColor: '#50c878',
-                    backgroundColor: 'rgba(80, 200, 120, 0.1)',
-                    tension: 0.4,
-                    fill: true,
-                    pointRadius: pointRadius,
-                    pointBackgroundColor: '#50c878',
-                    pointBorderColor: '#ffffff',
-                    pointBorderWidth: points.length <= 30 ? 2 : 1
-                }]
+                datasets: [
+                    {
+                        label: 'Calories Burned',
+                        data: activityCaloriesByPeriod,
+                        borderColor: '#50c878',
+                        backgroundColor: 'rgba(80, 200, 120, 0.1)',
+                        tension: 0.4,
+                        fill: true,
+                        pointRadius: pointRadius,
+                        pointBackgroundColor: '#50c878',
+                        pointBorderColor: '#ffffff',
+                        pointBorderWidth: points.length <= 30 ? 2 : 1
+                    },
+                    {
+                        label: 'Average Calories Burned',
+                        data: activityCaloriesByPeriod.map(() => avgActivityCalories),
+                        borderColor: isLightMode ? 'rgba(40, 120, 60, 0.9)' : 'rgba(80, 200, 120, 0.9)',
+                        borderDash: [6, 6],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false
+                    }
+                ]
             },
             options: {
                 responsive: true,
@@ -7043,6 +7279,13 @@ function updateNutritionChart(period = '7d') {
         if (existingMsg) existingMsg.remove();
     }
     
+    // Average calories across the selected period (for calories line)
+    const avgCalories = nutritionByPeriod.length
+        ? totalCalories / nutritionByPeriod.length
+        : 0;
+    const avgCaloriesScaled = avgCalories / 10; // match Calories (×0.1) scaling
+    const caloriesSeries = nutritionByPeriod.map(n => n.calories / 10);
+    
     const isLightMode = document.body.classList.contains('light-mode');
     const textColor = isLightMode ? '#2c3e50' : '#ffffff';
     const gridColor = isLightMode ? 'rgba(0, 0, 0, 0.1)' : 'rgba(255, 255, 255, 0.1)';
@@ -7060,7 +7303,7 @@ function updateNutritionChart(period = '7d') {
                 datasets: [
                     {
                         label: 'Calories (×0.1)',
-                        data: nutritionByPeriod.map(n => n.calories / 10),
+                        data: caloriesSeries,
                         backgroundColor: 'rgba(255, 107, 107, 0.6)',
                         borderColor: '#ff6b6b',
                         borderWidth: 2
@@ -7078,6 +7321,17 @@ function updateNutritionChart(period = '7d') {
                         backgroundColor: 'rgba(255, 215, 0, 0.6)',
                         borderColor: '#ffd700',
                         borderWidth: 2
+                    },
+                    {
+                        type: 'line',
+                        label: 'Avg Calories (×0.1)',
+                        data: nutritionByPeriod.map(() => avgCaloriesScaled),
+                        borderColor: isLightMode ? 'rgba(200, 50, 50, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+                        borderDash: [6, 6],
+                        borderWidth: 2,
+                        pointRadius: 0,
+                        fill: false,
+                        yAxisID: 'y'
                     }
                 ]
             },
@@ -8276,7 +8530,50 @@ function displayDietPlan(plan) {
             `).join('')}
         </div>
         
-        <div style="display: flex; gap: 10px; margin-top: 20px; flex-wrap: wrap;">
+        <div style="background: rgba(255, 255, 255, 0.04); padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.12); margin-bottom: 22px;">
+            <h4 style="color: var(--text-primary); margin-top: 0; display: flex; align-items: center; gap: 8px;">
+                <i class="fas fa-pen-to-square" style="color: var(--primary-color);"></i>
+                Special Request
+            </h4>
+            <div id="dietSpecialRequestDisplay" style="color: var(--text-secondary); line-height: 1.6;">
+                ${
+                    plan.specialRequest && plan.specialRequest.trim()
+                        ? `<p style="margin: 0; white-space: pre-line;">${plan.specialRequest.replace(/\\n/g, '<br>')}</p>`
+                        : `<p style="margin: 0; font-style: italic; opacity: 0.8;">No special request added yet. Click <strong>Edit Plan</strong> to add one.</p>`
+                }
+            </div>
+            <div id="dietSpecialRequestEditor" style="display: none; margin-top: 10px;">
+                <label for="dietSpecialRequestTextarea" style="display: block; margin-bottom: 6px; color: var(--text-secondary); font-size: 0.9em;">
+                    Describe any special requests (allergies, cultural preferences, timing, etc.)
+                </label>
+                <textarea
+                    id="dietSpecialRequestTextarea"
+                    rows="4"
+                    style="
+                        width: 100%;
+                        padding: 12px 14px;
+                        border-radius: 10px;
+                        border: 2px solid rgba(255, 255, 255, 0.18);
+                        background: rgba(255, 255, 255, 0.06);
+                        color: var(--text-primary);
+                        font-size: 0.95em;
+                        resize: vertical;
+                        font-family: inherit;
+                        outline: none;
+                    "
+                ></textarea>
+                <div style="margin-top: 10px; display: flex; gap: 10px; justify-content: flex-end; flex-wrap: wrap;">
+                    <button type="button" onclick="saveDietPlanSpecialRequest()" class="btn-primary" style="width: auto; padding: 10px 18px; min-width: 120px;">
+                        <i class="fas fa-save"></i> Save
+                    </button>
+                    <button type="button" onclick="cancelDietPlanSpecialRequest()" class="btn-secondary" style="width: auto; padding: 10px 18px; min-width: 120px;">
+                        <i class="fas fa-times"></i> Cancel
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div style="display: flex; gap: 10px; margin-top: 10px; flex-wrap: wrap;">
             <button onclick="saveDietPlanToChat()" class="btn-primary" style="flex: 1; min-width: 150px;">
                 <i class="fas fa-save"></i> Save to Chat
             </button>
@@ -8344,6 +8641,10 @@ function saveDietPlanToChat() {
         planText += `- ${t.test} (${t.frequency}) - ${t.reason}\n`;
     });
     
+    if (plan.specialRequest && plan.specialRequest.trim()) {
+        planText += `\n**Special Request:**\n${plan.specialRequest.trim()}\n`;
+    }
+    
     planText += `\n**Meal Suggestions:**\n`;
     Object.entries(plan.mealSuggestions).forEach(([mealType, suggestions]) => {
         planText += `\n*${mealType.charAt(0).toUpperCase() + mealType.slice(1)}:*\n`;
@@ -8362,25 +8663,63 @@ function saveDietPlanToChat() {
     alert('Diet plan saved to chat!');
 }
 
-// Edit diet plan
+// Edit diet plan - only Special Request section (inline editor)
 function editDietPlan() {
     if (!window.currentDietPlan) {
         alert('No diet plan to edit. Please generate a diet plan first.');
         return;
     }
     
-    const plan = window.currentDietPlan;
-    const editText = prompt('Edit your diet plan. You can modify the summary or any section:', plan.summary);
+    const displayEl = document.getElementById('dietSpecialRequestDisplay');
+    const editorEl = document.getElementById('dietSpecialRequestEditor');
+    const textarea = document.getElementById('dietSpecialRequestTextarea');
     
-    if (editText && editText.trim()) {
-        // Update the summary
-        plan.summary = editText.trim();
-        
-        // Re-display the plan
-        displayDietPlan(plan);
-        
-        alert('Diet plan updated! Click "Save to Chat" to save the edited version.');
+    if (!displayEl || !editorEl || !textarea) {
+        console.warn('Special Request editor elements not found in diet plan modal.');
+        return;
     }
+    
+    // Populate textarea with current special request (if any)
+    textarea.value = window.currentDietPlan.specialRequest || '';
+    
+    // Toggle to edit mode
+    displayEl.style.display = 'none';
+    editorEl.style.display = 'block';
+    
+    textarea.focus();
+}
+
+// Save Special Request edits
+function saveDietPlanSpecialRequest() {
+    if (!window.currentDietPlan) return;
+    
+    const textarea = document.getElementById('dietSpecialRequestTextarea');
+    if (!textarea) return;
+    
+    const value = textarea.value.trim();
+    window.currentDietPlan.specialRequest = value;
+    
+    // Re-render plan so display section updates and editor hides
+    displayDietPlan(window.currentDietPlan);
+    
+    alert('Special request updated! Click "Save to Chat" to save the edited version.');
+}
+
+// Cancel Special Request edit (revert UI without changing stored plan)
+function cancelDietPlanSpecialRequest() {
+    const displayEl = document.getElementById('dietSpecialRequestDisplay');
+    const editorEl = document.getElementById('dietSpecialRequestEditor');
+    const textarea = document.getElementById('dietSpecialRequestTextarea');
+    
+    if (!displayEl || !editorEl || !textarea) return;
+    
+    // Reset textarea to current plan value
+    if (window.currentDietPlan) {
+        textarea.value = window.currentDietPlan.specialRequest || '';
+    }
+    
+    editorEl.style.display = 'none';
+    displayEl.style.display = 'block';
 }
 
 // Generate 7-day diet plan
@@ -8793,5 +9132,613 @@ function initializeSupportChatbot() {
     const badge = document.getElementById('supportBadge');
     if (badge) {
         badge.style.display = 'flex';
+    }
+    
+    // Update nutrition when quantity changes in scan meal form
+    const scanMealQuantity = document.getElementById('scanMealQuantity');
+    if (scanMealQuantity) {
+        scanMealQuantity.addEventListener('change', function() {
+            if (window.scannedMealData && window.scannedMealData.nutritionPer100g) {
+                const quantity = parseFloat(this.value) || 100;
+                const nutrition = {
+                    calories: Math.round((window.scannedMealData.nutritionPer100g.calories || 0) * (quantity / 100)),
+                    protein: parseFloat(((window.scannedMealData.nutritionPer100g.protein || 0) * (quantity / 100)).toFixed(1)),
+                    carbs: parseFloat(((window.scannedMealData.nutritionPer100g.carbs || 0) * (quantity / 100)).toFixed(1)),
+                    fats: parseFloat(((window.scannedMealData.nutritionPer100g.fats || 0) * (quantity / 100)).toFixed(1))
+                };
+                
+                document.getElementById('scanMealCalories').value = nutrition.calories;
+                document.getElementById('scanMealProtein').value = nutrition.protein;
+                document.getElementById('scanMealCarbs').value = nutrition.carbs;
+                document.getElementById('scanMealFats').value = nutrition.fats;
+            }
+        });
+    }
+}
+
+// ==================== SCAN MEAL FUNCTIONS ====================
+
+// Handle image upload
+function handleImageUpload(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+        showNotification('Please upload a valid image file', 'error');
+        return;
+    }
+    
+    // Validate file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+        showNotification('Image size should be less than 10MB', 'error');
+        return;
+    }
+    
+    // Show preview
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        const preview = document.getElementById('imagePreview');
+        const container = document.getElementById('imagePreviewContainer');
+        preview.src = e.target.result;
+        container.style.display = 'block';
+        
+        // Hide detected form if exists
+        document.getElementById('detectedMealForm').style.display = 'none';
+        window.scannedMealData = null;
+    };
+    reader.readAsDataURL(file);
+}
+
+// Clear image preview
+function clearImagePreview() {
+    document.getElementById('imagePreview').src = '';
+    document.getElementById('imagePreviewContainer').style.display = 'none';
+    document.getElementById('mealImageInput').value = '';
+    document.getElementById('detectedMealForm').style.display = 'none';
+    document.getElementById('analyzingContainer').style.display = 'none';
+    window.scannedMealData = null;
+}
+
+// Compress and resize image before upload
+function compressImage(file, maxWidth = 1024, maxHeight = 1024, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const img = new Image();
+            img.onload = () => {
+                const canvas = document.createElement('canvas');
+                let width = img.width;
+                let height = img.height;
+                
+                // Calculate new dimensions
+                if (width > height) {
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                } else {
+                    if (height > maxHeight) {
+                        width = (width * maxHeight) / height;
+                        height = maxHeight;
+                    }
+                }
+                
+                canvas.width = width;
+                canvas.height = height;
+                
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, width, height);
+                
+                // Convert to base64 with compression
+                const compressedBase64 = canvas.toDataURL('image/jpeg', quality);
+                resolve({
+                    base64: compressedBase64.split(',')[1],
+                    mimeType: 'image/jpeg'
+                });
+            };
+            img.onerror = reject;
+            img.src = e.target.result;
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+    });
+}
+
+// Analyze meal image (frontend handler)
+async function analyzeMealImageFromUpload() {
+    const imageInput = document.getElementById('mealImageInput');
+    const file = imageInput.files[0];
+    
+    if (!file) {
+        showNotification('Please upload an image first', 'error');
+        return;
+    }
+    
+    // Show loading state
+    document.getElementById('imagePreviewContainer').style.display = 'none';
+    document.getElementById('analyzingContainer').style.display = 'block';
+    document.getElementById('detectedMealForm').style.display = 'none';
+    
+    const analyzeBtn = document.getElementById('analyzeBtn');
+    const analyzeBtnText = document.getElementById('analyzeBtnText');
+    if (analyzeBtn) {
+        analyzeBtn.disabled = true;
+        if (analyzeBtnText) analyzeBtnText.innerHTML = '<span class="spinner"></span> Compressing & Analyzing...';
+    }
+    
+    try {
+        // Compress image first to reduce size
+        const compressed = await compressImage(file, 1024, 1024, 0.8);
+        const base64String = compressed.base64;
+        const mimeType = compressed.mimeType;
+        
+        if (analyzeBtnText) analyzeBtnText.innerHTML = '<span class="spinner"></span> Analyzing...';
+        
+        // Call API directly using fetch
+        const response = await fetch('/api/gemini/analyze-meal-image', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({ 
+                imageBase64: base64String, 
+                imageMimeType: mimeType 
+            })
+        });
+        
+        if (!response.ok) {
+            const errorData = await response.json().catch(() => ({}));
+            throw new Error(errorData.error || 'Failed to analyze meal image');
+        }
+        
+        const data = await response.json();
+        const result = data.data;
+        
+        // Store scanned data
+        window.scannedMealData = result;
+        
+        // Pre-fill form
+        document.getElementById('scanMealName').value = result.mealName || '';
+        document.getElementById('scanMealQuantity').value = result.estimatedQuantity || 100;
+        document.getElementById('scanMealCalories').value = result.nutrition.calories || 0;
+        document.getElementById('scanMealProtein').value = result.nutrition.protein || 0;
+        document.getElementById('scanMealCarbs').value = result.nutrition.carbs || 0;
+        document.getElementById('scanMealFats').value = result.nutrition.fats || 0;
+        
+        // Set today's date
+        const today = new Date().toISOString().split('T')[0];
+        document.getElementById('scanMealDate').value = today;
+        
+        // Show form
+        document.getElementById('analyzingContainer').style.display = 'none';
+        document.getElementById('imagePreviewContainer').style.display = 'block';
+        document.getElementById('detectedMealForm').style.display = 'block';
+        
+        // Scroll to form
+        document.getElementById('detectedMealForm').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        
+        showNotification(`Meal detected! ${result.confidence === 'high' ? 'High' : result.confidence === 'medium' ? 'Medium' : 'Low'} confidence.`, 'success');
+    } catch (error) {
+        console.error('Error analyzing meal:', error);
+        document.getElementById('analyzingContainer').style.display = 'none';
+        document.getElementById('imagePreviewContainer').style.display = 'block';
+        showNotification(error.message || 'Failed to analyze meal image', 'error');
+    } finally {
+        if (analyzeBtn) {
+            analyzeBtn.disabled = false;
+            if (analyzeBtnText) analyzeBtnText.innerHTML = '<i class="fas fa-brain"></i> Analyze Meal';
+        }
+    }
+}
+
+// Log scanned meal
+async function logScannedMeal() {
+    const mealType = document.getElementById('scanMealType').value;
+    const mealDate = document.getElementById('scanMealDate').value;
+    const mealName = document.getElementById('scanMealName').value;
+    const quantity = parseFloat(document.getElementById('scanMealQuantity').value) || 100;
+    const calories = parseInt(document.getElementById('scanMealCalories').value) || 0;
+    const protein = parseFloat(document.getElementById('scanMealProtein').value) || 0;
+    const carbs = parseFloat(document.getElementById('scanMealCarbs').value) || 0;
+    const fats = parseFloat(document.getElementById('scanMealFats').value) || 0;
+    
+    // Validation
+    if (!mealType) {
+        showNotification('Please select a meal type', 'error');
+        return;
+    }
+    
+    if (!mealName) {
+        showNotification('Meal name is required', 'error');
+        return;
+    }
+    
+    // Recalculate nutrition based on quantity if it changed
+    let finalNutrition = {
+        calories: calories,
+        protein: protein,
+        carbs: carbs,
+        fats: fats
+    };
+    
+    if (window.scannedMealData && window.scannedMealData.nutritionPer100g) {
+        const originalQuantity = window.scannedMealData.estimatedQuantity || 100;
+        if (quantity !== originalQuantity) {
+            // Recalculate based on new quantity
+            finalNutrition = {
+                calories: Math.round((window.scannedMealData.nutritionPer100g.calories || 0) * (quantity / 100)),
+                protein: parseFloat(((window.scannedMealData.nutritionPer100g.protein || 0) * (quantity / 100)).toFixed(1)),
+                carbs: parseFloat(((window.scannedMealData.nutritionPer100g.carbs || 0) * (quantity / 100)).toFixed(1)),
+                fats: parseFloat(((window.scannedMealData.nutritionPer100g.fats || 0) * (quantity / 100)).toFixed(1))
+            };
+            
+            // Update form fields
+            document.getElementById('scanMealCalories').value = finalNutrition.calories;
+            document.getElementById('scanMealProtein').value = finalNutrition.protein;
+            document.getElementById('scanMealCarbs').value = finalNutrition.carbs;
+            document.getElementById('scanMealFats').value = finalNutrition.fats;
+        }
+    }
+    
+    const meal = {
+        type: mealType,
+        name: mealName,
+        date: mealDate,
+        quantity: quantity,
+        quantityType: 'grams',
+        calories: finalNutrition.calories,
+        protein: finalNutrition.protein,
+        carbs: finalNutrition.carbs,
+        fats: finalNutrition.fats
+    };
+    
+    const logBtn = document.getElementById('logScannedMealBtn');
+    const logBtnText = document.getElementById('logScannedMealBtnText');
+    
+    if (logBtn) {
+        logBtn.disabled = true;
+        if (logBtnText) logBtnText.innerHTML = '<span class="spinner"></span> Logging...';
+    }
+    
+    try {
+        // Check if user is in demo mode
+        const currentUserId = localStorage.getItem('currentUserId');
+        const isDemoUser = currentUserId && currentUserId.startsWith('demo-');
+        
+        if (isDemoUser) {
+            // Save to localStorage for demo users
+            const savedMeal = {
+                ...meal,
+                id: 'meal-' + Date.now(),
+                _id: 'meal-' + Date.now()
+            };
+            meals.push(savedMeal);
+            localStorage.setItem('meals', JSON.stringify(meals));
+            
+            displayMeals();
+            loadRecentMealsChips();
+            updateOverview();
+            updateProgressPage();
+            
+            showNotification('Meal logged successfully! (Demo mode)', 'success');
+        } else {
+            // Save to API for real users
+            const savedMeal = await createMeal(meal);
+            savedMeal.id = savedMeal._id;
+            meals.push(savedMeal);
+            localStorage.setItem('meals', JSON.stringify(meals));
+            
+            displayMeals();
+            loadRecentMealsChips();
+            updateOverview();
+            updateProgressPage();
+            
+            showNotification('Meal logged successfully!', 'success');
+        }
+        
+        // Clear scanned meal form
+        clearScannedMeal();
+        
+        // Navigate to meal log page
+        showPage('meals');
+    } catch (error) {
+        console.error('Error logging scanned meal:', error);
+        showNotification(error.message || 'Failed to log meal', 'error');
+    } finally {
+        if (logBtn) {
+            logBtn.disabled = false;
+            if (logBtnText) logBtnText.innerHTML = '<i class="fas fa-check"></i> Log Meal';
+        }
+    }
+}
+
+// Clear scanned meal form
+function clearScannedMeal() {
+    document.getElementById('detectedMealForm').style.display = 'none';
+    document.getElementById('scanMealType').value = '';
+    document.getElementById('scanMealName').value = '';
+    document.getElementById('scanMealQuantity').value = '100';
+    document.getElementById('scanMealCalories').value = '';
+    document.getElementById('scanMealProtein').value = '';
+    document.getElementById('scanMealCarbs').value = '';
+    document.getElementById('scanMealFats').value = '';
+    clearImagePreview();
+    window.scannedMealData = null;
+}
+
+// ==================== CONNECTED DEVICES FUNCTIONS ====================
+
+// Load device connection status
+async function loadDeviceStatus() {
+    try {
+        const status = await getDeviceStatus();
+        
+        // Update Google Fit status
+        const googleFitStatusText = document.getElementById('googleFitStatusText');
+        const googleFitConnectBtn = document.getElementById('googleFitConnectBtn');
+        const googleFitInfo = document.getElementById('googleFitInfo');
+        const googleFitLastSync = document.getElementById('googleFitLastSync');
+        
+        if (status && status.googleFit && status.googleFit.connected) {
+            if (googleFitStatusText) {
+                googleFitStatusText.textContent = 'Connected';
+                googleFitStatusText.style.color = 'var(--secondary-color)';
+            }
+            if (googleFitConnectBtn) {
+                googleFitConnectBtn.style.display = 'none';
+            }
+            if (googleFitInfo) {
+                googleFitInfo.style.setProperty('display', 'block', 'important');
+                googleFitInfo.style.setProperty('margin-top', '15px', 'important');
+                googleFitInfo.style.setProperty('padding-top', '15px', 'important');
+                googleFitInfo.style.setProperty('border-top', '1px solid rgba(255,255,255,0.1)', 'important');
+                googleFitInfo.style.setProperty('height', 'auto', 'important');
+                googleFitInfo.style.setProperty('overflow', 'visible', 'important');
+            }
+            if (googleFitLastSync) {
+                if (status.googleFit.lastSync) {
+                    try {
+                        const lastSyncDate = new Date(status.googleFit.lastSync);
+                        googleFitLastSync.textContent = lastSyncDate.toLocaleString();
+                    } catch (e) {
+                        googleFitLastSync.textContent = 'Never';
+                    }
+                } else {
+                    googleFitLastSync.textContent = 'Never';
+                }
+            }
+        } else {
+            if (googleFitStatusText) {
+                googleFitStatusText.textContent = 'Not Connected';
+                googleFitStatusText.style.color = 'var(--text-secondary)';
+            }
+            if (googleFitConnectBtn) {
+                googleFitConnectBtn.style.display = 'block';
+            }
+            if (googleFitInfo) {
+                googleFitInfo.style.setProperty('display', 'none', 'important');
+                googleFitInfo.style.setProperty('margin', '0', 'important');
+                googleFitInfo.style.setProperty('padding', '0', 'important');
+                googleFitInfo.style.setProperty('border', 'none', 'important');
+                googleFitInfo.style.setProperty('height', '0', 'important');
+                googleFitInfo.style.setProperty('overflow', 'hidden', 'important');
+            }
+        }
+    } catch (error) {
+        console.error('Error loading device status:', error);
+        // On error, show "Not Connected" state instead of error message
+        const googleFitStatusText = document.getElementById('googleFitStatusText');
+        const googleFitConnectBtn = document.getElementById('googleFitConnectBtn');
+        const googleFitInfo = document.getElementById('googleFitInfo');
+        
+        if (googleFitStatusText) {
+            googleFitStatusText.textContent = 'Not Connected';
+            googleFitStatusText.style.color = 'var(--text-secondary)';
+        }
+        if (googleFitConnectBtn) {
+            googleFitConnectBtn.style.display = 'block';
+        }
+        if (googleFitInfo) {
+            googleFitInfo.style.display = 'none';
+        }
+    }
+}
+
+// Connect Google Fit
+async function connectGoogleFit() {
+    try {
+        const authUrl = await initiateGoogleFitAuth();
+        // Open OAuth popup
+        const width = 600;
+        const height = 700;
+        const left = (window.innerWidth - width) / 2;
+        const top = (window.innerHeight - height) / 2;
+        
+        const popup = window.open(
+            authUrl,
+            'Google Fit Authorization',
+            `width=${width},height=${height},left=${left},top=${top},resizable=yes,scrollbars=yes`
+        );
+        
+        // Check if popup was blocked
+        if (!popup) {
+            showNotification('Please allow popups to connect Google Fit', 'error');
+            return;
+        }
+        
+        // Listen for message from popup
+        const messageHandler = (event) => {
+            if (event.data && event.data.type === 'google-fit-connected') {
+                if (event.data.success) {
+                    showNotification('Google Fit connected successfully!', 'success');
+                    loadDeviceStatus();
+                    loadSyncHistory();
+                } else {
+                    showNotification(event.data.error || 'Failed to connect Google Fit. Please try again.', 'error');
+                }
+                window.removeEventListener('message', messageHandler);
+            }
+        };
+        window.addEventListener('message', messageHandler);
+        
+        // Fallback: Monitor popup for completion (if message doesn't work)
+        const checkPopup = setInterval(() => {
+            if (popup.closed) {
+                clearInterval(checkPopup);
+                // Reload status after popup closes
+                setTimeout(() => {
+                    loadDeviceStatus();
+                    loadSyncHistory();
+                    // Check URL for connection status
+                    const urlParams = new URLSearchParams(window.location.search);
+                    if (urlParams.get('connected') === 'google-fit') {
+                        showNotification('Google Fit connected successfully!', 'success');
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    } else if (urlParams.get('error') === 'google-fit-auth-failed') {
+                        showNotification('Failed to connect Google Fit. Please try again.', 'error');
+                        window.history.replaceState({}, document.title, window.location.pathname);
+                    }
+                }, 1000);
+            }
+        }, 500);
+    } catch (error) {
+        console.error('Error connecting Google Fit:', error);
+        showNotification(error.message || 'Failed to initiate Google Fit connection', 'error');
+    }
+}
+
+// Sync Google Fit data (frontend handler)
+async function syncGoogleFitData() {
+    const syncBtn = event?.target || document.querySelector('button[onclick*="syncGoogleFit"]');
+    if (syncBtn) {
+        syncBtn.disabled = true;
+        const originalText = syncBtn.innerHTML;
+        syncBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Syncing...';
+        
+        try {
+            // Call the API function (from api.js)
+            const result = await syncGoogleFit();
+            
+            // Check if result exists and has the expected structure
+            if (!result) {
+                throw new Error('No response from server');
+            }
+            
+            // Handle different response structures
+            const message = result.message || (result.data && result.data.message);
+            const count = result.count || (result.data && result.data.count) || 0;
+            
+            if (message) {
+                showNotification(message, 'success');
+            } else if (count > 0) {
+                showNotification(`Synced ${count} activities from Google Fit`, 'success');
+            } else {
+                showNotification('Sync completed. No new activities found.', 'info');
+            }
+            
+            // Reload activities and update overview
+            await loadUserData();
+            updateOverview();
+            updateProgressPage();
+            
+            // Update last sync time
+            loadDeviceStatus();
+            loadSyncHistory();
+        } catch (error) {
+            console.error('Error syncing Google Fit:', error);
+            const errorMsg = (error && error.message) || (error && error.error) || 'Failed to sync Google Fit data';
+            showNotification(errorMsg, 'error');
+        } finally {
+            if (syncBtn) {
+                syncBtn.disabled = false;
+                syncBtn.innerHTML = originalText;
+            }
+        }
+    }
+}
+
+// Disconnect Google Fit
+async function disconnectGoogleFitDevice() {
+    if (!confirm('Are you sure you want to disconnect Google Fit? This will stop automatic syncing.')) {
+        return;
+    }
+    
+    try {
+        await disconnectGoogleFit();
+        showNotification('Google Fit disconnected successfully', 'success');
+        loadDeviceStatus();
+        loadSyncHistory();
+    } catch (error) {
+        console.error('Error disconnecting Google Fit:', error);
+        showNotification(error.message || 'Failed to disconnect Google Fit', 'error');
+    }
+}
+
+// Connect Apple Health (placeholder for future implementation)
+function connectAppleHealth() {
+    showNotification('Apple Health integration coming soon!', 'info');
+}
+
+// Load sync history
+async function loadSyncHistory() {
+    const syncHistoryDiv = document.getElementById('syncHistory');
+    if (!syncHistoryDiv) return;
+    
+    try {
+        // Get recent synced activities
+        const syncedActivities = activities.filter(a => a.source === 'google-fit' || a.source === 'apple-health');
+        
+        if (syncedActivities.length === 0) {
+            syncHistoryDiv.innerHTML = `
+                <p style="color: var(--text-secondary); text-align: center; margin: 20px 0;">
+                    No sync history yet. Connect a device and sync to see your activity history here.
+                </p>
+            `;
+            return;
+        }
+        
+        // Group by date
+        const groupedByDate = {};
+        syncedActivities.forEach(activity => {
+            const date = new Date(activity.date).toLocaleDateString();
+            if (!groupedByDate[date]) {
+                groupedByDate[date] = [];
+            }
+            groupedByDate[date].push(activity);
+        });
+        
+        let historyHTML = '';
+        Object.keys(groupedByDate).sort((a, b) => new Date(b) - new Date(a)).forEach(date => {
+            const dayActivities = groupedByDate[date];
+            historyHTML += `
+                <div style="margin-bottom: 20px; padding: 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px;">
+                    <div style="font-weight: 600; color: var(--text-primary); margin-bottom: 10px;">
+                        <i class="fas fa-calendar-day"></i> ${date}
+                    </div>
+                    ${dayActivities.map(activity => `
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                            <div>
+                                <div style="color: var(--text-primary); font-weight: 500;">${activity.name || activity.type}</div>
+                                <div style="color: var(--text-secondary); font-size: 0.85em;">
+                                    ${activity.duration} min • ${activity.calories} cal
+                                    ${activity.source === 'google-fit' ? '<i class="fab fa-google" style="margin-left: 8px;"></i>' : ''}
+                                    ${activity.source === 'apple-health' ? '<i class="fab fa-apple" style="margin-left: 8px;"></i>' : ''}
+                                </div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        });
+        
+        syncHistoryDiv.innerHTML = historyHTML;
+    } catch (error) {
+        console.error('Error loading sync history:', error);
+        syncHistoryDiv.innerHTML = `
+            <p style="color: var(--text-secondary); text-align: center; margin: 20px 0;">
+                Error loading sync history.
+            </p>
+        `;
     }
 }

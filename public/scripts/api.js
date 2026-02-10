@@ -493,3 +493,81 @@ if (typeof module !== 'undefined' && module.exports) {
     };
 }
 
+// Analyze meal image
+async function analyzeMealImage(imageBase64, imageMimeType) {
+    const data = await apiCall('/gemini/analyze-meal-image', {
+        method: 'POST',
+        body: JSON.stringify({ imageBase64, imageMimeType })
+    });
+    return data.data;
+}
+
+// Device connection APIs
+async function getDeviceStatus() {
+    const currentUserId = localStorage.getItem('currentUserId');
+    if (!currentUserId) {
+        // Return default status for demo users or when not logged in
+        return {
+            googleFit: {
+                connected: false,
+                connectedAt: null,
+                lastSync: null
+            },
+            appleHealth: {
+                connected: false,
+                connectedAt: null,
+                lastSync: null
+            }
+        };
+    }
+    try {
+        const data = await apiCall(`/devices/status?userId=${currentUserId}`, {
+            method: 'GET'
+        });
+        return data.devices || {
+            googleFit: { connected: false, connectedAt: null, lastSync: null },
+            appleHealth: { connected: false, connectedAt: null, lastSync: null }
+        };
+    } catch (error) {
+        console.error('Error getting device status:', error);
+        // Return default status on error
+        return {
+            googleFit: {
+                connected: false,
+                connectedAt: null,
+                lastSync: null
+            },
+            appleHealth: {
+                connected: false,
+                connectedAt: null,
+                lastSync: null
+            }
+        };
+    }
+}
+
+async function initiateGoogleFitAuth() {
+    const currentUserId = localStorage.getItem('currentUserId');
+    const data = await apiCall(`/devices/google-fit/auth?userId=${currentUserId}`, {
+        method: 'GET'
+    });
+    return data.authUrl;
+}
+
+async function syncGoogleFit() {
+    const currentUserId = localStorage.getItem('currentUserId');
+    const data = await apiCall('/devices/google-fit/sync', {
+        method: 'POST',
+        body: JSON.stringify({ userId: currentUserId })
+    });
+    return data;
+}
+
+async function disconnectGoogleFit() {
+    const currentUserId = localStorage.getItem('currentUserId');
+    const data = await apiCall('/devices/google-fit/disconnect', {
+        method: 'POST',
+        body: JSON.stringify({ userId: currentUserId })
+    });
+    return data;
+}

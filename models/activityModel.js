@@ -38,6 +38,15 @@ const activitySchema = new mongoose.Schema({
     date: {
         type: Date,
         required: true
+    },
+    source: {
+        type: String,
+        enum: ['manual', 'google-fit', 'apple-health'],
+        default: 'manual'
+    },
+    metadata: {
+        type: mongoose.Schema.Types.Mixed,
+        default: {}
     }
 }, {
     timestamps: true

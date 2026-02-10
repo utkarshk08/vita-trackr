@@ -627,7 +627,15 @@ const generate7DayPlan = async (req, res) => {
 
         const userContext = buildUserContext(userProfile, activities, meals);
 
+        // Extract special request (if provided on the base diet plan) and surface it explicitly
+        let specialRequestText = '';
+        if (baseDietPlan && typeof baseDietPlan === 'object' && baseDietPlan.specialRequest) {
+            specialRequestText = String(baseDietPlan.specialRequest).trim();
+        }
+
         const prompt = `Generate a comprehensive 7-day personalized diet plan based on the following information. PRIMARY sources are the base diet plan and user profile overview. Report analysis is optional and supplementary.
+
+${specialRequestText ? `USER SPECIAL REQUEST (TOP PRIORITY - You MUST strictly follow this across all 7 days unless clearly unsafe):\n${specialRequestText}\n` : ''}
 
 ${userContext ? `User Profile Overview (PRIMARY - Use this as the main context):\n${userContext}\n` : ''}
 
@@ -665,13 +673,15 @@ Generate a detailed 7-day diet plan in JSON format:
 
 Important:
 - PRIMARY: Base recommendations primarily on the base diet plan and user profile overview
+- If a USER SPECIAL REQUEST is provided, TREAT IT AS TOP PRIORITY and follow it across all 7 days (e.g. cultural preferences, strict dislikes, timing constraints). ONLY ignore it when it is clearly unsafe for the user.
+- When applying special requests, mention how they are respected in the "notes" field for each affected day.
 - The base diet plan should be the foundation for meal suggestions and structure
 - Use the user profile overview (health conditions, allergies, dietary preferences, goals, activity levels) as the main context
 - OPTIONAL: Report analysis is supplementary - use it only if provided and to enhance recommendations
-- Consider the user's health conditions, allergies, and dietary preferences from the profile
-- Ensure variety across the 7 days
+- Consider the user's health conditions, allergies, dietary preferences, and special requests from the profile/base plan
+- Ensure variety across the 7 days while still respecting special requests
 - Make meals practical and achievable
-- Include specific meal suggestions for each day that align with the base diet plan
+- Include specific meal suggestions for each day that align with the base diet plan and special request
 - Return ONLY valid JSON, no markdown formatting`;
 
         console.log('[ChatGPT] Generating 7-day plan...');
@@ -679,7 +689,10 @@ Important:
         const completion = await openai.chat.completions.create({
             model: process.env.OPENAI_MODEL || 'gpt-4o-mini',
             messages: [
-                { role: 'system', content: 'You are a nutritionist AI. Always respond with valid JSON only.' },
+                {
+                    role: 'system',
+                    content: 'You are a nutritionist AI. Always respond with valid JSON only. If the user provides a "USER SPECIAL REQUEST", you MUST treat it as the highest-priority constraint (above general preferences) as long as it is not clearly unsafe.'
+                },
                 { role: 'user', content: prompt }
             ],
             temperature: 0.3,

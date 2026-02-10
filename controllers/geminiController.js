@@ -976,11 +976,140 @@ Return ONLY the JSON array, no markdown formatting, no additional text.`;
     }
 };
 
+// @desc    Analyze meal image to detect food items and quantities
+// @route   POST /api/gemini/analyze-meal-image
+// @access  Public
+const analyzeMealImage = async (req, res) => {
+    try {
+        const { imageBase64, imageMimeType } = req.body;
+
+        if (!imageBase64) {
+            return res.status(400).json({
+                success: false,
+                error: 'Image is required'
+            });
+        }
+
+        // Check if API key is configured
+        let openai;
+        try {
+            openai = getOpenAI();
+        } catch (error) {
+            return res.status(500).json({
+                success: false,
+                error: error.message || getApiKeyErrorMessage()
+            });
+        }
+
+        // Build the prompt for meal analysis
+        const prompt = `Analyze this food image and provide detailed information about the meal. 
+
+CRITICAL REQUIREMENTS:
+1. Identify ALL food items visible in the image
+2. Estimate the quantity/weight of each item in GRAMS (be as accurate as possible based on visual estimation)
+3. For the main dish/meal, provide a descriptive name
+4. Estimate nutrition values per 100g for the main dish, then calculate for the estimated quantity
+
+Return a JSON object with this exact structure:
+{
+    "mealName": "Descriptive name of the main dish/meal",
+    "estimatedQuantity": estimated weight in grams (number),
+    "items": [
+        {
+            "name": "Item name",
+            "quantity": quantity in grams (number)
+        }
+    ],
+    "nutritionPer100g": {
+        "calories": number,
+        "protein": number in grams,
+        "carbs": number in grams,
+        "fats": number in grams
+    },
+    "confidence": "high/medium/low"
+}
+
+Be realistic with your estimates. If you cannot clearly identify items, use "medium" or "low" confidence.`;
+
+        // Call OpenAI Vision API (using gpt-4o for better vision capabilities)
+        // gpt-4o has superior vision capabilities compared to gpt-4o-mini
+        const modelName = process.env.OPENAI_VISION_MODEL || 'gpt-4o';
+        const response = await openai.chat.completions.create({
+            model: modelName,
+            messages: [
+                {
+                    role: 'user',
+                    content: [
+                        {
+                            type: 'text',
+                            text: prompt
+                        },
+                        {
+                            type: 'image_url',
+                            image_url: {
+                                url: `data:${imageMimeType || 'image/jpeg'};base64,${imageBase64}`
+                            }
+                        }
+                    ]
+                }
+            ],
+            max_tokens: 1000,
+            temperature: 0.3 // Lower temperature for more consistent results
+        });
+
+        const content = response.choices[0].message.content;
+        
+        // Parse JSON response
+        let mealData;
+        try {
+            mealData = cleanAndParseJSON(content);
+        } catch (parseError) {
+            console.error('Error parsing meal analysis JSON:', parseError);
+            // Try to extract JSON from text if it's wrapped
+            const jsonMatch = content.match(/\{[\s\S]*\}/);
+            if (jsonMatch) {
+                mealData = JSON.parse(jsonMatch[0]);
+            } else {
+                throw new Error('Failed to parse AI response');
+            }
+        }
+
+        // Calculate nutrition for estimated quantity
+        const quantity = mealData.estimatedQuantity || 100;
+        const nutritionPer100g = mealData.nutritionPer100g || {};
+        const calculatedNutrition = {
+            calories: Math.round((nutritionPer100g.calories || 0) * (quantity / 100)),
+            protein: parseFloat(((nutritionPer100g.protein || 0) * (quantity / 100)).toFixed(1)),
+            carbs: parseFloat(((nutritionPer100g.carbs || 0) * (quantity / 100)).toFixed(1)),
+            fats: parseFloat(((nutritionPer100g.fats || 0) * (quantity / 100)).toFixed(1))
+        };
+
+        res.json({
+            success: true,
+            data: {
+                mealName: mealData.mealName || 'Unknown Meal',
+                estimatedQuantity: quantity,
+                items: mealData.items || [],
+                nutrition: calculatedNutrition,
+                nutritionPer100g: nutritionPer100g,
+                confidence: mealData.confidence || 'medium'
+            }
+        });
+    } catch (error) {
+        console.error('Error analyzing meal image:', error);
+        res.status(500).json({
+            success: false,
+            error: error.message || 'Failed to analyze meal image'
+        });
+    }
+};
+
 module.exports = {
     generateRecipeWithGemini,
     generateMultipleRecipesWithGemini,
     suggestRecipeNames,
     recommendActivities,
     generateDailyPlan,
-    getDishSuggestions
+    getDishSuggestions,
+    analyzeMealImage
 };
